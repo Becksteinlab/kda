@@ -66,22 +66,21 @@ state_probs = kda.calc_state_probabilities(G, directional_partials)
 print(state_probs)
 print(state_probs.sum(axis=0))
 
-date = '02_13_2020'
+date = '02_20_2020'
 run = '4_state'
-model = 'NHE'
-pc = "laptop"     # 'home', 'laptop' or 'work'
-plot = False
-save = False     # To save, plot must also be True
+pc = "home"     # 'home', 'laptop' or 'work'
+plot = True
+save = True     # To save, plot must also be True
 
 if pc == "home":
-    path = "/c/Users/Nikolaus/phy495/antiporter-model/data"
+    path = "C:/Users/Nikolaus/phy495/hill-biochemical-kinetic-diagram-analyzer/data/plots"
 elif pc == "laptop":
-	path = "C:/Users/nikol/phy495/antiporter-model/data"
+	path = "C:/Users/nikol/phy495/hill-biochemical-kinetic-diagram-analyzer/data/plots"
 elif pc == "work":
     path = "/nfs/homes/nawtrey/Documents/PHY495/data"
 
 if plot == True:
-    pd.plot_input_diagram(G, pos, save=save, path=path, model=model, date=date, run=run)
-    pd.plot_partials(partials, pos, save=save, path=path, model=model, date=date, run=run)
-    pd.plot_directional_partials(directional_partials, pos, save=save, path=path, model=model, date=date, run=run)
+    pd.plot_input_diagram(G, pos, save=save, path=path, date=date, run=run)
+    pd.plot_partials(partials, pos, save=save, path=path, date=date, run=run)
+    pd.plot_directional_partials(directional_partials, pos, save=save, path=path, date=date, run=run)
     plt.show()

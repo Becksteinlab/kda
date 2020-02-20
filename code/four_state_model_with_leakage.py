@@ -64,30 +64,24 @@ import hill_biochemical_kinetic_diagram_analyzer as kda
 import plot_diagrams as pd
 
 partials = kda.generate_partial_diagrams(G)
-# directional_partials = kda.generate_directional_partial_diagrams(partials)
-# state_probs = kda.calc_state_probabilities(G, directional_partials)
-# print(state_probs)
-# print(state_probs.sum(axis=0))
+directional_partials = kda.generate_directional_partial_diagrams(partials)
+state_probs = kda.calc_state_probabilities(G, directional_partials)
+print(state_probs)
+print(state_probs.sum(axis=0))
 
-date = '02_15_2020'
+date = '02_20_2020'
 run = '4_state_with_leakage'
-pc = "laptop"     # 'home', 'laptop' or 'work'
-plot = False
-save = False     # To save, plot must also be True
+pc = "home"     # 'home', 'laptop' or 'work'
+plot = True
+save = True     # To save, plot must also be True
 
 if pc == "home":
-    path = "/c/Users/Nikolaus/phy495/hill_biochemical_kinetic_diagram_analyzer/data/plots"
+    path = "C:/Users/Nikolaus/phy495/hill-biochemical-kinetic-diagram-analyzer/data/plots"
 elif pc == "laptop":
-	path = "C:/Users/nikol/phy495/hill_biochemical_kinetic_diagram_analyzer/data/plots"
-elif pc == "work":
-    path = "/nfs/homes/nawtrey/Documents/PHY495/data"
+	path = "C:/Users/nikol/phy495/hill-biochemical-kinetic-diagram-analyzer/data/plots"
 
-# if plot == True:
-#     pd.plot_input_diagram(G, pos, save=save, path=path, model=model, date=date, run=run)
-#     pd.plot_partials(partials, pos, save=save, path=path, model=model, date=date, run=run)
-#     pd.plot_directional_partials(directional_partials, pos, save=save, path=path, model=model, date=date, run=run)
-#     plt.show()
-pd.plot_input_diagram(G, pos, save=save, path=path, date=date, run=run)
-pd.plot_partials(partials, pos, save=save, path=path, date=date, run=run)
-
-plt.show()
+if plot == True:
+    pd.plot_input_diagram(G, pos, save=save, path=path, date=date, run=run)
+    pd.plot_partials(partials, pos, save=save, path=path, date=date, run=run)
+    pd.plot_directional_partials(directional_partials, pos, save=save, path=path, date=date, run=run)
+    plt.show()
