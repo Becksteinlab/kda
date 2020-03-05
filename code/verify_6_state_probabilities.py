@@ -80,7 +80,7 @@ import plot_diagrams as pd
 
 partials = kda.generate_partial_diagrams(G)
 directional_partials = kda.generate_directional_partial_diagrams(partials)
-state_probs = kda.calc_state_probabilities(G, directional_partials)
+p_kda = kda.calc_state_probabilities(G, directional_partials)
 
 #===============================================================================
 #== Manual =====================================================================
@@ -94,10 +94,35 @@ P5 = a65*a12*a23*a34*a45 + a61*a12*a23*a34*a45 + a43*a32*a21*a16*a65 + a45*a32*a
 P6 = a12*a23*a34*a45*a56 + a54*a43*a32*a21*a16 + a56*a43*a32*a21*a16 + a45*a56*a32*a21*a16 + a34*a45*a56*a21*a16 + a16*a23*a34*a45*a56
 
 Sigma = P1 + P2 + P3 + P4 + P5 + P6 # Normalization factor
-state_probs_manual = np.array([P1, P2, P3, P4, P5, P6])/Sigma
+p_manual = np.array([P1, P2, P3, P4, P5, P6])/Sigma
 
 #===============================================================================
 #== ODE Solver =================================================================
 #===============================================================================
 
-# Add required code from NHE_antiporter file
+from functions import probability_integrator
+k_on = 1e9                         # units:  /s
+k_off = 1e6                    # units:  /s
+k_conf = 5e6                   # rate of conformational change
+A_conc = 1e-3                       # total [A], in M
+B_conc = 1e-7                       # total [B], in M
+A_in = A_conc
+B_in = 1e-6
+A_out = A_conc
+B_out = B_conc
+t_max = 2e-5
+max_step = 1e-10
+flux = False
+# p1, p2, p3, p4, p5, p6
+p = np.array([1/6, 1/6, 1/6, 1/6, 1/6, 1/6])
+# [A_in], [A_out], [B_in], [B_out]
+CAB = np.array([A_in, A_out, B_in, B_out])
+print("Beginning simulation.")
+results = probability_integrator([p, CAB], k_off, k_on, k_conf, t_max, max_step=max_step, AB_flux=flux)
+
+p_ode = np.array([results.y[0], results.y[1] , results.y[2], results.y[3], results.y[4], results.y[5]])
+
+#===============================================================================
+
+for i in range(6):
+    print("For state {}, probabilities (KDA, Manual, ODE) = ({}, {}, {})".format(i+1, p_kda[i], p_manual[i], p_ode[i][-1]))
