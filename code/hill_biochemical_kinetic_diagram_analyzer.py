@@ -89,7 +89,7 @@ def calc_state_probabilities(G, directional_partials):
         for j in range(G.number_of_nodes()):
             state_multiplicities[j] = partial_multiplicities[N_terms*j:N_terms*j+N_terms].sum(axis=0)
     state_probabilities = state_multiplicities/state_multiplicities.sum(axis=0)
-    return state_probabilities
+    return state_multiplicities, state_probabilities
 
 def assign_probs_to_G(dir_partials):
     return NotImplementedError

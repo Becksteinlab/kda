@@ -41,47 +41,47 @@ def generate_edges(G, rates):
 #== Graph ======================================================================
 #===============================================================================
 
-k12 = 2
-k21 = 3
-k23 = 5
-k32 = 7
-k34 = 11
-k43 = 13
-k41 = 17
-k14 = 19
-k24 = 23
-k42 = 29
-
-rates = [k12, k21, k23, k32, k34, k43, k41, k14, k24, k42]
-G = nx.MultiDiGraph()
-generate_edges(G, rates)
-pos = generate_node_positions()
+# k12 = 2
+# k21 = 3
+# k23 = 5
+# k32 = 7
+# k34 = 11
+# k43 = 13
+# k41 = 17
+# k14 = 19
+# k24 = 23
+# k42 = 29
+#
+# rates = [k12, k21, k23, k32, k34, k43, k41, k14, k24, k42]
+# G = nx.MultiDiGraph()
+# generate_edges(G, rates)
+# pos = generate_node_positions()
 #===============================================================================
 #== Run Method =================================================================
 #===============================================================================
 
-import hill_biochemical_kinetic_diagram_analyzer as kda
-import plot_diagrams as pd
-
-partials = kda.generate_partial_diagrams(G)
-directional_partials = kda.generate_directional_partial_diagrams(partials)
-state_probs = kda.calc_state_probabilities(G, directional_partials)
-print(state_probs)
-print(state_probs.sum(axis=0))
-
-date = '02_20_2020'
-run = '4_state_with_leakage'
-pc = "home"     # 'home', 'laptop' or 'work'
-plot = True
-save = True     # To save, plot must also be True
-
-if pc == "home":
-    path = "C:/Users/Nikolaus/phy495/hill-biochemical-kinetic-diagram-analyzer/data/plots"
-elif pc == "laptop":
-	path = "C:/Users/nikol/phy495/hill-biochemical-kinetic-diagram-analyzer/data/plots"
-
-if plot == True:
-    pd.plot_input_diagram(G, pos, save=save, path=path, date=date, run=run)
-    pd.plot_partials(partials, pos, save=save, path=path, date=date, run=run)
-    pd.plot_directional_partials(directional_partials, pos, save=save, path=path, date=date, run=run)
-    plt.show()
+# import hill_biochemical_kinetic_diagram_analyzer as kda
+# import plot_diagrams as pd
+#
+# partials = kda.generate_partial_diagrams(G)
+# directional_partials = kda.generate_directional_partial_diagrams(partials)
+# state_probs = kda.calc_state_probabilities(G, directional_partials)
+# print(state_probs)
+# print(state_probs.sum(axis=0))
+#
+# date = '02_20_2020'
+# run = '4_state_with_leakage'
+# pc = "home"     # 'home', 'laptop' or 'work'
+# plot = True
+# save = True     # To save, plot must also be True
+#
+# if pc == "home":
+#     path = "C:/Users/Nikolaus/phy495/hill-biochemical-kinetic-diagram-analyzer/data/plots"
+# elif pc == "laptop":
+# 	path = "C:/Users/nikol/phy495/hill-biochemical-kinetic-diagram-analyzer/data/plots"
+#
+# if plot == True:
+#     pd.plot_input_diagram(G, pos, save=save, path=path, date=date, run=run)
+#     pd.plot_partials(partials, pos, save=save, path=path, date=date, run=run)
+#     pd.plot_directional_partials(directional_partials, pos, save=save, path=path, date=date, run=run)
+#     plt.show()

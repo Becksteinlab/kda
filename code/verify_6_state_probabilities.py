@@ -53,18 +53,18 @@ B_in = 1e-6
 A_out = A_conc
 B_out = B_conc
 
-a12 = k_on*A_out    # a01
-a21 = k_off         # a10
-a23 = k_conf        # a12
-a32 = k_conf        # a21
-a34 = k_off         # a23
-a43 = k_on*A_in     # a32
-a45 = k_on*B_in     # a34
-a54 = k_off         # a43
-a56 = k_conf        # a45
-a65 = k_conf        # a54
-a61 = k_off         # a50
-a16 = k_on*B_out    # a05
+a12_ODE = k_on*A_out    # a01
+a21_ODE = k_off         # a10
+a23_ODE = k_conf        # a12
+a32_ODE = k_conf        # a21
+a34_ODE = k_off         # a23
+a43_ODE = k_on*A_in     # a32
+a45_ODE = k_on*B_in     # a34
+a54_ODE = k_off         # a43
+a56_ODE = k_conf        # a45
+a65_ODE = k_conf        # a54
+a61_ODE = k_off         # a50
+a16_ODE = k_on*B_out    # a05
 
 rates = np.array([a12, a21, a23, a32, a34, a43, a45, a54, a56, a65, a61, a16])
 G = nx.MultiDiGraph()
@@ -87,7 +87,7 @@ state_probs = kda.calc_state_probabilities(G, directional_partials)
 #===============================================================================
 
 P1 = a65*a54*a43*a32*a21 + a61*a54*a43*a32*a21 + a56*a61*a43*a32*a21 + a45*a56*a61*a32*a21 + a34*a45*a56*a61*a21 + a23*a34*a45*a56*a61
-P2 = a12*a65*a54*a43*a32 + a61*a12*a54*a43*a32 + a65*a61*a12*a43*a32 + a45*a56*a61*a32*a12 + a34*a45*a56*a61*a12 + a16*a65*a54*a43*a32
+P2 = a12*a65*a54*a43*a32 + a61*a12*a54*a43*a32 + a56*a61*a12*a43*a32 + a45*a56*a61*a32*a12 + a34*a45*a56*a61*a12 + a16*a65*a54*a43*a32
 P3 = a12*a23*a65*a54*a43 + a61*a12*a23*a54*a43 + a56*a61*a12*a23*a43 + a45*a56*a61*a12*a23 + a21*a16*a65*a54*a43 + a23*a16*a65*a54*a43
 P4 = a65*a54*a12*a23*a34 + a54*a61*a12*a23*a34 + a56*a61*a12*a23*a34 + a32*a21*a16*a65*a54 + a21*a16*a65*a54*a34 + a16*a65*a54*a23*a34
 P5 = a65*a12*a23*a34*a45 + a61*a12*a23*a34*a45 + a43*a32*a21*a16*a65 + a45*a32*a21*a16*a65 + a34*a45*a21*a16*a65 + a23*a34*a45*a16*a65
@@ -101,3 +101,4 @@ state_probs_manual = np.array([P1, P2, P3, P4, P5, P6])/Sigma
 #===============================================================================
 
 # Add required code from NHE_antiporter file
+# Needs to have 3 different probabilitites: kinetic model manual, kinetic ODE, and NetworkX

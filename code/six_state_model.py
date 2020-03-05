@@ -43,62 +43,62 @@ def generate_edges(G, rates):
 #== Graph ======================================================================
 #===============================================================================
 
-k_on = 1e9                         # units:  /s
-k_off = 1e6                    # units:  /s
-k_conf = 5e6                   # rate of conformational change
-A_conc = 1e-3                       # total [A], in M
-B_conc = 1e-7                       # total [B], in M
-A_in = A_conc
-B_in = 1e-6
-A_out = A_conc
-B_out = B_conc
+# k_on = 1e9                         # units:  /s
+# k_off = 1e6                    # units:  /s
+# k_conf = 5e6                   # rate of conformational change
+# A_conc = 1e-3                       # total [A], in M
+# B_conc = 1e-7                       # total [B], in M
+# A_in = A_conc
+# B_in = 1e-6
+# A_out = A_conc
+# B_out = B_conc
+#
+# a12 = k_on*A_out    # a01
+# a21 = k_off         # a10
+# a23 = k_conf        # a12
+# a32 = k_conf        # a21
+# a34 = k_off         # a23
+# a43 = k_on*A_in     # a32
+# a45 = k_on*B_in     # a34
+# a54 = k_off         # a43
+# a56 = k_conf        # a45
+# a65 = k_conf        # a54
+# a61 = k_off         # a50
+# a16 = k_on*B_out    # a05
 
-a12 = k_on*A_out    # a01
-a21 = k_off         # a10
-a23 = k_conf        # a12
-a32 = k_conf        # a21
-a34 = k_off         # a23
-a43 = k_on*A_in     # a32
-a45 = k_on*B_in     # a34
-a54 = k_off         # a43
-a56 = k_conf        # a45
-a65 = k_conf        # a54
-a61 = k_off         # a50
-a16 = k_on*B_out    # a05
-
-rates = np.array([a12, a21, a23, a32, a34, a43, a45, a54, a56, a65, a61, a16])
-G = nx.MultiDiGraph()
-generate_edges(G, rates)
-pos = generate_node_positions()
+# rates = np.array([a12, a21, a23, a32, a34, a43, a45, a54, a56, a65, a61, a16])
+# G = nx.MultiDiGraph()
+# generate_edges(G, rates)
+# pos = generate_node_positions()
 
 #===============================================================================
 #== Run Method =================================================================
 #===============================================================================
 
-import hill_biochemical_kinetic_diagram_analyzer as kda
-import plot_diagrams as pd
-
-partials = kda.generate_partial_diagrams(G)
-directional_partials = kda.generate_directional_partial_diagrams(partials)
-state_probs = kda.calc_state_probabilities(G, directional_partials)
-print(state_probs)
-print(state_probs.sum(axis=0))
-
-date = '02_20_2020'
-run = '6_state'
-pc = "home"     # 'home', 'laptop' or 'work'
-plot = True
-save = True     # To save, plot must also be True
-
-if pc == "home":
-    path = "C:/Users/Nikolaus/phy495/hill-biochemical-kinetic-diagram-analyzer/data/plots"
-elif pc == "laptop":
-	path = "C:/Users/nikol/phy495/hill-biochemical-kinetic-diagram-analyzer/data/plots"
-elif pc == "work":
-    path = "/nfs/homes/nawtrey/Documents/PHY495/data"
-
-if plot == True:
-    pd.plot_input_diagram(G, pos, save=save, path=path, date=date, run=run)
-    pd.plot_partials(partials, pos, save=save, path=path, date=date, run=run)
-    pd.plot_directional_partials(directional_partials, pos, save=save, path=path, date=date, run=run)
-    plt.show()
+# import hill_biochemical_kinetic_diagram_analyzer as kda
+# import plot_diagrams as pd
+#
+# partials = kda.generate_partial_diagrams(G)
+# directional_partials = kda.generate_directional_partial_diagrams(partials)
+# state_probs = kda.calc_state_probabilities(G, directional_partials)
+# print(state_probs)
+# print(state_probs.sum(axis=0))
+#
+# date = '02_20_2020'
+# run = '6_state'
+# pc = "home"     # 'home', 'laptop' or 'work'
+# plot = True
+# save = True     # To save, plot must also be True
+#
+# if pc == "home":
+#     path = "C:/Users/Nikolaus/phy495/hill-biochemical-kinetic-diagram-analyzer/data/plots"
+# elif pc == "laptop":
+# 	path = "C:/Users/nikol/phy495/hill-biochemical-kinetic-diagram-analyzer/data/plots"
+# elif pc == "work":
+#     path = "/nfs/homes/nawtrey/Documents/PHY495/data"
+#
+# if plot == True:
+#     pd.plot_input_diagram(G, pos, save=save, path=path, date=date, run=run)
+#     pd.plot_partials(partials, pos, save=save, path=path, date=date, run=run)
+#     pd.plot_directional_partials(directional_partials, pos, save=save, path=path, date=date, run=run)
+#     plt.show()
