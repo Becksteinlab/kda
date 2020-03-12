@@ -76,7 +76,7 @@ pos = generate_node_positions()
 #===============================================================================
 #== Run Method =================================================================
 #===============================================================================
-# 
+
 # import hill_biochemical_kinetic_diagram_analyzer as kda
 # import plot_diagrams as pd
 #
@@ -85,11 +85,11 @@ pos = generate_node_positions()
 # state_mult, state_probs = kda.calc_state_probabilities(G, directional_partials)
 # print(state_probs)
 # print(state_probs.sum(axis=0))
-#
-# date = '02_20_2020'
-# run = '4_state_with_leakage'
+
+# date = '03_12_2020'
+# run = '5_state_with_leakage'
 # pc = "home"     # 'home', 'laptop' or 'work'
-# plot = True
+# plot = False
 # save = False     # To save, plot must also be True
 #
 # if pc == "home":
@@ -99,6 +99,6 @@ pos = generate_node_positions()
 #
 # if plot == True:
 #     pd.plot_input_diagram(G, pos, save=save, path=path, date=date, run=run)
-#     # pd.plot_partials(partials, pos, save=save, path=path, date=date, run=run)
-#     # pd.plot_directional_partials(directional_partials, pos, save=save, path=path, date=date, run=run)
-#     plt.show()
+#     pd.plot_partials(partials, pos, save=save, path=path, date=date, run=run)
+#     pd.plot_directional_partials(directional_partials, pos, save=save, path=path, date=date, run=run)
+    # plt.show()
