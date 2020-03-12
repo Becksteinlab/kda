@@ -13,6 +13,7 @@ import hill_biochemical_kinetic_diagram_analyzer as kda
 from three_state_model import generate_edges as ge3
 from four_state_model import generate_edges as ge4
 from four_state_model_with_leakage import generate_edges as ge4wl
+from five_state_model_with_leakage import generate_edges as ge5wl
 from six_state_model import generate_edges as ge6
 
 #===============================================================================
@@ -93,6 +94,37 @@ Sigma = P1 + P2 + P3 + P4 # Normalization factor
 sp4wl_manual = np.array([P1, P2, P3, P4])/Sigma
 
 #===============================================================================
+#== 5 State w/ Leakage =========================================================
+#===============================================================================
+c12 = 2
+c21 = 3
+c23 = 5
+c32 = 7
+c13 = 11
+c31 = 13
+c24 = 17
+c42 = 19
+c35 = 31
+c53 = 37
+c45 = 23
+c54 = 29
+G5wl = nx.MultiDiGraph()
+ge5wl(G5wl, [c12, c21, c23, c32, c13, c31, c24, c42, c35, c53, c45, c54])
+
+#== State probabilitites =======================================================
+partials5wl = kda.generate_partial_diagrams(G5wl)
+directional_partials5wl = kda.generate_directional_partial_diagrams(partials5wl)
+sp5wl_mult, sp5wl_diag = kda.calc_state_probabilities(G5wl, directional_partials5wl)
+#== Manual =====================================================================
+P1 = c35*c54*c42*c21 + c24*c45*c53*c31 + c21*c45*c53*c31 + c42*c21*c53*c31 + c54*c42*c21*c31 + c54*c42*c32*c21 + c45*c53*c23*c31 + c53*c32*c42*c21 + c42*c23*c53*c31 + c54*c42*c23*c31 + c45*c53*c32*c21
+P2 = c12*c35*c54*c42 + c13*c35*c54*c42 + c45*c53*c31*c12 + c42*c53*c31*c12 + c31*c12*c54*c42 + c54*c42*c32*c12 + c45*c53*c13*c32 + c53*c32*c42*c12 + c53*c13*c32*c42 + c54*c42*c13*c32 + c45*c53*c32*c12
+P3 = c12*c24*c45*c53 + c13*c24*c45*c53 + c21*c13*c45*c53 + c42*c21*c13*c53 + c54*c42*c21*c13 + c54*c42*c12*c23 + c45*c53*c23*c13 + c42*c12*c23*c53 + c42*c23*c13*c53 + c54*c42*c23*c13 + c45*c53*c12*c23
+P4 = c12*c24*c35*c54 + c24*c13*c35*c54 + c21*c13*c35*c54 + c53*c31*c12*c24 + c54*c31*c12*c24 + c12*c32*c24*c54 + c13*c23*c35*c54 + c53*c32*c12*c24 + c13*c53*c32*c24 + c13*c32*c24*c54 + c12*c23*c35*c54
+P5 = c35*c12*c24*c45 + c13*c35*c24*c45 + c45*c21*c13*c35 + c42*c21*c13*c35 + c31*c12*c24*c45 + c12*c32*c24*c45 + c13*c23*c35*c45 + c12*c42*c23*c35 + c42*c23*c13*c35 + c13*c32*c24*c45 + c12*c23*c35*c45
+Sigma = P1 + P2 + P3 + P4 + P5 # Normalization factor
+sp5wl_manual = np.array([P1, P2, P3, P4, P5])/Sigma
+
+#===============================================================================
 #== 6 State ====================================================================
 #===============================================================================
 a12 = 2
@@ -131,8 +163,40 @@ sp6_manual = np.array([P1, P2, P3, P4, P5, P6])/Sigma
 print("3 state model probabilities, manual - diag: {}".format(sp3_manual - sp3_diag))
 print("4 state model probabilities, manual - diag: {}".format(sp4_manual - sp4_diag))
 print("4 state model with leakage probabilities, manual - diag: {}".format(sp4wl_manual - sp4wl_diag))
+print("5 state model with leakage probabilities, manual - diag: {}".format(sp5wl_manual - sp5wl_diag))
 print("6 state model probabilities, manual - diag: {}".format(sp6_manual - sp6_diag))
 
 # Check multiplicities
 # Check probabilitites
 # Check that probabilities are normalized to 1
+
+#===============================================================================
+#== ODE Solver =================================================================
+#===============================================================================
+
+# from functions import probability_integrator
+# k_on = 1e9                         # units:  /s
+# k_off = 1e6                    # units:  /s
+# k_conf = 5e6                   # rate of conformational change
+# A_conc = 1e-3                       # total [A], in M
+# B_conc = 1e-7                       # total [B], in M
+# A_in = A_conc
+# B_in = 1e-6
+# A_out = A_conc
+# B_out = B_conc
+# t_max = 2e-5
+# max_step = 1e-10
+# flux = False
+# # p1, p2, p3, p4, p5, p6
+# p = np.array([1/6, 1/6, 1/6, 1/6, 1/6, 1/6])
+# # [A_in], [A_out], [B_in], [B_out]
+# CAB = np.array([A_in, A_out, B_in, B_out])
+# print("Beginning simulation.")
+# results = probability_integrator([p, CAB], k_off, k_on, k_conf, t_max, max_step=max_step, AB_flux=flux)
+#
+# p_ode = np.array([results.y[0], results.y[1] , results.y[2], results.y[3], results.y[4], results.y[5]])
+#
+# #===============================================================================
+#
+# for i in range(6):
+#     print("For state {}, probabilities (KDA, Manual, ODE) = ({}, {}, {})".format(i+1, p_kda[i], p_manual[i], p_ode[i][-1]))
