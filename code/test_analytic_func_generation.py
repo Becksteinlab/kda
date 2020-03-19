@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import networkx as nx
 import sympy
+from sympy import *
 
 import hill_biochemical_kinetic_diagram_analyzer as kda
 
@@ -66,6 +67,15 @@ def construct_analytic_functions(G, dir_parts, var_dict):
         state_mults.append("+".join(term_list[N_terms*j:N_terms*j+N_terms]))
     norm = "+".join(state_mults)
     return state_mults, norm
+
+def output_sympy_state_prob_function(rate_names, state_func, norm_func, latex=None):
+    joined_names = " ".join(rate_names)
+    joined_names = symbols(joined_names)
+    init_printing(use_unicode=True)
+    if latex == True:
+        return latex(simplify(sympy.parsing.sympy_parser.parse_expr(state_func)/sympy.parsing.sympy_parser.parse_expr(norm_func)))
+    else:
+        return simplify(sympy.parsing.sympy_parser.parse_expr(state_func)/sympy.parsing.sympy_parser.parse_expr(norm_func))
 
 #===============================================================================
 #== 3 State ====================================================================
@@ -202,3 +212,8 @@ print("===== 6 state model w/ Leakage =====")
 for i, func in enumerate(state_mult_funcs6):
     print(i+1, func)
 print("Normalization Factor:", norm_func6)
+
+#== LaTeX ======================================================================
+
+a = output_sympy_state_prob_function(rate_names5wl, state_mult_funcs5wl[0], norm_func5wl)
+print(latex(a))

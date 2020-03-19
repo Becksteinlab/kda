@@ -149,5 +149,14 @@ def construct_analytic_functions(G, dir_parts, var_dict):
     norm = "+".join(state_mults)    # sum all terms to get normalization factor
     return state_mults, norm
 
+def output_sympy_state_prob_function(rate_names, state_func, norm_func, latex=None):
+    joined_names = " ".join(rate_names)
+    joined_names = symbols(joined_names)
+    init_printing(use_unicode=True)
+    if latex == True:
+        return latex(simplify(sympy.parsing.sympy_parser.parse_expr(state_func)/sympy.parsing.sympy_parser.parse_expr(norm_func)))
+    else:
+        return simplify(sympy.parsing.sympy_parser.parse_expr(state_func)/sympy.parsing.sympy_parser.parse_expr(norm_func))
+
 def assign_probs_and_analytic_functions_to_G(dir_partials):
     return NotImplementedError
