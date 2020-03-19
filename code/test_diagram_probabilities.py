@@ -32,7 +32,7 @@ ge3(G3, [k12, k21, k23, k32, k13, k31])
 #== State probabilitites =======================================================
 partials3 = kda.generate_partial_diagrams(G3)
 directional_partials3 = kda.generate_directional_partial_diagrams(partials3)
-sp3_mult, sp3_diag = kda.calc_state_probabilities(G3, directional_partials3)
+sp3_diag, sp3_mult = kda.calc_state_probabilities(G3, directional_partials3, state_mults=True)
 #== Manual =====================================================================
 P1 = k23*k31 + k32*k21 + k31*k21
 P2 = k13*k32 + k32*k12 + k31*k12
@@ -64,7 +64,7 @@ ge4(G4, [b12, b21, b23, b32, b34, b43, b41, b14])
 #== State probabilitites =======================================================
 partials4 = kda.generate_partial_diagrams(G4)
 directional_partials4 = kda.generate_directional_partial_diagrams(partials4)
-sp4_mult, sp4_diag = kda.calc_state_probabilities(G4, directional_partials4)
+sp4_diag, sp4_mult = kda.calc_state_probabilities(G4, directional_partials4, state_mults=True)
 #== Manual =====================================================================
 P1 = b43*b32*b21 + b23*b34*b41 + b21*b34*b41 + b41*b32*b21
 P2 = b12*b43*b32 + b14*b43*b32 + b34*b41*b12 + b32*b41*b12
@@ -92,7 +92,7 @@ ge4wl(G4wl, [b12, b21, b23, b32, b34, b43, b41, b14, b24, b42])
 #== State probabilitites =======================================================
 partials4wl = kda.generate_partial_diagrams(G4wl)
 directional_partials4wl = kda.generate_directional_partial_diagrams(partials4wl)
-sp4wl_mult, sp4wl_diag = kda.calc_state_probabilities(G4wl, directional_partials4wl)
+sp4wl_diag, sp4wl_mult = kda.calc_state_probabilities(G4wl, directional_partials4wl, state_mults=True)
 #== Manual =====================================================================
 P1 = b43*b32*b21 + b23*b34*b41 + b21*b34*b41 + b41*b32*b21 + b32*b42*b21 + b24*b34*b41 + b34*b42*b21 + b32*b24*b41
 P2 = b12*b43*b32 + b14*b43*b32 + b34*b41*b12 + b32*b41*b12 + b32*b42*b12 + b34*b14*b42 + b12*b34*b42 + b32*b14*b42
@@ -122,7 +122,7 @@ ge5wl(G5wl, [c12, c21, c23, c32, c13, c31, c24, c42, c35, c53, c45, c54])
 #== State probabilitites =======================================================
 partials5wl = kda.generate_partial_diagrams(G5wl)
 directional_partials5wl = kda.generate_directional_partial_diagrams(partials5wl)
-sp5wl_mult, sp5wl_diag = kda.calc_state_probabilities(G5wl, directional_partials5wl)
+sp5wl_diag, sp5wl_mult = kda.calc_state_probabilities(G5wl, directional_partials5wl, state_mults=True)
 #== Manual =====================================================================
 P1 = c35*c54*c42*c21 + c24*c45*c53*c31 + c21*c45*c53*c31 + c42*c21*c53*c31 + c54*c42*c21*c31 + c54*c42*c32*c21 + c45*c53*c23*c31 + c53*c32*c42*c21 + c42*c23*c53*c31 + c54*c42*c23*c31 + c45*c53*c32*c21
 P2 = c12*c35*c54*c42 + c13*c35*c54*c42 + c45*c53*c31*c12 + c42*c53*c31*c12 + c31*c12*c54*c42 + c54*c42*c32*c12 + c45*c53*c13*c32 + c53*c32*c42*c12 + c53*c13*c32*c42 + c54*c42*c13*c32 + c45*c53*c32*c12
@@ -153,7 +153,7 @@ ge6(G6, [a12, a21, a23, a32, a34, a43, a45, a54, a56, a65, a61, a16])
 #== State probabilitites =======================================================
 partials6 = kda.generate_partial_diagrams(G6)
 directional_partials6 = kda.generate_directional_partial_diagrams(partials6)
-sp6_mult, sp6_diag = kda.calc_state_probabilities(G6, directional_partials6)
+sp6_diag, sp6_mult = kda.calc_state_probabilities(G6, directional_partials6, state_mults=True)
 
 #== Manual =====================================================================
 P1 = a65*a54*a43*a32*a21 + a61*a54*a43*a32*a21 + a56*a61*a43*a32*a21 + a45*a56*a61*a32*a21 + a34*a45*a56*a61*a21 + a23*a34*a45*a56*a61
