@@ -75,21 +75,79 @@ def generate_directional_partial_diagrams(partials):
             dir_par_diags.append(diag)
     return dir_par_diags
 
-def calc_state_probabilities(G, directional_partials):
+def calc_state_probabilities(G, directional_partials, state_mults=None):
     state_multiplicities = np.zeros(G.number_of_nodes())
-    for s in range(G.number_of_nodes()):
-        partial_multiplicities = np.zeros(len(directional_partials))
-        for i in range(len(directional_partials)):
-            edge_list = list(directional_partials[i].edges)
-            products = np.array([1], dtype=np.float64)
-            for e in edge_list:
-                products *= G.edges[e[0], e[1], e[2]]['weight']
-            partial_multiplicities[i] = products[0]
-        N_terms = np.int(len(directional_partials)/G.number_of_nodes())
-        for j in range(G.number_of_nodes()):
+    for s in range(G.number_of_nodes()):    # iterate over number of states, "s"
+        partial_multiplicities = np.zeros(len(directional_partials))    # generate zero array of length # of directional partial diagrams
+        for i in range(len(directional_partials)):      # iterate over the directional partial diagrams
+            edge_list = list(directional_partials[i].edges)     # get a list of all edges for partial directional diagram i
+            products = np.array([1])          # generate an array with a value of 1
+            for e in edge_list:                                 # iterate over the edges in the given directional partial diagram i
+                products *= G.edges[e[0], e[1], e[2]]['weight']     # multiply the weight of each edge in edge_list
+            partial_multiplicities[i] = products[0]                 # for directional partial diagram i, assign product to partial multiplicity array
+        N_terms = np.int(len(directional_partials)/G.number_of_nodes()) # calculate the number of terms to be summed for given state, s
+        for j in range(G.number_of_nodes()):                            # iterate over number of states
+             # sum appropriate parts of partial multiplicity array for given state, s
             state_multiplicities[j] = partial_multiplicities[N_terms*j:N_terms*j+N_terms].sum(axis=0)
+            # this gives you an array of all the state multiplicites
+    # calculate the state probabilities by normalizing over the sum of all state multiplicites
     state_probabilities = state_multiplicities/state_multiplicities.sum(axis=0)
-    return state_multiplicities, state_probabilities
+    if state_mults == True:
+        return state_probabilities, state_multiplicities
+    else:
+        return state_probabilities
 
-def assign_probs_to_G(dir_partials):
+def generate_variable_dictionary(rates, rate_names):
+    """
+    Generates dictionary where rate constant values are keys and rate constant
+    names are the values.
+    """
+    var_dict = dict.fromkeys(rates, {})
+    for i in range(len(rates)):
+        var_dict[rates[i]] = rate_names[i]
+    return var_dict
+
+def construct_analytic_functions(G, dir_parts, var_dict):
+    """
+    This function will input a list of all directional partial diagrams and
+    output a list of analytic functions for the steady-state probability of
+    each state in the original diagram.
+
+    Parameters
+    ----------
+    G : networkx diagram object
+    dir_parts : list of networkx diagram objects
+        List of all directional partial diagrams for the given diagram "G"
+    var_dict : dict
+        Dictionary where the rate constant values are the keys and the rate
+        constant names are the values
+
+    Returns
+    -------
+    state_mults : list
+        List of length 'N', where N is the number of states, that contains the
+        analytic multiplicity function for each state
+    norm : str
+        Sum of all state multiplicity functions, the normalization factor to
+        calculate the state probabilities
+    """
+    state_mults = []    # create empty list to fill with summed terms
+    for s in range(G.number_of_nodes()):    # iterate over number of states, "s"
+        part_mults = []    # generate empty list to put partial multiplicities in
+        for i in range(len(dir_parts)):      # iterate over the directional partial diagrams
+            edge_list = list(dir_parts[i].edges)     # get a list of all edges for partial directional diagram i
+            products = []          # generate an empty list to store individual variable names for each product
+            for edge in edge_list:
+                products.append(var_dict[G.edges[edge[0], edge[1], edge[2]]['weight']]) # append rate constant names from dir_par to list
+            part_mults.append(products)     # append list of rate constant names to part_mults
+    N_terms = int(len(part_mults)/G.number_of_nodes()) # number of terms per state
+    term_list = []  # create empty list to put products of rate constants (terms) in
+    for vars in part_mults:
+        term_list.append("*".join(vars))    # join rate constants for each dir_par by delimeter "*"
+    for j in range(G.number_of_nodes()):
+        state_mults.append("+".join(term_list[N_terms*j:N_terms*j+N_terms]))    # join appropriate terms for each state by delimeter "+"
+    norm = "+".join(state_mults)    # sum all terms to get normalization factor
+    return state_mults, norm
+
+def assign_probs_and_analytic_functions_to_G(dir_partials):
     return NotImplementedError
