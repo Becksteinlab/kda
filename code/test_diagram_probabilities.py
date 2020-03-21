@@ -2,7 +2,6 @@
 # Beckstein Lab
 # Arizona State University
 # 02/13/2020
-# 6 State Kinetic Model
 
 import numpy as np
 import matplotlib.pyplot as plt

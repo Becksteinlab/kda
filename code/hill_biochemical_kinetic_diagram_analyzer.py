@@ -8,6 +8,9 @@ import numpy as np
 import networkx as nx
 import functools
 import itertools
+import sympy
+from sympy import *
+init_printing(use_unicode=True)
 
 #===============================================================================
 #== Functions ==================================================================
@@ -97,10 +100,10 @@ def calc_state_probabilities(G, directional_partials, state_mults=None):
     else:
         return state_probabilities
 
-def generate_variable_dictionary(rates, rate_names):
+def generate_rate_dict(rates, rate_names):
     """
     Generates dictionary where rate constant values are keys and rate constant
-    names are the values.
+    names are the values, or vice-versa.
     """
     var_dict = dict.fromkeys(rates, {})
     for i in range(len(rates)):
@@ -149,14 +152,31 @@ def construct_analytic_functions(G, dir_parts, var_dict):
     norm = "+".join(state_mults)    # sum all terms to get normalization factor
     return state_mults, norm
 
-def output_sympy_state_prob_function(rate_names, state_func, norm_func, latex=None):
-    joined_names = " ".join(rate_names)
-    joined_names = symbols(joined_names)
-    init_printing(use_unicode=True)
-    if latex == True:
-        return latex(simplify(sympy.parsing.sympy_parser.parse_expr(state_func)/sympy.parsing.sympy_parser.parse_expr(norm_func)))
+def gen_analytic_prob_func(rate_names, state_func, norm_func, vars=None):
+    var_names = " ".join(rate_names)
+    var_names = symbols(var_names)
+    prob_func = sympy.parsing.sympy_parser.parse_expr(state_func)/sympy.parsing.sympy_parser.parse_expr(norm_func)
+    if vars == True:
+        return prob_func, var_names
     else:
-        return simplify(sympy.parsing.sympy_parser.parse_expr(state_func)/sympy.parsing.sympy_parser.parse_expr(norm_func))
+        return prob_func
+
+def gen_analytic_mult_func(rate_names, state_func, vars=None):
+    var_names = " ".join(rate_names)
+    var_names = symbols(var_names)
+    mult_func = sympy.parsing.sympy_parser.parse_expr(state_func)
+    if vars == True:
+        return mult_func, var_names
+    else:
+        return mult_func
+
+def calc_sympy_state_mult(state_mult_funcs, rate_names, var_dict):
+    mult_funcs = []
+    state_mults = []
+    for i in range(len(state_mult_funcs)):
+        mult_funcs.append(gen_analytic_mult_func(rate_names, state_mult_funcs[i]))
+        state_mults.append(gen_analytic_mult_func(rate_names, state_mult_funcs[i]).subs(var_dict))
+    return mult_funcs, state_mults
 
 def assign_probs_and_analytic_functions_to_G(dir_partials):
     return NotImplementedError
