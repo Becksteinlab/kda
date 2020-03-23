@@ -8,7 +8,7 @@ import numpy as np
 import networkx as nx
 import functools
 import itertools
-import sympy
+import sympy as sp
 from sympy import *
 init_printing(use_unicode=True)
 
@@ -100,6 +100,7 @@ def calc_state_probabilities(G, directional_partials, state_mults=None):
     else:
         return state_probabilities
 
+
 def generate_rate_dict(rates, rate_names):
     """
     Generates dictionary where rate constant values are keys and rate constant
@@ -110,7 +111,8 @@ def generate_rate_dict(rates, rate_names):
         var_dict[rates[i]] = rate_names[i]
     return var_dict
 
-def construct_analytic_functions(G, dir_parts, var_dict):
+
+def construct_analytic_functions(G, dir_parts, var_dict, rate_names, sym_funcs=None):
     """
     This function will input a list of all directional partial diagrams and
     output a list of analytic functions for the steady-state probability of
@@ -124,17 +126,21 @@ def construct_analytic_functions(G, dir_parts, var_dict):
     var_dict : dict
         Dictionary where the rate constant values are the keys and the rate
         constant names are the values
+    rate_names : list
+        List of strings of variable names for the model ["x12", "x21", "x23"...]
 
     Returns
     -------
-    state_mults : list
+    state_prob_funcs : list
+        List of lambdified functions for each state [p1, p2, p3,...pn]
+    state_mult_funcs : list
         List of length 'N', where N is the number of states, that contains the
         analytic multiplicity function for each state
-    norm : str
+    norm_func : str
         Sum of all state multiplicity functions, the normalization factor to
         calculate the state probabilities
     """
-    state_mults = []    # create empty list to fill with summed terms
+    state_mult_funcs = []    # create empty list to fill with summed terms
     for s in range(G.number_of_nodes()):    # iterate over number of states, "s"
         part_mults = []    # generate empty list to put partial multiplicities in
         for i in range(len(dir_parts)):      # iterate over the directional partial diagrams
@@ -148,35 +154,18 @@ def construct_analytic_functions(G, dir_parts, var_dict):
     for vars in part_mults:
         term_list.append("*".join(vars))    # join rate constants for each dir_par by delimeter "*"
     for j in range(G.number_of_nodes()):
-        state_mults.append("+".join(term_list[N_terms*j:N_terms*j+N_terms]))    # join appropriate terms for each state by delimeter "+"
-    norm = "+".join(state_mults)    # sum all terms to get normalization factor
-    return state_mults, norm
-
-def gen_analytic_prob_func(rate_names, state_func, norm_func, vars=None):
-    var_names = " ".join(rate_names)
-    var_names = symbols(var_names)
-    prob_func = sympy.parsing.sympy_parser.parse_expr(state_func)/sympy.parsing.sympy_parser.parse_expr(norm_func)
-    if vars == True:
-        return prob_func, var_names
+        state_mult_funcs.append("+".join(term_list[N_terms*j:N_terms*j+N_terms]))    # join appropriate terms for each state by delimeter "+"
+    norm_func = "+".join(state_mult_funcs)    # sum all terms to get normalization factor
+    state_prob_funcs = []   # create empty list to fill with state probability functions
+    for i in range(G.number_of_nodes()):
+        state_func = sp.parsing.sympy_parser.parse_expr(state_mult_funcs[i]) # convert strings into SymPy data type
+        prob_func = state_func/sp.parsing.sympy_parser.parse_expr(norm_func)     # normalize probabilities
+        state_prob_funcs.append(lambdify(rate_names, prob_func, "numpy"))    # convert into "lambdified" functions that work with NumPy arrays
+    if sym_funcs == True:
+        return state_prob_funcs, state_mult_funcs, norm_funcs
     else:
-        return prob_func
+        return state_prob_funcs
 
-def gen_analytic_mult_func(rate_names, state_func, vars=None):
-    var_names = " ".join(rate_names)
-    var_names = symbols(var_names)
-    mult_func = sympy.parsing.sympy_parser.parse_expr(state_func)
-    if vars == True:
-        return mult_func, var_names
-    else:
-        return mult_func
-
-def calc_sympy_state_mult(state_mult_funcs, rate_names, var_dict):
-    mult_funcs = []
-    state_mults = []
-    for i in range(len(state_mult_funcs)):
-        mult_funcs.append(gen_analytic_mult_func(rate_names, state_mult_funcs[i]))
-        state_mults.append(gen_analytic_mult_func(rate_names, state_mult_funcs[i]).subs(var_dict))
-    return mult_funcs, state_mults
 
 def assign_probs_and_analytic_functions_to_G(dir_partials):
     return NotImplementedError

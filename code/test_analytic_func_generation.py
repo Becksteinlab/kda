@@ -144,70 +144,27 @@ G6 = nx.MultiDiGraph()
 ge6(G6, rates6)
 pars6 = kda.generate_partial_diagrams(G6)
 dir_pars6 = kda.generate_directional_partial_diagrams(pars6)
+
 var_dict6 = kda.generate_rate_dict(rates6, rate_names6)
-state_mult_funcs6, norm_func6 = kda.construct_analytic_functions(G6, dir_pars6, var_dict6)
+state_prob_funcs6 = kda.construct_analytic_functions(G6, dir_pars6, var_dict6, rate_names6)
 
-print("===== 6 state model w/ Leakage =====")
-for i, func in enumerate(state_mult_funcs6):
-    print(i+1, func)
-print("Normalization Factor:", norm_func6)
-
-#===============================================================================
-#== Generate Probability Functions =============================================
-#===============================================================================
-
-state_1_prob_func6_sym, names6 = kda.gen_analytic_prob_func(rate_names6, state_mult_funcs6[0], norm_func6, vars=True)
-state_2_prob_func6_sym, names6 = kda.gen_analytic_prob_func(rate_names6, state_mult_funcs6[1], norm_func6, vars=True)
-state_3_prob_func6_sym, names6 = kda.gen_analytic_prob_func(rate_names6, state_mult_funcs6[2], norm_func6, vars=True)
-state_4_prob_func6_sym, names6 = kda.gen_analytic_prob_func(rate_names6, state_mult_funcs6[3], norm_func6, vars=True)
-state_5_prob_func6_sym, names6 = kda.gen_analytic_prob_func(rate_names6, state_mult_funcs6[4], norm_func6, vars=True)
-state_6_prob_func6_sym, names6 = kda.gen_analytic_prob_func(rate_names6, state_mult_funcs6[5], norm_func6, vars=True)
-
-state_1_prob_func6 = lambdify(rate_names6, state_1_prob_func6_sym)
-state_2_prob_func6 = lambdify(rate_names6, state_2_prob_func6_sym)
-state_3_prob_func6 = lambdify(rate_names6, state_3_prob_func6_sym)
-state_4_prob_func6 = lambdify(rate_names6, state_4_prob_func6_sym)
-state_5_prob_func6 = lambdify(rate_names6, state_5_prob_func6_sym)
-state_6_prob_func6 = lambdify(rate_names6, state_6_prob_func6_sym)
-
-p1_6 = state_1_prob_func6(2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37)
-p2_6 = state_2_prob_func6(2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37)
-p3_6 = state_3_prob_func6(2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37)
-p4_6 = state_4_prob_func6(2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37)
-p5_6 = state_5_prob_func6(2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37)
-p6_6 = state_6_prob_func6(2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37)
-
-six_state_probs = [p1_6, p2_6, p3_6, p4_6, p5_6, p6_6]
-
+six_state_probs = []
+for i in range(G6.number_of_nodes()):
+    six_state_probs.append(state_prob_funcs6[i](k12, k21, k23, k32, k34, k43, k45, k54, k56, k65, k61, k16))
 
 #===============================================================================
 #== Verify SymPy Multiplicities ================================================
 #===============================================================================
 
-var_dict6s = kda.generate_rate_dict(rate_names6, rates6)
-mult_funcs6, state_mults6 = kda.calc_sympy_state_mult(state_mult_funcs6, rate_names6, var_dict6s)
-sp6_diag, sp6_mult = kda.calc_state_probabilities(G6, dir_pars6, state_mults=True)
-print(sp6_mult - state_mults6)
-print(sp6_diag - six_state_probs)
+sp6_probs = kda.calc_state_probabilities(G6, dir_pars6)
+print(sp6_probs - six_state_probs)
+
+
 # Simplify 6 state model like we did for ODE solver
 # x, y = symbols('x y')
 # x12, x21, x23, x32, x34, x43, x45, x54, x56, x65, x61, x16 = names6
 # new_prob_func6 = prob_func6.subs({x23: y, x32: y, x56: y, x65: y, x61: x, x21: x, x61: x, x43: x, x61: x, x45: x})
 # print(new_prob_func6)
-
-# def gen_analytic_prob_func(rate_names, state_func, norm_func):
-#     var_names = " ".join(rate_names)
-#     var_names = symbols(var_names)
-#     prob_func = sympy.parsing.sympy_parser.parse_expr(state_func)/sympy.parsing.sympy_parser.parse_expr(norm_func)
-#     return prob_func
-
-# def generate_analytic_prob_func(rate_names, state_func, norm_func):
-#
-#     def prob_func(*rate_names):
-#         return NotImplementedError
-#
-#     return prob_func
-
 
 
 
