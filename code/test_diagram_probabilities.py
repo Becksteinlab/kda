@@ -6,7 +6,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import networkx as nx
-import sympy
 
 import hill_biochemical_kinetic_diagram_analyzer as kda
 
@@ -15,6 +14,12 @@ from four_state_model import generate_edges as ge4
 from four_state_model_with_leakage import generate_edges as ge4wl
 from five_state_model_with_leakage import generate_edges as ge5wl
 from six_state_model import generate_edges as ge6
+from ODE_integrator import integrate_prob_ODE as integrate
+from ODE_integrator import plot_ODE_probs
+
+t_max = 5e0
+max_step = t_max/1e3
+plot = False
 
 #===============================================================================
 #== 3 State ====================================================================
@@ -38,6 +43,19 @@ P2 = k13*k32 + k32*k12 + k31*k12
 P3 = k13*k23 + k12*k23 + k21*k13
 Sigma = P1 + P2 + P3 # Normalization factor
 sp3_manual = np.array([P1, P2, P3])/Sigma
+#== ODE ========================================================================
+N3 = 3   # number of states in cycle
+p_list = np.random.rand(N3)  # generate random probabilities
+sigma = p_list.sum(axis=0)  # normalization factor
+p3 = p_list/sigma       # normalize probabilities
+k3 = np.array([[0, k12, k13],
+              [k21, 0, k23],
+              [k31, k32, 0]])
+results3 = integrate(p3, k3, t_max, max_step)
+probs3 = results3.y[:N3]
+sp3_ODE = []
+for i in probs3:
+    sp3_ODE.append(i[-1])
 
 #===============================================================================
 #== 4 State ====================================================================
@@ -64,6 +82,20 @@ P3 = b43*b12*b23 + b23*b14*b43 + b21*b14*b43 + b41*b12*b23
 P4 = b12*b23*b34 + b14*b23*b34 + b34*b21*b14 + b32*b21*b14
 Sigma = P1 + P2 + P3 + P4 # Normalization factor
 sp4_manual = np.array([P1, P2, P3, P4])/Sigma
+#== ODE ========================================================================
+N4 = 4   # number of states in cycle
+p_list = np.random.rand(N4)  # generate random probabilities
+sigma = p_list.sum(axis=0)  # normalization factor
+p4 = p_list/sigma       # normalize probabilities
+k4 = np.array([[0, b12, 0, b14],
+               [b21, 0, b23, 0],
+               [0, b32, 0, b34],
+               [b41, 0, b43, 0]])
+results4 = integrate(p4, k4, t_max, max_step)
+probs4 = results4.y[:N4]
+sp4_ODE = []
+for i in probs4:
+    sp4_ODE.append(i[-1])
 
 #===============================================================================
 #== 4 State w/ Leakage =========================================================
@@ -92,6 +124,20 @@ P3 = b43*b12*b23 + b23*b14*b43 + b21*b14*b43 + b41*b12*b23 + b12*b42*b23 + b14*b
 P4 = b12*b23*b34 + b14*b23*b34 + b34*b21*b14 + b32*b21*b14 + b32*b12*b24 + b14*b24*b34 + b34*b12*b24 + b14*b32*b24
 Sigma = P1 + P2 + P3 + P4 # Normalization factor
 sp4wl_manual = np.array([P1, P2, P3, P4])/Sigma
+#== ODE ========================================================================
+N4wl = 4   # number of states in cycle
+p_list = np.random.rand(N4wl)  # generate random probabilities
+sigma = p_list.sum(axis=0)  # normalization factor
+p4wl = p_list/sigma       # normalize probabilities
+k4wl = np.array([[0, b12, 0, b14],
+                [b21, 0, b23, b24],
+                [0, b32, 0, b34],
+                [b41, b42, b43, 0]])
+results4wl = integrate(p4wl, k4wl, t_max, max_step)
+probs4wl = results4wl.y[:N4wl]
+sp4wl_ODE = []
+for i in probs4wl:
+    sp4wl_ODE.append(i[-1])
 
 #===============================================================================
 #== 5 State w/ Leakage =========================================================
@@ -123,6 +169,21 @@ P4 = c12*c24*c35*c54 + c24*c13*c35*c54 + c21*c13*c35*c54 + c53*c31*c12*c24 + c54
 P5 = c35*c12*c24*c45 + c13*c35*c24*c45 + c45*c21*c13*c35 + c42*c21*c13*c35 + c31*c12*c24*c45 + c12*c32*c24*c45 + c13*c23*c35*c45 + c12*c42*c23*c35 + c42*c23*c13*c35 + c13*c32*c24*c45 + c12*c23*c35*c45
 Sigma = P1 + P2 + P3 + P4 + P5 # Normalization factor
 sp5wl_manual = np.array([P1, P2, P3, P4, P5])/Sigma
+#== ODE ========================================================================
+N5wl = 5   # number of states in cycle
+p_list = np.random.rand(N5wl)  # generate random probabilities
+sigma = p_list.sum(axis=0)  # normalization factor
+p5wl = p_list/sigma       # normalize probabilities
+k5wl = np.array([[  0, c12, c13,   0,   0],
+                 [c21,   0, c23, c24,   0],
+                 [c31, c32,   0,   0, c35],
+                 [  0, c42,   0,   0, c45],
+                 [  0,   0, c53, c54,   0]])
+results5wl = integrate(p5wl, k5wl, t_max, max_step)
+probs5wl = results5wl.y[:N5wl]
+sp5wl_ODE = []
+for i in probs5wl:
+    sp5wl_ODE.append(i[-1])
 
 #===============================================================================
 #== 6 State ====================================================================
@@ -156,47 +217,59 @@ P5 = a65*a12*a23*a34*a45 + a61*a12*a23*a34*a45 + a43*a32*a21*a16*a65 + a45*a32*a
 P6 = a12*a23*a34*a45*a56 + a54*a43*a32*a21*a16 + a56*a43*a32*a21*a16 + a45*a56*a32*a21*a16 + a34*a45*a56*a21*a16 + a16*a23*a34*a45*a56
 Sigma = P1 + P2 + P3 + P4 + P5 + P6 # Normalization factor
 sp6_manual = np.array([P1, P2, P3, P4, P5, P6])/Sigma
+#== ODE ========================================================================
+N6 = 6   # number of states in cycle
+p_list = np.random.rand(N6)  # generate random probabilities
+sigma = p_list.sum(axis=0)  # normalization factor
+p6 = p_list/sigma       # normalize probabilities
+k6 = np.array([[  0, a12,   0,   0,   0, a16],
+               [a21,   0, a23,   0,   0,   0],
+               [  0, a32,   0, a34,   0,   0],
+               [  0,   0, a43,   0, a45,   0],
+               [  0,   0,   0, a54,   0, a56],
+               [a61,   0,   0,   0, a65,   0]])
+results6 = integrate(p6, k6, t_max, max_step)
+probs6 = results6.y[:N6]
+sp6_ODE = []
+for i in probs6:
+    sp6_ODE.append(i[-1])
 
 #===============================================================================
 #== Verification ===============================================================
 #===============================================================================
-print("3 state model probabilities, manual - diag: {}".format(sp3_manual - sp3_diag))
-print("4 state model probabilities, manual - diag: {}".format(sp4_manual - sp4_diag))
-print("4 state model with leakage probabilities, manual - diag: {}".format(sp4wl_manual - sp4wl_diag))
-print("5 state model with leakage probabilities, manual - diag: {}".format(sp5wl_manual - sp5wl_diag))
-print("6 state model probabilities, manual - diag: {}".format(sp6_manual - sp6_diag))
 
-# Check multiplicities
-# Check probabilitites
-# Check that probabilities are normalized to 1
+print("======== Three State ========")
+for i in range(N3):
+    print("State {}: manual = {}, diag = {}, ODE = {}".format(i+1, sp3_manual[i], sp3_diag[i], sp3_ODE[i]))
+print("======== Four State ========")
+for i in range(N4):
+    print("State {}: manual = {}, diag = {}, ODE = {}".format(i+1, sp4_manual[i], sp4_diag[i], sp4_ODE[i]))
+print("======== Four State with Leakage ========")
+for i in range(N4wl):
+    print("State {}: manual = {}, diag = {}, ODE = {}".format(i+1, sp4wl_manual[i], sp4wl_diag[i], sp4wl_ODE[i]))
+print("======== Five State with Leakage ========")
+for i in range(N5wl):
+    print("State {}: manual = {}, diag = {}, ODE = {}".format(i+1, sp5wl_manual[i], sp5wl_diag[i], sp5wl_ODE[i]))
+print("======== Six State ========")
+for i in range(N6):
+    print("State {}: manual = {}, diag = {}, ODE = {}".format(i+1, sp6_manual[i], sp6_diag[i], sp6_ODE[i]))
 
-#===============================================================================
-#== ODE Solver =================================================================
-#===============================================================================
+# print(sp3_manual - sp3_ODE)
+# print(sp4_manual - sp4_ODE)
+# print(sp4wl_manual - sp4wl_ODE)
+# print(sp5wl_manual - sp5wl_ODE)
+# print(sp6_manual - sp6_ODE)
 
-# from functions import probability_integrator
-# k_on = 1e9                         # units:  /s
-# k_off = 1e6                    # units:  /s
-# k_conf = 5e6                   # rate of conformational change
-# A_conc = 1e-3                       # total [A], in M
-# B_conc = 1e-7                       # total [B], in M
-# A_in = A_conc
-# B_in = 1e-6
-# A_out = A_conc
-# B_out = B_conc
-# t_max = 2e-5
-# max_step = 1e-10
-# flux = False
-# # p1, p2, p3, p4, p5, p6
-# p = np.array([1/6, 1/6, 1/6, 1/6, 1/6, 1/6])
-# # [A_in], [A_out], [B_in], [B_out]
-# CAB = np.array([A_in, A_out, B_in, B_out])
-# print("Beginning simulation.")
-# results = probability_integrator([p, CAB], k_off, k_on, k_conf, t_max, max_step=max_step, AB_flux=flux)
-#
-# p_ode = np.array([results.y[0], results.y[1] , results.y[2], results.y[3], results.y[4], results.y[5]])
-#
-# #===============================================================================
-#
-# for i in range(6):
-#     print("For state {}, probabilities (KDA, Manual, ODE) = ({}, {}, {})".format(i+1, p_kda[i], p_manual[i], p_ode[i][-1]))
+if plot == True:
+    plot_ODE_probs(results3)
+    plot_ODE_probs(results4)
+    plot_ODE_probs(results4wl)
+    plot_ODE_probs(results5wl)
+    plot_ODE_probs(results6)
+# check probabilities are normalized to 1
+
+
+
+
+
+#===

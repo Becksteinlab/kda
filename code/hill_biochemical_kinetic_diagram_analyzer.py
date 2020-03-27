@@ -10,7 +10,6 @@ import functools
 import itertools
 import sympy as sp
 from sympy import *
-init_printing(use_unicode=True)
 
 #===============================================================================
 #== Functions ==================================================================
@@ -22,9 +21,11 @@ def find_unique_edges(G):
     tuples = [(sorted_edges[i, 1], sorted_edges[i, 2]) for i in range(len(sorted_edges))]   # Make list of edges tuples
     return list(set(tuples))
 
+
 def combine(x,y):
     x.update(y)
     return x
+
 
 def generate_directional_connections(target, unique_edges):
     edges = [i for i in unique_edges if target in i]    # Find edges that connect to target state
@@ -34,12 +35,14 @@ def generate_directional_connections(target, unique_edges):
     unique_edges = [k for k in unique_edges if not k in edges]  # Make new list of unique edges that does not contain original unique edges
     return functools.reduce(combine, [{target: neighbors}] + [generate_directional_connections(i, unique_edges) for i in neighbors])
 
+
 def generate_directional_edges(cons):
     values = []
     for i in cons.keys():
         for j in cons[i]:
             values.append((j, i, 0))
     return values
+
 
 def generate_partial_diagrams(G):
     # Calculate number of edges needed for each partial diagram
@@ -64,6 +67,7 @@ def generate_partial_diagrams(G):
             valid_partials.append(i)
     return valid_partials
 
+
 def generate_directional_partial_diagrams(partials):
     N_targets = partials[0].number_of_nodes()
     dir_par_diags = []
@@ -77,6 +81,7 @@ def generate_directional_partial_diagrams(partials):
             [diag.add_edge(e[0], e[1], e[2]) for e in dir_edges]
             dir_par_diags.append(diag)
     return dir_par_diags
+
 
 def calc_state_probabilities(G, directional_partials, state_mults=None):
     state_multiplicities = np.zeros(G.number_of_nodes())
@@ -167,5 +172,9 @@ def construct_analytic_functions(G, dir_parts, var_dict, rate_names, sym_funcs=N
         return state_prob_funcs
 
 
-def assign_probs_and_analytic_functions_to_G(dir_partials):
+def calc_cycle_fluxes(dir_pars):
+    return NotImplementedError
+
+
+def assign_probs_and_analytic_functions_to_G(dir_pars):
     return NotImplementedError
