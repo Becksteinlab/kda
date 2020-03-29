@@ -18,10 +18,17 @@ def pos_3(center=[0, 0], radius=10):
 
     Parameters
     ----------
-    center : list
-        Defines the center of the triangle in the xy-plane
-    radius : int
-        The radius of the triangle, from center to node
+    center : list (optional)
+        Defines the center of the triangle in the xy-plane. Default is
+        (x, y) = (0, 0)
+    radius : int (optional)
+        The radius of the triangle, from center to node. Default is 10.
+
+    Returns
+    -------
+    pos : dict
+        Dictionary where keys are the indexed states (0, 1, 2, ..., N) and
+        the values are NumPy arrays of x, y coordinates for each node.
     """
     N = 3
     angle = np.pi*np.array([1/2, 7/6, 11/6])        # Angles start at 0 and go clockwise (like unit circle)
@@ -44,8 +51,9 @@ def edges_3(G, rates, key='k'):
         Input diagram
     rates : list
         List of kinetic rate constants
-    key : str
-        Definition of key in NetworkX diagram edges, used to call rate values
+    key : str (optional)
+        Definition of key in NetworkX diagram edges, used to call rate values.
+        Default is 'k'.
     """
     G.add_weighted_edges_from([(0, 1, rates[0]),
                                (1, 0, rates[1]),
@@ -60,10 +68,17 @@ def pos_4(center=[0, 0], radius=10):
 
     Parameters
     ----------
-    center : list
-        Defines the center of the square in the xy-plane
-    radius : int
-        The radius of the square, from center to node
+    center : list (optional)
+        Defines the center of the square in the xy-plane. Default is
+        (x, y) = (0, 0)
+    radius : int (optional)
+        The radius of the square, from center to node. Default is 10.
+
+    Returns
+    -------
+    pos : dict
+        Dictionary where keys are the indexed states (0, 1, 2, ..., N) and
+        the values are NumPy arrays of x, y coordinates for each node.
     """
     N = 4
     angle = np.pi*np.array([1/4, 3/4, 5/4, 7/4])        # Angles start at 0 and go clockwise (like unit circle)
@@ -86,8 +101,9 @@ def edges_4(G, rates, key='k'):
         Input diagram
     rates : list
         List of kinetic rate constants
-    key : str
-        Definition of key in NetworkX diagram edges, used to call rate values
+    key : str (optional)
+        Definition of key in NetworkX diagram edges, used to call rate values.
+        Default is 'k'.
     """
     G.add_weighted_edges_from([(0, 1, rates[0]),
                                (1, 0, rates[1]),
@@ -104,10 +120,17 @@ def pos_4wl(center=[0, 0], radius=10):
 
     Parameters
     ----------
-    center : list
-        Defines the center of the square in the xy-plane
-    radius : int
-        The radius of the square, from center to node
+    center : list (optional)
+        Defines the center of the square in the xy-plane. Default is
+        (x, y) = (0, 0)
+    radius : int (optional)
+        The radius of the square, from center to node. Default is 10.
+
+    Returns
+    -------
+    pos : dict
+        Dictionary where keys are the indexed states (0, 1, 2, ..., N) and
+        the values are NumPy arrays of x, y coordinates for each node.
     """
     N = 4
     angle = np.pi*np.array([1/4, 3/4, 5/4, 7/4])        # Angles start at 0 and go clockwise (like unit circle)
@@ -130,8 +153,9 @@ def edges_4wl(G, rates, key='k'):
         Input diagram
     rates : list
         List of kinetic rate constants
-    key : str
-        Definition of key in NetworkX diagram edges, used to call rate values
+    key : str (optional)
+        Definition of key in NetworkX diagram edges, used to call rate values.
+        Default is 'k'.
     """
     G.add_weighted_edges_from([(0, 1, rates[0]),
                                (1, 0, rates[1]),
@@ -150,10 +174,17 @@ def pos_5wl(center=[0, 0], radius=10):
 
     Parameters
     ----------
-    center : list
-        Defines the center of the pentagon in the xy-plane
-    radius : int
-        The radius of the pentagon, from center to node
+    center : list (optional)
+        Defines the center of the pentagon in the xy-plane. Default is
+        (x, y) = (0, 0)
+    radius : int (optional)
+        The radius of the pentagon, from center to node. Default is 10.
+
+    Returns
+    -------
+    pos : dict
+        Dictionary where keys are the indexed states (0, 1, 2, ..., N) and
+        the values are NumPy arrays of x, y coordinates for each node.
     """
     h = radius*np.sqrt(3)/2 # height of equilateral triangle
     pos = {0 : [0, h],
@@ -173,8 +204,9 @@ def edges_5wl(G, rates, key='k'):
         Input diagram
     rates : list
         List of kinetic rate constants
-    key : str
-        Definition of key in NetworkX diagram edges, used to call rate values
+    key : str (optional)
+        Definition of key in NetworkX diagram edges, used to call rate values.
+        Default is 'k'.
     """
     G.add_weighted_edges_from([(0, 1, rates[0]),
                                (1, 0, rates[1]),
@@ -195,10 +227,17 @@ def pos_6(center=[0, 0], radius=10):
 
     Parameters
     ----------
-    center : list
-        Defines the center of the hexagon in the xy-plane
-    radius : int
-        The radius of the hexagon, from center to node
+    center : list (optional)
+        Defines the center of the hexagon in the xy-plane. Default is
+        (x, y) = (0, 0)
+    radius : int (optional)
+        The radius of the hexagon, from center to node. Default is 10.
+
+    Returns
+    -------
+    pos : dict
+        Dictionary where keys are the indexed states (0, 1, 2, ..., N) and
+        the values are NumPy arrays of x, y coordinates for each node.
     """
     N = 6                                                       # number of states/nodes
     angle = np.pi*np.array([1/2, 13/6, 11/6, 3/2, 7/6, 5/6])    # angles go CCW
@@ -221,8 +260,9 @@ def edges_6(G, rates, key='k'):
         Input diagram
     rates : list
         List of kinetic rate constants
-    key : str
-        Definition of key in NetworkX diagram edges, used to call rate values
+    key : str (optional)
+        Definition of key in NetworkX diagram edges, used to call rate values.
+        Default is 'k'.
     """
     G.add_weighted_edges_from([(0, 1, rates[0]),
                                (1, 0, rates[1]),

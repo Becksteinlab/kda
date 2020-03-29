@@ -8,43 +8,102 @@ import numpy as np
 import networkx as nx
 import functools
 import itertools
-import sympy as sp
+import sympy
 from sympy import *
+from sympy.parsing.sympy_parser import parse_expr
 
 #===============================================================================
 #== Functions ==================================================================
 #===============================================================================
 
 def find_unique_edges(G):
+    """
+    Creates list of unique edges for input diagram G. Effectively removes
+    duplicate edges such as '(1, 0)' from [(0, 1), (1, 0)].
+
+    Parameters
+    ----------
+    G : NetworkX MultiDiGraph
+        Input diagram
+    """
     edges = list(G.edges)           # Get list of edges
     sorted_edges = np.sort(edges)      # Sort list of edges
     tuples = [(sorted_edges[i, 1], sorted_edges[i, 2]) for i in range(len(sorted_edges))]   # Make list of edges tuples
     return list(set(tuples))
 
 
-def combine(x,y):
+def combine(x, y):
+    """
+    Used to reduce list of dictionaries into single dictionary where the keys
+    are the indices of states, and the values are lists of neighbors for each
+    state. 
+    """
     x.update(y)
     return x
 
 
-def generate_directional_connections(target, unique_edges):
+def get_directional_connections(target, unique_edges):
+    """
+    Recursively constructs dictionary of directional connections for a given
+    target state, {0: [1, 5], 1: [2], ...}. This allows for iterating through a
+    given partial diagram in get_directional_edges() to construct the list of
+    directional edges for each directional partial diagram.
+
+    Parameters
+    ----------
+    target : int
+        Index of target state
+    unique_edges : list
+        List of edges (2-tuples) that are unique to the diagram,
+        [(0, 1), (1, 2), ...].
+    """
     edges = [i for i in unique_edges if target in i]    # Find edges that connect to target state
     neighbors = [[j for j in i if not j == target][0] for i in edges] # Find states neighboring target state
     if not neighbors:
         return {}
     unique_edges = [k for k in unique_edges if not k in edges]  # Make new list of unique edges that does not contain original unique edges
-    return functools.reduce(combine, [{target: neighbors}] + [generate_directional_connections(i, unique_edges) for i in neighbors])
+    return functools.reduce(combine, [{target: neighbors}] + [get_directional_connections(i, unique_edges) for i in neighbors])
 
 
-def generate_directional_edges(cons):
+def get_directional_edges(cons):
+    """
+    Iterates through a dictionary of connections to construct the list
+    of directional edges for each directional partial diagram.
+
+    Parameters
+    ----------
+    cons : dict
+        Dictionary of directional connections for a given target state,
+        {0: [1, 5], 1: [2], ...}.
+
+    Returns
+    -------
+    values : list
+        List of edges (3-tuples) corresponding to a single directional partial
+        diagram, [(1, 0, 0), (5, 0, 0), ...].
+    """
     values = []
-    for i in cons.keys():
-        for j in cons[i]:
-            values.append((j, i, 0))
+    for target in cons.keys():
+        for neighb in cons[target]:
+            values.append((neighb, target, 0))
     return values
 
 
 def generate_partial_diagrams(G):
+    """
+    Generates all partial diagrams for input diagram G.
+
+    Parameters
+    ----------
+    G : NetworkX MultiDiGraph
+        Input diagram
+
+    Returns
+    -------
+    valid_partials : list
+        List of NetworkX MultiDiGraphs where each graph is a unique partial
+        diagram with no loops.
+    """
     # Calculate number of edges needed for each partial diagram
     N_partial_edges = G.number_of_nodes() - 1
     # Get list of all possible combinations of unique edges (N choose n)
@@ -69,75 +128,101 @@ def generate_partial_diagrams(G):
 
 
 def generate_directional_partial_diagrams(partials):
+    """
+    Generates all directional partial diagrams for input diagram G.
+
+    Parameters
+    ----------
+    partials : list
+        List of NetworkX MultiDiGraphs where each graph is a unique partial
+        diagram with no loops.
+
+    Returns
+    -------
+    dir_partials : list
+        List of all directional partial diagrams for a given set of partial
+        diagrams.
+    """
     N_targets = partials[0].number_of_nodes()
-    dir_par_diags = []
+    dir_partials = []
     for target in range(N_targets):
         for i in range(len(partials)):
             diag = partials[i].copy()               # Make a copy of directional partial diagram
             unique_edges = find_unique_edges(diag)      # Find unique edges of that diagram
-            cons = generate_directional_connections(target, unique_edges)   # Get dictionary of connections
-            dir_edges = generate_directional_edges(cons)                    # Get directional edges from connections
+            cons = get_directional_connections(target, unique_edges)   # Get dictionary of connections
+            dir_edges = get_directional_edges(cons)                    # Get directional edges from connections
             diag.remove_edges_from(list(diag.edges()))
             [diag.add_edge(e[0], e[1], e[2]) for e in dir_edges]
-            dir_par_diags.append(diag)
-    return dir_par_diags
+            dir_partials.append(diag)
+    return dir_partials
 
 
-def calc_state_probabilities(G, directional_partials, state_mults=None):
+def calc_state_probabilities(G, dir_partials, key='k'):
+    """
+    Calculates state probabilities for N states in diagram G.
+
+    Parameters
+    ----------
+    G : NetworkX MultiDiGraph
+        Input diagram
+    dir_partials : list
+        List of all directional partial diagrams for a given set of partial
+        diagrams.
+    key : str (optional)
+        Definition of key in NetworkX diagram edges, used to call rate values.
+        Default is 'k'. This needs to match the key used for the rate constants
+        in the input diagram G.
+
+    Returns
+    -------
+    state_probabilities : NumPy array
+        Array of state probabilities for N states, [p1, p2, p3, ..., pN].
+    """
     state_multiplicities = np.zeros(G.number_of_nodes())
     for s in range(G.number_of_nodes()):    # iterate over number of states, "s"
-        partial_multiplicities = np.zeros(len(directional_partials))    # generate zero array of length # of directional partial diagrams
-        for i in range(len(directional_partials)):      # iterate over the directional partial diagrams
-            edge_list = list(directional_partials[i].edges)     # get a list of all edges for partial directional diagram i
+        partial_multiplicities = np.zeros(len(dir_partials))    # generate zero array of length # of directional partial diagrams
+        for i in range(len(dir_partials)):      # iterate over the directional partial diagrams
+            edge_list = list(dir_partials[i].edges)     # get a list of all edges for partial directional diagram i
             products = np.array([1])          # generate an array with a value of 1
             for e in edge_list:                                 # iterate over the edges in the given directional partial diagram i
-                products *= G.edges[e[0], e[1], e[2]]['weight']     # multiply the weight of each edge in edge_list
+                products *= G[e[0]][e[1]][e[2]][key]     # multiply the rate of each edge in edge_list
             partial_multiplicities[i] = products[0]                 # for directional partial diagram i, assign product to partial multiplicity array
-        N_terms = np.int(len(directional_partials)/G.number_of_nodes()) # calculate the number of terms to be summed for given state, s
+        N_terms = np.int(len(dir_partials)/G.number_of_nodes()) # calculate the number of terms to be summed for given state, s
         for j in range(G.number_of_nodes()):                            # iterate over number of states
              # sum appropriate parts of partial multiplicity array for given state, s
             state_multiplicities[j] = partial_multiplicities[N_terms*j:N_terms*j+N_terms].sum(axis=0)
             # this gives you an array of all the state multiplicites
     # calculate the state probabilities by normalizing over the sum of all state multiplicites
     state_probabilities = state_multiplicities/state_multiplicities.sum(axis=0)
-    if state_mults == True:
-        return state_probabilities, state_multiplicities
-    else:
-        return state_probabilities
+    return state_probabilities
 
 
-def generate_rate_dict(rates, rate_names):
+def construct_string_funcs(G, dir_partials, rates, rate_names, key='k'):
     """
-    Generates dictionary where rate constant values are keys and rate constant
-    names are the values, or vice-versa.
-    """
-    var_dict = dict.fromkeys(rates, {})
-    for i in range(len(rates)):
-        var_dict[rates[i]] = rate_names[i]
-    return var_dict
-
-
-def construct_analytic_functions(G, dir_parts, var_dict, rate_names, sym_funcs=None):
-    """
-    This function will input a list of all directional partial diagrams and
-    output a list of analytic functions for the steady-state probability of
-    each state in the original diagram.
+    Constructs analytic state multiplicity and normalization function strings
+    for the input diagram G.
 
     Parameters
     ----------
-    G : networkx diagram object
-    dir_parts : list of networkx diagram objects
-        List of all directional partial diagrams for the given diagram "G"
-    var_dict : dict
-        Dictionary where the rate constant values are the keys and the rate
-        constant names are the values
+    G : NetworkX MultiDiGraph
+        Input diagram
+    dir_partials : list
+        List of all directional partial diagrams for a given set of partial
+        diagrams.
+    rates : list
+        List of rate values associated with the edges of the input diagram G.
+        Each element should be the corresponding value for the input list of
+        strings 'rate_names', [x12, x21, x23...].
     rate_names : list
-        List of strings of variable names for the model ["x12", "x21", "x23"...]
+        List of strings, where each element is the name of the variable in the
+        input list 'rates', ["x12", "x21", "x23", ...].
+    key : str (optional)
+        Definition of key in NetworkX diagram edges, used to call rate values.
+        Default is 'k'. This needs to match the key used for the rate constants
+        in the input diagram G.
 
     Returns
     -------
-    state_prob_funcs : list
-        List of lambdified functions for each state [p1, p2, p3,...pn]
     state_mult_funcs : list
         List of length 'N', where N is the number of states, that contains the
         analytic multiplicity function for each state
@@ -145,14 +230,17 @@ def construct_analytic_functions(G, dir_parts, var_dict, rate_names, sym_funcs=N
         Sum of all state multiplicity functions, the normalization factor to
         calculate the state probabilities
     """
+    var_dict = dict.fromkeys(rates, {}) # generate dictionary with rates as keys
+    for i in range(len(rates)):
+        var_dict[rates[i]] = rate_names[i]  # assign appropriate rate names to rate values
     state_mult_funcs = []    # create empty list to fill with summed terms
     for s in range(G.number_of_nodes()):    # iterate over number of states, "s"
         part_mults = []    # generate empty list to put partial multiplicities in
-        for i in range(len(dir_parts)):      # iterate over the directional partial diagrams
-            edge_list = list(dir_parts[i].edges)     # get a list of all edges for partial directional diagram i
+        for i in range(len(dir_partials)):      # iterate over the directional partial diagrams
+            edge_list = list(dir_partials[i].edges)     # get a list of all edges for partial directional diagram i
             products = []          # generate an empty list to store individual variable names for each product
             for edge in edge_list:
-                products.append(var_dict[G.edges[edge[0], edge[1], edge[2]]['weight']]) # append rate constant names from dir_par to list
+                products.append(var_dict[G.edges[edge[0], edge[1], edge[2]][key]]) # append rate constant names from dir_par to list
             part_mults.append(products)     # append list of rate constant names to part_mults
     N_terms = int(len(part_mults)/G.number_of_nodes()) # number of terms per state
     term_list = []  # create empty list to put products of rate constants (terms) in
@@ -161,15 +249,56 @@ def construct_analytic_functions(G, dir_parts, var_dict, rate_names, sym_funcs=N
     for j in range(G.number_of_nodes()):
         state_mult_funcs.append("+".join(term_list[N_terms*j:N_terms*j+N_terms]))    # join appropriate terms for each state by delimeter "+"
     norm_func = "+".join(state_mult_funcs)    # sum all terms to get normalization factor
+    return state_mult_funcs, norm_func
+
+
+def construct_sympy_funcs(state_mult_funcs, norm_func):
+    """
+    Constructs analytic state probability SymPy functions
+
+    Parameters
+    ----------
+    state_mult_funcs : list
+        List of length 'N', where N is the number of states, that contains the
+        analytic multiplicity function for each state
+    norm_func : str
+        Sum of all state multiplicity functions, the normalization factor to
+        calculate the state probabilities
+
+    Returns
+    -------
+    sympy_funcs : list
+        List of analytic state probability SymPy functions.
+    """
+    sympy_funcs = []   # create empty list to fill with state probability functions
+    for i in range(len(state_mult_funcs)):
+        state_func = parse_expr(state_mult_funcs[i]) # convert strings into SymPy data type
+        prob_func = state_func/parse_expr(norm_func)     # normalize probabilities
+        sympy_funcs.append(prob_func)
+    return sympy_funcs
+
+
+def construct_lambdify_funcs(prob_funcs, rate_names):
+    """
+    Constructs lambdified analytic state probability functions.
+
+    Parameters
+    ----------
+    prob_funcs : list of SymPy functions
+        List of analytic state probability SymPy functions.
+    rate_names : list
+        List of strings, where each element is the name of the variables for
+        the input probability functions, ["x12", "x21", "x23", ...].
+
+    Returns
+    -------
+    state_prob_funcs : list
+        List of lambdified analytic state probability functions.
+    """
     state_prob_funcs = []   # create empty list to fill with state probability functions
-    for i in range(G.number_of_nodes()):
-        state_func = sp.parsing.sympy_parser.parse_expr(state_mult_funcs[i]) # convert strings into SymPy data type
-        prob_func = state_func/sp.parsing.sympy_parser.parse_expr(norm_func)     # normalize probabilities
-        state_prob_funcs.append(lambdify(rate_names, prob_func, "numpy"))    # convert into "lambdified" functions that work with NumPy arrays
-    if sym_funcs == True:
-        return state_prob_funcs, state_mult_funcs, norm_funcs
-    else:
-        return state_prob_funcs
+    for i in range(len(prob_funcs)):
+        state_prob_funcs.append(lambdify(rate_names, prob_funcs[i], "numpy"))    # convert into "lambdified" functions that work with NumPy arrays
+    return state_prob_funcs
 
 
 def calc_cycle_fluxes(dir_pars):
