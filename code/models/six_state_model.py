@@ -12,20 +12,32 @@ import networkx as nx
 #== Functions ==================================================================
 #===============================================================================
 
-def generate_node_positions(center=[0, 0], radius=10, N=6):
-    """Generates positions for nodes
+def pos_6(center=[0, 0], radius=10):
     """
-    angle = np.pi*np.array([1/2, 5/6, 7/6, 3/2, 11/6, 13/6])        # Angles start at 0 and go clockwise (like unit circle)
-    array = np.zeros((N, 2))                                        # Empty 2D array of shape (6x2)
-    for i in range(N):                                              # Creates hexagon of atoms in the xy-plane
+    Generates positions of nodes for a hexagon in the xy-plane
+
+    Parameters
+    ----------
+    center : list
+        Defines the center of the hexagon in the xy-plane
+    radius : int
+        The radius of the hexagon, from center to node
+    """
+    N = 6                                                       # number of states/nodes
+    angle = np.pi*np.array([1/2, 5/6, 7/6, 3/2, 11/6, 13/6])    # Angles start at 0 and go clockwise (like unit circle)
+    array = np.zeros((N, 2))                                    # Empty 2D array of shape (6x2)
+    for i in range(N):                                          # Creates hexagon of atoms in the xy-plane
         array[i, 0] = np.cos(angle[i])
         array[i, 1] = np.sin(angle[i])
-    pos = {}
+    pos = {}                                                    # empty dict for positions to go in
     for i in range(N):
         pos[i] = array[i]*radius + center
     return pos
 
-def generate_edges(G, rates):
+def edges_6(G, rates):
+    """
+    Generates edges 6 state model
+    """
     G.add_weighted_edges_from([(0, 1, rates[0]),
                                (1, 0, rates[1]),
                                (1, 2, rates[2]),
@@ -43,28 +55,18 @@ def generate_edges(G, rates):
 #== Graph ======================================================================
 #===============================================================================
 
-# k_on = 1e9                         # units:  /s
-# k_off = 1e6                    # units:  /s
-# k_conf = 5e6                   # rate of conformational change
-# A_conc = 1e-3                       # total [A], in M
-# B_conc = 1e-7                       # total [B], in M
-# A_in = A_conc
-# B_in = 1e-6
-# A_out = A_conc
-# B_out = B_conc
-#
-# a12 = k_on*A_out    # a01
-# a21 = k_off         # a10
-# a23 = k_conf        # a12
-# a32 = k_conf        # a21
-# a34 = k_off         # a23
-# a43 = k_on*A_in     # a32
-# a45 = k_on*B_in     # a34
-# a54 = k_off         # a43
-# a56 = k_conf        # a45
-# a65 = k_conf        # a54
-# a61 = k_off         # a50
-# a16 = k_on*B_out    # a05
+# a12 = 2
+# a21 = 3
+# a23 = 5
+# a32 = 7
+# a34 = 11
+# a43 = 13
+# a45 = 17
+# a54 = 19
+# a56 = 23
+# a65 = 29
+# a61 = 31
+# a16 = 37
 
 # rates = np.array([a12, a21, a23, a32, a34, a43, a45, a54, a56, a65, a61, a16])
 # G = nx.MultiDiGraph()
