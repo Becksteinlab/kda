@@ -4,12 +4,22 @@
 # 02/14/2020
 # Biochemical Kinetic Diagram Analyzer Plotting
 
-import numpy as np
 import matplotlib.pyplot as plt
 import networkx as nx
 
 def plot_input_diagram(G, pos, save=None, path=None, date=None, run=None):
-    fig1 = plt.figure(figsize=(4, 3), tight_layout=True)
+    """
+    Plots the input diagram G.
+
+    Parameters
+    ----------
+    G : NetworkX MultiDiGraph
+        Input diagram
+    pos : dict
+        Dictionary where keys are the indexed states (0, 1, 2, ..., N) and
+        the values are NumPy arrays of x, y coordinates for each node.
+    """
+    fig1 = plt.figure(figsize=(3, 3), tight_layout=True)
     fig1.add_subplot(111)
     nx.draw_networkx_nodes(G, pos, node_size=500, nodelist=[i for i in range(G.number_of_nodes())], node_color='grey')
     nx.draw_networkx_edges(G, pos, width=4, arrow_style='->', arrowsize=15)
@@ -21,8 +31,20 @@ def plot_input_diagram(G, pos, save=None, path=None, date=None, run=None):
         fig1.savefig(path + "/{}/input_{}_diagram.png".format(date, run))
 
 def plot_partials(partials, pos, save=None, path=None, date=None, run=None):
+    """
+    Plots all partial diagrams.
+
+    Parameters
+    ----------
+    partials : list
+        List of NetworkX MultiDiGraphs where each graph is a unique partial
+        diagram with no loops.
+    pos : dict
+        Dictionary where keys are the indexed states (0, 1, 2, ..., N) and
+        the values are NumPy arrays of x, y coordinates for each node.
+    """
     for i in range(len(partials)):
-        fig1 = plt.figure(figsize=(4, 3), tight_layout=True)
+        fig1 = plt.figure(figsize=(3, 3), tight_layout=True)
         fig1.add_subplot(111)
         partial = partials[i]
         nx.draw_networkx_nodes(partial, pos, node_size=500, nodelist=[i for i in range(partials[0].number_of_nodes())], node_color='grey')
@@ -35,8 +57,20 @@ def plot_partials(partials, pos, save=None, path=None, date=None, run=None):
             fig1.savefig(path + "/{}/partial_diagram_{}_{}.png".format(date, run, i+1))
 
 def plot_directional_partials(dir_partials, pos, save=None, path=None, date=None, run=None):
+    """
+    Plots all directional partial diagrams.
+
+    Parameters
+    ----------
+    dir_partials : list
+        List of all directional partial diagrams for a given set of partial
+        diagrams.
+    pos : dict
+        Dictionary where keys are the indexed states (0, 1, 2, ..., N) and
+        the values are NumPy arrays of x, y coordinates for each node.
+    """
     for i in range(len(dir_partials)):
-        fig1 = plt.figure(figsize=(4, 3), tight_layout=True)
+        fig1 = plt.figure(figsize=(3, 3), tight_layout=True)
         fig1.add_subplot(111)
         partial = dir_partials[i]
         nx.draw_networkx_nodes(partial, pos, node_size=500, nodelist=[i for i in range(dir_partials[0].number_of_nodes())], node_color='grey')
