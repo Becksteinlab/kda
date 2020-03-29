@@ -6,6 +6,7 @@
 
 import numpy as np
 import networkx as nx
+import scipy.integrate
 import functools
 import itertools
 import sympy
@@ -36,7 +37,7 @@ def combine(x, y):
     """
     Used to reduce list of dictionaries into single dictionary where the keys
     are the indices of states, and the values are lists of neighbors for each
-    state. 
+    state.
     """
     x.update(y)
     return x
@@ -307,3 +308,46 @@ def calc_cycle_fluxes(dir_pars):
 
 def assign_probs_and_analytic_functions_to_G(dir_pars):
     return NotImplementedError
+
+
+def solve_ODE(P, K, t_max, max_step):
+    """
+    Integrates state probabilities to find steady state probabilities.
+
+    Parameters
+    ----------
+    P : array
+        'Nx1' matrix of initial state probabilities.
+    K : array
+        'NxN' matrix, where N is the number of states. Element i, j represents
+        the rate constant from state i to state j. Diagonal elements should be
+        zero, but does not have to be in input k
+        matrix.
+    t_max : int
+        Length of time for integrator to run, in seconds.
+    max_step : int
+        Maximum step size for integrator.
+        """
+    def convert_K(K):
+        """
+        Sets the diagonal elements of the input k matrix to zero, then takes the
+        transpose, and lastly sets the diagonals equal to the negative of the
+        sum of the column elements.
+        """
+        N = len(K)
+        np.fill_diagonal(K, 0)
+        K = K.T
+        for i in range(N):
+            K[i, i] = -K[:, i].sum(axis=0)
+        return K
+
+    def func(t, y):
+        """
+        y = [p1, p2, p3, ... , pn]
+        """
+        return np.dot(k, y)
+
+    k = convert_K(K)
+    time = (0, t_max)
+    y0 = np.array(P, dtype=np.float64)
+    return scipy.integrate.solve_ivp(func, time, y0, max_step=max_step)
