@@ -20,6 +20,7 @@ from plotting import plot_ODE_probs
 t_max = 5e0
 max_step = t_max/1e3
 plot = False
+path = "C:/Users/nikol/phy495/hill-biochemical-kinetic-diagram-analyzer/data/html"
 
 #===============================================================================
 #== 3 State ====================================================================
@@ -319,12 +320,12 @@ def get_diff_array(theoretical, experimental):
             diff_array[m, s] = theoretical[s] - experimental[m, s]
     return diff_array
 
-def generate_table(state_probs, name):
+def generate_table(state_probs, name, path=path):
     N = len(state_probs)
     cols = ["Theoretical", "KDA", "SymPy", "ODE", "KDA Diff", "SymPy Diff", "ODE Diff", "KDA Error", "SymPy Error", "ODE Error"]
     rows = ["State {}".format(i+1) for i in range(N)]
     df = pd.DataFrame(data=state_probs, index=rows, columns=cols)
-    df.to_html('{}.html'.format(name))
+    df.to_html(path + '/{}.html'.format(name))
     print(df)
 
 # Make arrays of all probability values for all 3 methods
