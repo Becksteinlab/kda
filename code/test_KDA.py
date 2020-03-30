@@ -1,7 +1,8 @@
 # Nikolaus Awtrey
 # Beckstein Lab
 # Arizona State University
-# 0/13/2020
+# 03/30/2020
+# Biochemical Kinetic Diagram Analyzer Testing
 
 import numpy as np
 import networkx as nx
@@ -366,7 +367,20 @@ generate_table(sp6, name="sp6")
 
 
 
-
-
-
 #===
+
+
+def test_three_state():
+    return NotImplementedError
+
+def test_four_state():
+    return NotImplementedError
+
+def test_four_state_with_leakage():
+    return NotImplementedError
+
+def test_five_state_with_leakage():
+    return NotImplementedError
+
+def test_six_state():
+    return NotImplementedError

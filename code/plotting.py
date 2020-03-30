@@ -86,7 +86,7 @@ def plot_directional_partials(dir_partials, pos, save=None, path=None, date=None
             fig1.savefig(path + "/{}/directional_partial_diagram_{}_{}.png".format(date, run, i+1))
 
 
-def plot_ODE_probs(results):
+def plot_ODE_probs(results, save=None, path=None, ident=None):
     """
     Plots probability time series for all states.
 
@@ -94,7 +94,7 @@ def plot_ODE_probs(results):
     ----------
     results : bunch object
         Contains time information (results.t) and function information at time
-        t (results.y), as well as various other fields.  
+        t (results.y), as well as various other fields.
     """
     N = int(len(results.y))
     time = results.t
@@ -109,4 +109,5 @@ def plot_ODE_probs(results):
     ax.set_ylabel(r"Probability")
     ax.set_xlabel(r"Time (s)")
     ax.legend(loc='best')
-    plt.show()
+    if save == True:
+        fig1.savefig(path + "/ODE_probs_{}.png".format(ident))
