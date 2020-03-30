@@ -1,21 +1,20 @@
 # Nikolaus Awtrey
 # Beckstein Lab
 # Arizona State University
-# 02/13/2020
+# 0/13/2020
 
 import numpy as np
-import matplotlib.pyplot as plt
 import networkx as nx
+import matplotlib.pyplot as plt
 
 import hill_biochemical_kinetic_diagram_analyzer as kda
 
-from three_state_model import generate_edges as ge3
-from four_state_model import generate_edges as ge4
-from four_state_model_with_leakage import generate_edges as ge4wl
-from five_state_model_with_leakage import generate_edges as ge5wl
-from six_state_model import generate_edges as ge6
-from ODE_integrator import integrate_prob_ODE as integrate
-from ODE_integrator import plot_ODE_probs
+from model_generation import edges_3 as ge3
+from model_generation import edges_4 as ge4
+from model_generation import edges_4wl as ge4wl
+from model_generation import edges_5wl as ge5wl
+from model_generation import edges_6 as ge6
+from plotting import plot_ODE_probs
 
 t_max = 5e0
 max_step = t_max/1e3
@@ -30,13 +29,22 @@ k23 = 5
 k32 = 7
 k13 = 11
 k31 = 13
+rates3 = [k12, k21, k23, k32, k13, k31]
+rate_names3 = ["x12", "x21", "x23", "x32", "x13", "x31"]
 G3 = nx.MultiDiGraph()
-ge3(G3, [k12, k21, k23, k32, k13, k31])
-
+ge3(G3, rates3)
 #== State probabilitites =======================================================
-partials3 = kda.generate_partial_diagrams(G3)
-directional_partials3 = kda.generate_directional_partial_diagrams(partials3)
-sp3_diag, sp3_mult = kda.calc_state_probabilities(G3, directional_partials3, state_mults=True)
+pars3 = kda.generate_partial_diagrams(G3)
+dir_pars3 = kda.generate_directional_partial_diagrams(pars3)
+sp3_KDA = kda.calc_state_probabilities(G3, dir_pars3)
+#== State Func probabilitites ==================================================
+state_mults3, norm3 = kda.construct_string_funcs(G3, dir_pars3, rates3, rate_names3)
+sympy_funcs3 = kda.construct_sympy_funcs(state_mults3, norm3)
+state_prob_funcs3 = kda.construct_lambdify_funcs(sympy_funcs3, rate_names3)
+sp3_SymPy = []
+for i in range(G3.number_of_nodes()):
+    sp3_SymPy.append(state_prob_funcs3[i](k12, k21, k23, k32, k13, k31))
+sp3_SymPy = np.array(sp3_SymPy)
 #== Manual =====================================================================
 P1 = k23*k31 + k32*k21 + k31*k21
 P2 = k13*k32 + k32*k12 + k31*k12
@@ -51,11 +59,13 @@ p3 = p_list/sigma       # normalize probabilities
 k3 = np.array([[0, k12, k13],
               [k21, 0, k23],
               [k31, k32, 0]])
-results3 = integrate(p3, k3, t_max, max_step)
+results3 = kda.solve_ODE(p3, k3, t_max, max_step)
 probs3 = results3.y[:N3]
 sp3_ODE = []
 for i in probs3:
     sp3_ODE.append(i[-1])
+sp3_ODE = np.array(sp3_ODE)
+
 
 #===============================================================================
 #== 4 State ====================================================================
@@ -68,13 +78,22 @@ b34 = 11
 b43 = 13
 b41 = 17
 b14 = 19
+rates4 = [b12, b21, b23, b32, b34, b43, b41, b14]
+rate_names4 = ["y12", "y21", "y23", "y32", "y34", "y43", "y41", "y14"]
 G4 = nx.MultiDiGraph()
-ge4(G4, [b12, b21, b23, b32, b34, b43, b41, b14])
-
+ge4(G4, rates4)
 #== State probabilitites =======================================================
-partials4 = kda.generate_partial_diagrams(G4)
-directional_partials4 = kda.generate_directional_partial_diagrams(partials4)
-sp4_diag, sp4_mult = kda.calc_state_probabilities(G4, directional_partials4, state_mults=True)
+pars4 = kda.generate_partial_diagrams(G4)
+dir_pars4 = kda.generate_directional_partial_diagrams(pars4)
+sp4_KDA = kda.calc_state_probabilities(G4, dir_pars4)
+#== State Func probabilitites ==================================================
+state_mults4, norm4 = kda.construct_string_funcs(G4, dir_pars4, rates4, rate_names4)
+sympy_funcs4 = kda.construct_sympy_funcs(state_mults4, norm4)
+state_prob_funcs4 = kda.construct_lambdify_funcs(sympy_funcs4, rate_names4)
+sp4_SymPy = []
+for i in range(G4.number_of_nodes()):
+    sp4_SymPy.append(state_prob_funcs4[i](b12, b21, b23, b32, b34, b43, b41, b14))
+sp4_SymPy = np.array(sp4_SymPy)
 #== Manual =====================================================================
 P1 = b43*b32*b21 + b23*b34*b41 + b21*b34*b41 + b41*b32*b21
 P2 = b12*b43*b32 + b14*b43*b32 + b34*b41*b12 + b32*b41*b12
@@ -91,11 +110,13 @@ k4 = np.array([[0, b12, 0, b14],
                [b21, 0, b23, 0],
                [0, b32, 0, b34],
                [b41, 0, b43, 0]])
-results4 = integrate(p4, k4, t_max, max_step)
+results4 = kda.solve_ODE(p4, k4, t_max, max_step)
 probs4 = results4.y[:N4]
 sp4_ODE = []
 for i in probs4:
     sp4_ODE.append(i[-1])
+sp4_ODE = np.array(sp4_ODE)
+
 
 #===============================================================================
 #== 4 State w/ Leakage =========================================================
@@ -110,13 +131,22 @@ b41 = 17
 b14 = 19
 b24 = 23
 b42 = 29
+rates4wl = [b12, b21, b23, b32, b34, b43, b41, b14, b24, b42]
+rate_names4wl = ["y12", "y21", "y23", "y32", "y34", "y43", "y41", "y14", "y24", "y42"]
 G4wl = nx.MultiDiGraph()
-ge4wl(G4wl, [b12, b21, b23, b32, b34, b43, b41, b14, b24, b42])
-
+ge4wl(G4wl, rates4wl)
 #== State probabilitites =======================================================
-partials4wl = kda.generate_partial_diagrams(G4wl)
-directional_partials4wl = kda.generate_directional_partial_diagrams(partials4wl)
-sp4wl_diag, sp4wl_mult = kda.calc_state_probabilities(G4wl, directional_partials4wl, state_mults=True)
+pars4wl = kda.generate_partial_diagrams(G4wl)
+dir_pars4wl = kda.generate_directional_partial_diagrams(pars4wl)
+sp4wl_KDA = kda.calc_state_probabilities(G4wl, dir_pars4wl)
+#== State Func probabilitites ==================================================
+state_mults4wl, norm4wl = kda.construct_string_funcs(G4wl, dir_pars4wl, rates4wl, rate_names4wl)
+sympy_funcs4wl = kda.construct_sympy_funcs(state_mults4wl, norm4wl)
+state_prob_funcs4wl = kda.construct_lambdify_funcs(sympy_funcs4wl, rate_names4wl)
+sp4wl_SymPy = []
+for i in range(G4wl.number_of_nodes()):
+    sp4wl_SymPy.append(state_prob_funcs4wl[i](b12, b21, b23, b32, b34, b43, b41, b14, b24, b42))
+sp4wl_SymPy = np.array(sp4wl_SymPy)
 #== Manual =====================================================================
 P1 = b43*b32*b21 + b23*b34*b41 + b21*b34*b41 + b41*b32*b21 + b32*b42*b21 + b24*b34*b41 + b34*b42*b21 + b32*b24*b41
 P2 = b12*b43*b32 + b14*b43*b32 + b34*b41*b12 + b32*b41*b12 + b32*b42*b12 + b34*b14*b42 + b12*b34*b42 + b32*b14*b42
@@ -133,11 +163,13 @@ k4wl = np.array([[0, b12, 0, b14],
                 [b21, 0, b23, b24],
                 [0, b32, 0, b34],
                 [b41, b42, b43, 0]])
-results4wl = integrate(p4wl, k4wl, t_max, max_step)
+results4wl = kda.solve_ODE(p4wl, k4wl, t_max, max_step)
 probs4wl = results4wl.y[:N4wl]
 sp4wl_ODE = []
 for i in probs4wl:
     sp4wl_ODE.append(i[-1])
+sp4wl_ODE = np.array(sp4wl_ODE)
+
 
 #===============================================================================
 #== 5 State w/ Leakage =========================================================
@@ -154,13 +186,22 @@ c35 = 31
 c53 = 37
 c45 = 23
 c54 = 29
+rates5wl = [c12, c21, c23, c32, c13, c31, c24, c42, c35, c53, c45, c54]
+rate_names5wl = ["z12", "z21", "z23", "z32", "z13", "z31", "z24", "z42", "z35", "z53", "z45", "z54"]
 G5wl = nx.MultiDiGraph()
-ge5wl(G5wl, [c12, c21, c23, c32, c13, c31, c24, c42, c35, c53, c45, c54])
-
+ge5wl(G5wl, rates5wl)
 #== State probabilitites =======================================================
-partials5wl = kda.generate_partial_diagrams(G5wl)
-directional_partials5wl = kda.generate_directional_partial_diagrams(partials5wl)
-sp5wl_diag, sp5wl_mult = kda.calc_state_probabilities(G5wl, directional_partials5wl, state_mults=True)
+pars5wl = kda.generate_partial_diagrams(G5wl)
+dir_pars5wl = kda.generate_directional_partial_diagrams(pars5wl)
+sp5wl_KDA = kda.calc_state_probabilities(G5wl, dir_pars5wl)
+#== State Func probabilitites ==================================================
+state_mults5wl, norm5wl = kda.construct_string_funcs(G5wl, dir_pars5wl, rates5wl, rate_names5wl)
+sympy_funcs5wl = kda.construct_sympy_funcs(state_mults5wl, norm5wl)
+state_prob_funcs5wl = kda.construct_lambdify_funcs(sympy_funcs5wl, rate_names5wl)
+sp5wl_SymPy = []
+for i in range(G5wl.number_of_nodes()):
+    sp5wl_SymPy.append(state_prob_funcs5wl[i](c12, c21, c23, c32, c13, c31, c24, c42, c35, c53, c45, c54))
+sp5wl_SymPy = np.array(sp5wl_SymPy)
 #== Manual =====================================================================
 P1 = c35*c54*c42*c21 + c24*c45*c53*c31 + c21*c45*c53*c31 + c42*c21*c53*c31 + c54*c42*c21*c31 + c54*c42*c32*c21 + c45*c53*c23*c31 + c53*c32*c42*c21 + c42*c23*c53*c31 + c54*c42*c23*c31 + c45*c53*c32*c21
 P2 = c12*c35*c54*c42 + c13*c35*c54*c42 + c45*c53*c31*c12 + c42*c53*c31*c12 + c31*c12*c54*c42 + c54*c42*c32*c12 + c45*c53*c13*c32 + c53*c32*c42*c12 + c53*c13*c32*c42 + c54*c42*c13*c32 + c45*c53*c32*c12
@@ -179,11 +220,12 @@ k5wl = np.array([[  0, c12, c13,   0,   0],
                  [c31, c32,   0,   0, c35],
                  [  0, c42,   0,   0, c45],
                  [  0,   0, c53, c54,   0]])
-results5wl = integrate(p5wl, k5wl, t_max, max_step)
+results5wl = kda.solve_ODE(p5wl, k5wl, t_max, max_step)
 probs5wl = results5wl.y[:N5wl]
 sp5wl_ODE = []
 for i in probs5wl:
     sp5wl_ODE.append(i[-1])
+sp5wl_ODE = np.array(sp5wl_ODE)
 
 #===============================================================================
 #== 6 State ====================================================================
@@ -200,14 +242,22 @@ a56 = 23
 a65 = 29
 a61 = 31
 a16 = 37
+rates6 = [a12, a21, a23, a32, a34, a43, a45, a54, a56, a65, a61, a16]
+rate_names6 = ["x12", "x21", "x23", "x32", "x34", "x43", "x45", "x54", "x56", "x65", "x61", "x16"]
 G6 = nx.MultiDiGraph()
-ge6(G6, [a12, a21, a23, a32, a34, a43, a45, a54, a56, a65, a61, a16])
-
+ge6(G6, rates6)
 #== State probabilitites =======================================================
-partials6 = kda.generate_partial_diagrams(G6)
-directional_partials6 = kda.generate_directional_partial_diagrams(partials6)
-sp6_diag, sp6_mult = kda.calc_state_probabilities(G6, directional_partials6, state_mults=True)
-
+pars6 = kda.generate_partial_diagrams(G6)
+dir_pars6 = kda.generate_directional_partial_diagrams(pars6)
+sp6_KDA = kda.calc_state_probabilities(G6, dir_pars6)
+#== State Func probabilitites ==================================================
+state_mults6, norm6 = kda.construct_string_funcs(G6, dir_pars6, rates6, rate_names6)
+sympy_funcs6 = kda.construct_sympy_funcs(state_mults6, norm6)
+state_prob_funcs6 = kda.construct_lambdify_funcs(sympy_funcs6, rate_names6)
+sp6_SymPy = []
+for i in range(G6.number_of_nodes()):
+    sp6_SymPy.append(state_prob_funcs6[i](a12, a21, a23, a32, a34, a43, a45, a54, a56, a65, a61, a16))
+sp6_SymPy = np.array(sp6_SymPy)
 #== Manual =====================================================================
 P1 = a65*a54*a43*a32*a21 + a61*a54*a43*a32*a21 + a56*a61*a43*a32*a21 + a45*a56*a61*a32*a21 + a34*a45*a56*a61*a21 + a23*a34*a45*a56*a61
 P2 = a12*a65*a54*a43*a32 + a61*a12*a54*a43*a32 + a56*a61*a12*a43*a32 + a45*a56*a61*a32*a12 + a34*a45*a56*a61*a12 + a16*a65*a54*a43*a32
@@ -228,37 +278,54 @@ k6 = np.array([[  0, a12,   0,   0,   0, a16],
                [  0,   0, a43,   0, a45,   0],
                [  0,   0,   0, a54,   0, a56],
                [a61,   0,   0,   0, a65,   0]])
-results6 = integrate(p6, k6, t_max, max_step)
+results6 = kda.solve_ODE(p6, k6, t_max, max_step)
 probs6 = results6.y[:N6]
 sp6_ODE = []
 for i in probs6:
     sp6_ODE.append(i[-1])
+sp6_ODE = np.array(sp6_ODE)
+
 
 #===============================================================================
 #== Verification ===============================================================
 #===============================================================================
 
-print("======== Three State ========")
-for i in range(N3):
-    print("State {}: manual = {}, diag = {}, ODE = {}".format(i+1, sp3_manual[i], sp3_diag[i], sp3_ODE[i]))
-print("======== Four State ========")
-for i in range(N4):
-    print("State {}: manual = {}, diag = {}, ODE = {}".format(i+1, sp4_manual[i], sp4_diag[i], sp4_ODE[i]))
-print("======== Four State with Leakage ========")
-for i in range(N4wl):
-    print("State {}: manual = {}, diag = {}, ODE = {}".format(i+1, sp4wl_manual[i], sp4wl_diag[i], sp4wl_ODE[i]))
-print("======== Five State with Leakage ========")
-for i in range(N5wl):
-    print("State {}: manual = {}, diag = {}, ODE = {}".format(i+1, sp5wl_manual[i], sp5wl_diag[i], sp5wl_ODE[i]))
-print("======== Six State ========")
-for i in range(N6):
-    print("State {}: manual = {}, diag = {}, ODE = {}".format(i+1, sp6_manual[i], sp6_diag[i], sp6_ODE[i]))
+# print("======== Three State ========")
+# for i in range(N3):
+#     print("State {}: manual = {}, KDA = {}, ODE = {}".format(i+1, sp3_manual[i], sp3_KDA[i], sp3_ODE[i]))
+# print("======== Four State ========")
+# for i in range(N4):
+#     print("State {}: manual = {}, KDA = {}, ODE = {}".format(i+1, sp4_manual[i], sp4_KDA[i], sp4_ODE[i]))
+# print("======== Four State with Leakage ========")
+# for i in range(N4wl):
+#     print("State {}: manual = {}, KDA = {}, ODE = {}".format(i+1, sp4wl_manual[i], sp4wl_KDA[i], sp4wl_ODE[i]))
+# print("======== Five State with Leakage ========")
+# for i in range(N5wl):
+#     print("State {}: manual = {}, KDA = {}, ODE = {}".format(i+1, sp5wl_manual[i], sp5wl_KDA[i], sp5wl_ODE[i]))
+# print("======== Six State ========")
+# for i in range(N6):
+#     print("State {}: manual = {}, KDA = {}, ODE = {}".format(i+1, sp6_manual[i], sp6_KDA[i], sp6_ODE[i]))
 
-# print(sp3_manual - sp3_ODE)
-# print(sp4_manual - sp4_ODE)
-# print(sp4wl_manual - sp4wl_ODE)
-# print(sp5wl_manual - sp5wl_ODE)
-# print(sp6_manual - sp6_ODE)
+def rel_error(theoretical, experimental):
+    return np.abs(theoretical - experimental)*100/theoretical
+
+# Need array of all values
+# Need array of differences
+# Need array of relative errors
+
+print("====== Manual Probabilities - ODE Probabilities ======")
+print(sp3_manual - sp3_ODE)
+print(sp4_manual - sp4_ODE)
+print(sp4wl_manual - sp4wl_ODE)
+print(sp5wl_manual - sp5wl_ODE)
+print(sp6_manual - sp6_ODE)
+
+print("====== KDA Probabilities - Lambdify Function Probabilities =======")
+print(sp3_KDA - sp3_SymPy)
+print(sp4_KDA - sp4_SymPy)
+print(sp4wl_KDA - sp4wl_SymPy)
+print(sp5wl_KDA - sp5wl_SymPy)
+print(sp6_KDA - sp6_SymPy)
 
 if plot == True:
     plot_ODE_probs(results3)
@@ -268,7 +335,7 @@ if plot == True:
     plot_ODE_probs(results6)
 # check probabilities are normalized to 1
 
-
+# ODE and SymPy are lists
 
 
 
