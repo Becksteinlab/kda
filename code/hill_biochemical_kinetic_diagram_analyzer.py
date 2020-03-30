@@ -179,8 +179,9 @@ def calc_state_probabilities(G, dir_partials, key='k'):
     state_probabilities : NumPy array
         Array of state probabilities for N states, [p1, p2, p3, ..., pN].
     """
-    state_multiplicities = np.zeros(G.number_of_nodes())
-    for s in range(G.number_of_nodes()):    # iterate over number of states, "s"
+    N = G.number_of_nodes() # Number of nodes/states
+    state_multiplicities = np.zeros(N)
+    for s in range(N):    # iterate over number of states, "s"
         partial_multiplicities = np.zeros(len(dir_partials))    # generate zero array of length # of directional partial diagrams
         for i in range(len(dir_partials)):      # iterate over the directional partial diagrams
             edge_list = list(dir_partials[i].edges)     # get a list of all edges for partial directional diagram i
@@ -188,8 +189,8 @@ def calc_state_probabilities(G, dir_partials, key='k'):
             for e in edge_list:                                 # iterate over the edges in the given directional partial diagram i
                 products *= G[e[0]][e[1]][e[2]][key]     # multiply the rate of each edge in edge_list
             partial_multiplicities[i] = products[0]                 # for directional partial diagram i, assign product to partial multiplicity array
-        N_terms = np.int(len(dir_partials)/G.number_of_nodes()) # calculate the number of terms to be summed for given state, s
-        for j in range(G.number_of_nodes()):                            # iterate over number of states
+        N_terms = np.int(len(dir_partials)/N) # calculate the number of terms to be summed for given state, s
+        for j in range(N):                            # iterate over number of states
              # sum appropriate parts of partial multiplicity array for given state, s
             state_multiplicities[j] = partial_multiplicities[N_terms*j:N_terms*j+N_terms].sum(axis=0)
             # this gives you an array of all the state multiplicites
@@ -224,18 +225,19 @@ def construct_string_funcs(G, dir_partials, rates, rate_names, key='k'):
 
     Returns
     -------
-    state_mult_funcs : list
+    state_mult_funcs : list of str
         List of length 'N', where N is the number of states, that contains the
         analytic multiplicity function for each state
     norm_func : str
         Sum of all state multiplicity functions, the normalization factor to
         calculate the state probabilities
     """
+    N = G.number_of_nodes() # Number of nodes/states
     var_dict = dict.fromkeys(rates, {}) # generate dictionary with rates as keys
     for i in range(len(rates)):
         var_dict[rates[i]] = rate_names[i]  # assign appropriate rate names to rate values
     state_mult_funcs = []    # create empty list to fill with summed terms
-    for s in range(G.number_of_nodes()):    # iterate over number of states, "s"
+    for s in range(N):    # iterate over number of states, "N"
         part_mults = []    # generate empty list to put partial multiplicities in
         for i in range(len(dir_partials)):      # iterate over the directional partial diagrams
             edge_list = list(dir_partials[i].edges)     # get a list of all edges for partial directional diagram i
@@ -243,11 +245,11 @@ def construct_string_funcs(G, dir_partials, rates, rate_names, key='k'):
             for edge in edge_list:
                 products.append(var_dict[G.edges[edge[0], edge[1], edge[2]][key]]) # append rate constant names from dir_par to list
             part_mults.append(products)     # append list of rate constant names to part_mults
-    N_terms = int(len(part_mults)/G.number_of_nodes()) # number of terms per state
+    N_terms = int(len(part_mults)/N) # number of terms per state
     term_list = []  # create empty list to put products of rate constants (terms) in
     for vars in part_mults:
         term_list.append("*".join(vars))    # join rate constants for each dir_par by delimeter "*"
-    for j in range(G.number_of_nodes()):
+    for j in range(N):
         state_mult_funcs.append("+".join(term_list[N_terms*j:N_terms*j+N_terms]))    # join appropriate terms for each state by delimeter "+"
     norm_func = "+".join(state_mult_funcs)    # sum all terms to get normalization factor
     return state_mult_funcs, norm_func
@@ -259,7 +261,7 @@ def construct_sympy_funcs(state_mult_funcs, norm_func):
 
     Parameters
     ----------
-    state_mult_funcs : list
+    state_mult_funcs : list of str
         List of length 'N', where N is the number of states, that contains the
         analytic multiplicity function for each state
     norm_func : str
@@ -272,20 +274,19 @@ def construct_sympy_funcs(state_mult_funcs, norm_func):
         List of analytic state probability SymPy functions.
     """
     sympy_funcs = []   # create empty list to fill with state probability functions
-    for i in range(len(state_mult_funcs)):
-        state_func = parse_expr(state_mult_funcs[i]) # convert strings into SymPy data type
-        prob_func = state_func/parse_expr(norm_func)     # normalize probabilities
+    for func in state_mult_funcs:
+        prob_func = parse_expr(func)/parse_expr(norm_func) # convert strings into SymPy functions, normalize
         sympy_funcs.append(prob_func)
     return sympy_funcs
 
 
-def construct_lambdify_funcs(prob_funcs, rate_names):
+def construct_lambdify_funcs(sympy_funcs, rate_names):
     """
     Constructs lambdified analytic state probability functions.
 
     Parameters
     ----------
-    prob_funcs : list of SymPy functions
+    sympy_funcs : list of SymPy functions
         List of analytic state probability SymPy functions.
     rate_names : list
         List of strings, where each element is the name of the variables for
@@ -297,8 +298,8 @@ def construct_lambdify_funcs(prob_funcs, rate_names):
         List of lambdified analytic state probability functions.
     """
     state_prob_funcs = []   # create empty list to fill with state probability functions
-    for i in range(len(prob_funcs)):
-        state_prob_funcs.append(lambdify(rate_names, prob_funcs[i], "numpy"))    # convert into "lambdified" functions that work with NumPy arrays
+    for func in sympy_funcs:
+        state_prob_funcs.append(lambdify(rate_names, func, "numpy"))    # convert into "lambdified" functions that work with NumPy arrays
     return state_prob_funcs
 
 
