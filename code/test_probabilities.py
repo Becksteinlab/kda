@@ -6,6 +6,7 @@
 import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
+import pandas as pd
 
 import hill_biochemical_kinetic_diagram_analyzer as kda
 
@@ -290,52 +291,80 @@ sp6_ODE = np.array(sp6_ODE)
 #== Verification ===============================================================
 #===============================================================================
 
-# print("======== Three State ========")
-# for i in range(N3):
-#     print("State {}: manual = {}, KDA = {}, ODE = {}".format(i+1, sp3_manual[i], sp3_KDA[i], sp3_ODE[i]))
-# print("======== Four State ========")
-# for i in range(N4):
-#     print("State {}: manual = {}, KDA = {}, ODE = {}".format(i+1, sp4_manual[i], sp4_KDA[i], sp4_ODE[i]))
-# print("======== Four State with Leakage ========")
-# for i in range(N4wl):
-#     print("State {}: manual = {}, KDA = {}, ODE = {}".format(i+1, sp4wl_manual[i], sp4wl_KDA[i], sp4wl_ODE[i]))
-# print("======== Five State with Leakage ========")
-# for i in range(N5wl):
-#     print("State {}: manual = {}, KDA = {}, ODE = {}".format(i+1, sp5wl_manual[i], sp5wl_KDA[i], sp5wl_ODE[i]))
-# print("======== Six State ========")
-# for i in range(N6):
-#     print("State {}: manual = {}, KDA = {}, ODE = {}".format(i+1, sp6_manual[i], sp6_KDA[i], sp6_ODE[i]))
-
-def rel_error(theoretical, experimental):
-    return np.abs(theoretical - experimental)*100/theoretical
-
-# Need array of all values
-# Need array of differences
-# Need array of relative errors
-
-print("====== Manual Probabilities - ODE Probabilities ======")
-print(sp3_manual - sp3_ODE)
-print(sp4_manual - sp4_ODE)
-print(sp4wl_manual - sp4wl_ODE)
-print(sp5wl_manual - sp5wl_ODE)
-print(sp6_manual - sp6_ODE)
-
-print("====== KDA Probabilities - Lambdify Function Probabilities =======")
-print(sp3_KDA - sp3_SymPy)
-print(sp4_KDA - sp4_SymPy)
-print(sp4wl_KDA - sp4wl_SymPy)
-print(sp5wl_KDA - sp5wl_SymPy)
-print(sp6_KDA - sp6_SymPy)
-
 if plot == True:
     plot_ODE_probs(results3)
     plot_ODE_probs(results4)
     plot_ODE_probs(results4wl)
     plot_ODE_probs(results5wl)
     plot_ODE_probs(results6)
-# check probabilities are normalized to 1
 
-# ODE and SymPy are lists
+def rel_error(theoretical, experimental):
+    return np.abs(theoretical - experimental)*100/theoretical
+
+def get_error_array(manual, other):
+    N_methods = len(other)
+    N_states = len(other[0])
+    error_array = np.zeros((N_methods, N_states))
+    for m in range(N_methods):
+        for s in range(N_states):
+            error_array[m, s] = rel_error(manual[s], other[m, s])
+    return error_array
+
+def get_diff_array(theoretical, experimental):
+    N_methods = len(experimental)
+    N_states = len(experimental[0])
+    diff_array = np.zeros((N_methods, N_states))
+    for m in range(N_methods):
+        for s in range(N_states):
+            diff_array[m, s] = theoretical[s] - experimental[m, s]
+    return diff_array
+
+def generate_table(state_probs, name):
+    N = len(state_probs)
+    cols = ["Theoretical", "KDA", "SymPy", "ODE", "KDA Diff", "SymPy Diff", "ODE Diff", "KDA Error", "SymPy Error", "ODE Error"]
+    rows = ["State {}".format(i+1) for i in range(N)]
+    df = pd.DataFrame(data=state_probs, index=rows, columns=cols)
+    df.to_html('{}.html'.format(name))
+    print(df)
+
+# Make arrays of all probability values for all 3 methods
+sp3_probs = np.array([sp3_KDA, sp3_SymPy, sp3_ODE])
+sp4_probs = np.array([sp4_KDA, sp4_SymPy, sp4_ODE])
+sp4wl_probs = np.array([sp4wl_KDA, sp4wl_SymPy, sp4wl_ODE])
+sp5wl_probs = np.array([sp5wl_KDA, sp5wl_SymPy, sp5wl_ODE])
+sp6_probs = np.array([sp6_KDA, sp6_SymPy, sp6_ODE])
+
+# Make arrays of all probability differences for all 3 methods
+sp3_diffs = get_diff_array(sp3_manual, sp3_probs)
+sp4_diffs = get_diff_array(sp4_manual, sp4_probs)
+sp4wl_diffs = get_diff_array(sp4wl_manual, sp4wl_probs)
+sp5wl_diffs = get_diff_array(sp5wl_manual, sp5wl_probs)
+sp6_diffs = get_diff_array(sp6_manual, sp6_probs)
+
+# Make arrays of all relative error values for all 3 methods
+sp3_error = get_error_array(sp3_manual, sp3_probs)
+sp4_error = get_error_array(sp4_manual, sp4_probs)
+sp4wl_error = get_error_array(sp4wl_manual, sp4wl_probs)
+sp5wl_error = get_error_array(sp5wl_manual, sp5wl_probs)
+sp6_error = get_error_array(sp6_manual, sp6_probs)
+
+# Stack arrays
+sp3 = np.vstack((sp3_manual, sp3_probs, sp3_diffs, sp3_error)).T
+sp4 = np.vstack((sp4_manual, sp4_probs, sp4_diffs, sp4_error)).T
+sp4wl = np.vstack((sp4wl_manual, sp4wl_probs, sp4wl_diffs, sp4wl_error)).T
+sp5wl = np.vstack((sp5wl_manual, sp5wl_probs, sp5wl_diffs, sp5wl_error)).T
+sp6 = np.vstack((sp6_manual, sp6_probs, sp6_diffs, sp6_error)).T
+
+# Generate dataframes, print, and output to html
+generate_table(sp3, name="sp3")
+generate_table(sp4, name="sp4")
+generate_table(sp4wl, name="sp4wl")
+generate_table(sp5wl, name="sp5wl")
+generate_table(sp6, name="sp6")
+
+
+
+
 
 
 
