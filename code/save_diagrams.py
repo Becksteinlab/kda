@@ -10,7 +10,7 @@ import networkx as nx
 
 from model_generation import edges_6
 from model_generation import pos_6
-import hill_biochemical_kinetic_diagram_analyzer as kda
+import kinetic_diagram_analyzer as kda
 import plotting as pd
 
 #===============================================================================

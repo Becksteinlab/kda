@@ -2,7 +2,7 @@
 # Beckstein Lab
 # Arizona State University
 # 02/14/2020
-# Hill Biochemical Kinetic Diagram Analyzer
+# Kinetic Diagram Analyzer
 
 import numpy as np
 import networkx as nx

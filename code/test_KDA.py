@@ -9,7 +9,7 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import pandas as pd
 
-import hill_biochemical_kinetic_diagram_analyzer as kda
+import kinetic_diagram_analyzer as kda
 
 from model_generation import edges_3 as ge3
 from model_generation import edges_4 as ge4
