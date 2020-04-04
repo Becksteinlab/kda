@@ -10,14 +10,10 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 import kinetic_diagram_analyzer as kda
-
-from model_generation import edges_3 as ge3
-from model_generation import edges_4 as ge4
-from model_generation import edges_4wl as ge4wl
-from model_generation import edges_5wl as ge5wl
-from model_generation import edges_6 as ge6
+from kinetic_diagram_analyzer import generate_edges as GE
 from plotting import plot_ODE_probs
 
+# ODE Parameters
 t_max = 5e0
 max_step = t_max/1e3
 plot = False
@@ -32,16 +28,21 @@ k23 = 5
 k32 = 7
 k13 = 11
 k31 = 13
-rates3 = [k12, k21, k23, k32, k13, k31]
-rate_names3 = ["x12", "x21", "x23", "x32", "x13", "x31"]
+k3 = np.array([[0, k12, k13],
+              [k21, 0, k23],
+              [k31, k32, 0]])
+k3s = np.array([[0, "k12", "k13"],
+                ["k21", 0, "k23"],
+                ["k31", "k32", 0]])
+rate_names3 = ["k12", "k21", "k23", "k32", "k13", "k31"]
 G3 = nx.MultiDiGraph()
-ge3(G3, rates3)
+GE(G3, k3s, k3, name_key='name', val_key='val')
 #== State probabilitites =======================================================
 pars3 = kda.generate_partial_diagrams(G3)
 dir_pars3 = kda.generate_directional_partial_diagrams(pars3)
-sp3_KDA = kda.calc_state_probabilities(G3, dir_pars3)
+sp3_KDA = kda.calc_state_probabilities(G3, dir_pars3, key='val')
 #== State Func probabilitites ==================================================
-state_mults3, norm3 = kda.construct_string_funcs(G3, dir_pars3, rates3, rate_names3)
+state_mults3, norm3 = kda.calc_state_probabilities(G3, dir_pars3, key='name', output_strings=True)
 sympy_funcs3 = kda.construct_sympy_funcs(state_mults3, norm3)
 state_prob_funcs3 = kda.construct_lambdify_funcs(sympy_funcs3, rate_names3)
 sp3_SymPy = []
@@ -59,9 +60,6 @@ N3 = 3   # number of states in cycle
 p_list = np.random.rand(N3)  # generate random probabilities
 sigma = p_list.sum(axis=0)  # normalization factor
 p3 = p_list/sigma       # normalize probabilities
-k3 = np.array([[0, k12, k13],
-              [k21, 0, k23],
-              [k31, k32, 0]])
 results3 = kda.solve_ODE(p3, k3, t_max, max_step)
 probs3 = results3.y[:N3]
 sp3_ODE = []
@@ -81,16 +79,23 @@ b34 = 11
 b43 = 13
 b41 = 17
 b14 = 19
-rates4 = [b12, b21, b23, b32, b34, b43, b41, b14]
-rate_names4 = ["y12", "y21", "y23", "y32", "y34", "y43", "y41", "y14"]
+k4 = np.array([[0, b12, 0, b14],
+               [b21, 0, b23, 0],
+               [0, b32, 0, b34],
+               [b41, 0, b43, 0]])
+k4s = np.array([[0, "k12", 0, "k14"],
+                ["k21", 0, "k23", 0],
+                [0, "k32", 0, "k34"],
+                ["k41", 0, "k43", 0]])
+rate_names4 = ["k12", "k21", "k23", "k32", "k34", "k43", "k41", "k14"]
 G4 = nx.MultiDiGraph()
-ge4(G4, rates4)
+GE(G4, k4s, k4, name_key='name', val_key='val')
 #== State probabilitites =======================================================
 pars4 = kda.generate_partial_diagrams(G4)
 dir_pars4 = kda.generate_directional_partial_diagrams(pars4)
-sp4_KDA = kda.calc_state_probabilities(G4, dir_pars4)
+sp4_KDA = kda.calc_state_probabilities(G4, dir_pars4, key='val')
 #== State Func probabilitites ==================================================
-state_mults4, norm4 = kda.construct_string_funcs(G4, dir_pars4, rates4, rate_names4)
+state_mults4, norm4 = kda.calc_state_probabilities(G4, dir_pars4, key='name', output_strings=True)
 sympy_funcs4 = kda.construct_sympy_funcs(state_mults4, norm4)
 state_prob_funcs4 = kda.construct_lambdify_funcs(sympy_funcs4, rate_names4)
 sp4_SymPy = []
@@ -109,10 +114,6 @@ N4 = 4   # number of states in cycle
 p_list = np.random.rand(N4)  # generate random probabilities
 sigma = p_list.sum(axis=0)  # normalization factor
 p4 = p_list/sigma       # normalize probabilities
-k4 = np.array([[0, b12, 0, b14],
-               [b21, 0, b23, 0],
-               [0, b32, 0, b34],
-               [b41, 0, b43, 0]])
 results4 = kda.solve_ODE(p4, k4, t_max, max_step)
 probs4 = results4.y[:N4]
 sp4_ODE = []
@@ -134,16 +135,23 @@ b41 = 17
 b14 = 19
 b24 = 23
 b42 = 29
-rates4wl = [b12, b21, b23, b32, b34, b43, b41, b14, b24, b42]
-rate_names4wl = ["y12", "y21", "y23", "y32", "y34", "y43", "y41", "y14", "y24", "y42"]
+k4wl = np.array([[0, b12, 0, b14],
+                [b21, 0, b23, b24],
+                [0, b32, 0, b34],
+                [b41, b42, b43, 0]])
+k4wls = np.array([[0, "k12", 0, "k14"],
+                  ["k21", 0, "k23", "k24"],
+                  [0, "k32", 0, "k34"],
+                  ["k41", "k42", "k43", 0]])
+rate_names4wl = ["k12", "k21", "k23", "k32", "k34", "k43", "k41", "k14", "k24", "k42"]
 G4wl = nx.MultiDiGraph()
-ge4wl(G4wl, rates4wl)
+GE(G4wl, k4wls, k4wl, name_key='name', val_key='val')
 #== State probabilitites =======================================================
 pars4wl = kda.generate_partial_diagrams(G4wl)
 dir_pars4wl = kda.generate_directional_partial_diagrams(pars4wl)
-sp4wl_KDA = kda.calc_state_probabilities(G4wl, dir_pars4wl)
+sp4wl_KDA = kda.calc_state_probabilities(G4wl, dir_pars4wl, key='val')
 #== State Func probabilitites ==================================================
-state_mults4wl, norm4wl = kda.construct_string_funcs(G4wl, dir_pars4wl, rates4wl, rate_names4wl)
+state_mults4wl, norm4wl = kda.calc_state_probabilities(G4wl, dir_pars4wl, key='name', output_strings=True)
 sympy_funcs4wl = kda.construct_sympy_funcs(state_mults4wl, norm4wl)
 state_prob_funcs4wl = kda.construct_lambdify_funcs(sympy_funcs4wl, rate_names4wl)
 sp4wl_SymPy = []
@@ -162,10 +170,6 @@ N4wl = 4   # number of states in cycle
 p_list = np.random.rand(N4wl)  # generate random probabilities
 sigma = p_list.sum(axis=0)  # normalization factor
 p4wl = p_list/sigma       # normalize probabilities
-k4wl = np.array([[0, b12, 0, b14],
-                [b21, 0, b23, b24],
-                [0, b32, 0, b34],
-                [b41, b42, b43, 0]])
 results4wl = kda.solve_ODE(p4wl, k4wl, t_max, max_step)
 probs4wl = results4wl.y[:N4wl]
 sp4wl_ODE = []
@@ -189,16 +193,25 @@ c35 = 31
 c53 = 37
 c45 = 23
 c54 = 29
-rates5wl = [c12, c21, c23, c32, c13, c31, c24, c42, c35, c53, c45, c54]
-rate_names5wl = ["z12", "z21", "z23", "z32", "z13", "z31", "z24", "z42", "z35", "z53", "z45", "z54"]
+k5wl = np.array([[  0, c12, c13,   0,   0],
+                 [c21,   0, c23, c24,   0],
+                 [c31, c32,   0,   0, c35],
+                 [  0, c42,   0,   0, c45],
+                 [  0,   0, c53, c54,   0]])
+k5wls = np.array([[  0, "k12", "k13",   0,   0],
+                  ["k21",   0, "k23", "k24",   0],
+                  ["k31", "k32",   0,   0, "k35"],
+                  [  0, "k42",   0,   0, "k45"],
+                  [  0,   0, "k53", "k54",   0]])
+rate_names5wl = ["k12", "k21", "k23", "k32", "k13", "k31", "k24", "k42", "k35", "k53", "k45", "k54"]
 G5wl = nx.MultiDiGraph()
-ge5wl(G5wl, rates5wl)
+GE(G5wl, k5wls, k5wl, name_key='name', val_key='val')
 #== State probabilitites =======================================================
 pars5wl = kda.generate_partial_diagrams(G5wl)
 dir_pars5wl = kda.generate_directional_partial_diagrams(pars5wl)
-sp5wl_KDA = kda.calc_state_probabilities(G5wl, dir_pars5wl)
+sp5wl_KDA = kda.calc_state_probabilities(G5wl, dir_pars5wl, key='val')
 #== State Func probabilitites ==================================================
-state_mults5wl, norm5wl = kda.construct_string_funcs(G5wl, dir_pars5wl, rates5wl, rate_names5wl)
+state_mults5wl, norm5wl = kda.calc_state_probabilities(G5wl, dir_pars5wl, key='name', output_strings=True)
 sympy_funcs5wl = kda.construct_sympy_funcs(state_mults5wl, norm5wl)
 state_prob_funcs5wl = kda.construct_lambdify_funcs(sympy_funcs5wl, rate_names5wl)
 sp5wl_SymPy = []
@@ -218,11 +231,6 @@ N5wl = 5   # number of states in cycle
 p_list = np.random.rand(N5wl)  # generate random probabilities
 sigma = p_list.sum(axis=0)  # normalization factor
 p5wl = p_list/sigma       # normalize probabilities
-k5wl = np.array([[  0, c12, c13,   0,   0],
-                 [c21,   0, c23, c24,   0],
-                 [c31, c32,   0,   0, c35],
-                 [  0, c42,   0,   0, c45],
-                 [  0,   0, c53, c54,   0]])
 results5wl = kda.solve_ODE(p5wl, k5wl, t_max, max_step)
 probs5wl = results5wl.y[:N5wl]
 sp5wl_ODE = []
@@ -245,16 +253,27 @@ a56 = 23
 a65 = 29
 a61 = 31
 a16 = 37
-rates6 = [a12, a21, a23, a32, a34, a43, a45, a54, a56, a65, a61, a16]
-rate_names6 = ["x12", "x21", "x23", "x32", "x34", "x43", "x45", "x54", "x56", "x65", "x61", "x16"]
+k6 = np.array([[  0, a12,   0,   0,   0, a16],
+               [a21,   0, a23,   0,   0,   0],
+               [  0, a32,   0, a34,   0,   0],
+               [  0,   0, a43,   0, a45,   0],
+               [  0,   0,   0, a54,   0, a56],
+               [a61,   0,   0,   0, a65,   0]])
+k6s = np.array([[  0, "k12",   0,   0,   0, "k16"],
+                ["k21",   0, "k23",   0,   0,   0],
+                [  0, "k32",   0, "k34",   0,   0],
+                [  0,   0, "k43",   0, "k45",   0],
+                [  0,   0,   0, "k54",   0, "k56"],
+                ["k61",   0,   0,   0, "k65",   0]])
+rate_names6 = ["k12", "k21", "k23", "k32", "k34", "k43", "k45", "k54", "k56", "k65", "k61", "k16"]
 G6 = nx.MultiDiGraph()
-ge6(G6, rates6)
+GE(G6, k6s, k6, name_key='name', val_key='val')
 #== State probabilitites =======================================================
 pars6 = kda.generate_partial_diagrams(G6)
 dir_pars6 = kda.generate_directional_partial_diagrams(pars6)
-sp6_KDA = kda.calc_state_probabilities(G6, dir_pars6)
+sp6_KDA = kda.calc_state_probabilities(G6, dir_pars6, key='val')
 #== State Func probabilitites ==================================================
-state_mults6, norm6 = kda.construct_string_funcs(G6, dir_pars6, rates6, rate_names6)
+state_mults6, norm6 = kda.calc_state_probabilities(G6, dir_pars6, key='name', output_strings=True)
 sympy_funcs6 = kda.construct_sympy_funcs(state_mults6, norm6)
 state_prob_funcs6 = kda.construct_lambdify_funcs(sympy_funcs6, rate_names6)
 sp6_SymPy = []
@@ -275,12 +294,6 @@ N6 = 6   # number of states in cycle
 p_list = np.random.rand(N6)  # generate random probabilities
 sigma = p_list.sum(axis=0)  # normalization factor
 p6 = p_list/sigma       # normalize probabilities
-k6 = np.array([[  0, a12,   0,   0,   0, a16],
-               [a21,   0, a23,   0,   0,   0],
-               [  0, a32,   0, a34,   0,   0],
-               [  0,   0, a43,   0, a45,   0],
-               [  0,   0,   0, a54,   0, a56],
-               [a61,   0,   0,   0, a65,   0]])
 results6 = kda.solve_ODE(p6, k6, t_max, max_step)
 probs6 = results6.y[:N6]
 sp6_ODE = []

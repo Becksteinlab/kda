@@ -12,6 +12,34 @@ import networkx as nx
 #== Functions ==================================================================
 #===============================================================================
 
+def generate_edges(G, names, vals, name_key='name', val_key='val'):
+    """
+    Generate edges with attributes 'name' and 'val'.
+
+    Parameters
+    ----------
+    G : NetworkX MultiDiGraph
+        Input diagram
+    names : array
+        'NxN' array where 'N' is the number of nodes in the diagram G. Contains
+        the names of all of the attributes corresponding to the values in
+        'vals' as strings, i.e. [[0, "k12"], ["k21", 0]].
+    vals : array
+        'NxN' array where 'N' is the number of nodes in the diagram G. Contains
+        the values associated with the attribute names in 'names'. For example,
+        assuming k12 and k21 had already been assigned values, for a 2 state
+        diagram 'vals' = [[0, k12], [k21, 0]].
+    name_key : str (optional)
+        Key used to retrieve variable names in 'names'. Default is 'name'.
+    val_key : str (optional)
+        Key used to retrieve variable values in 'vals'. Default is 'val'.
+    """
+    for i, row in enumerate(vals):
+        for j, elem in enumerate(row):
+            if not elem == 0:
+                attrs = {name_key : names[i, j], val_key : elem}
+                G.add_edge(i, j, **attrs)
+
 def pos_3(center=[0, 0], radius=10):
     """
     Generate node positions for 3 state model
@@ -40,27 +68,6 @@ def pos_3(center=[0, 0], radius=10):
     for i in range(N):
         pos[i] = array[i]*radius + center
     return pos
-
-def edges_3(G, rates, key='k'):
-    """
-    Generate edges for 3 state model
-
-    Parameters
-    ----------
-    G : NetworkX MultiDiGraph
-        Input diagram
-    rates : list
-        List of kinetic rate constants
-    key : str (optional)
-        Definition of key in NetworkX diagram edges, used to call rate values.
-        Default is 'k'.
-    """
-    G.add_weighted_edges_from([(0, 1, rates[0]),
-                               (1, 0, rates[1]),
-                               (1, 2, rates[2]),
-                               (2, 1, rates[3]),
-                               (0, 2, rates[4]),
-                               (2, 0, rates[5])], weight=key)
 
 def pos_4(center=[0, 0], radius=10):
     """
@@ -91,29 +98,6 @@ def pos_4(center=[0, 0], radius=10):
         pos[i] = array[i]*radius + center
     return pos
 
-def edges_4(G, rates, key='k'):
-    """
-    Generate edges for 4 state model
-
-    Parameters
-    ----------
-    G : NetworkX MultiDiGraph
-        Input diagram
-    rates : list
-        List of kinetic rate constants
-    key : str (optional)
-        Definition of key in NetworkX diagram edges, used to call rate values.
-        Default is 'k'.
-    """
-    G.add_weighted_edges_from([(0, 1, rates[0]),
-                               (1, 0, rates[1]),
-                               (1, 2, rates[2]),
-                               (2, 1, rates[3]),
-                               (2, 3, rates[4]),
-                               (3, 2, rates[5]),
-                               (3, 0, rates[6]),
-                               (0, 3, rates[7])], weight=key)
-
 def pos_4wl(center=[0, 0], radius=10):
     """
     Generate node positions for 4 state model with leakage
@@ -143,31 +127,6 @@ def pos_4wl(center=[0, 0], radius=10):
         pos[i] = array[i]*radius + center
     return pos
 
-def edges_4wl(G, rates, key='k'):
-    """
-    Generate edges for 4 state model with leakage
-
-    Parameters
-    ----------
-    G : NetworkX MultiDiGraph
-        Input diagram
-    rates : list
-        List of kinetic rate constants
-    key : str (optional)
-        Definition of key in NetworkX diagram edges, used to call rate values.
-        Default is 'k'.
-    """
-    G.add_weighted_edges_from([(0, 1, rates[0]),
-                               (1, 0, rates[1]),
-                               (1, 2, rates[2]),
-                               (2, 1, rates[3]),
-                               (2, 3, rates[4]),
-                               (3, 2, rates[5]),
-                               (3, 0, rates[6]),
-                               (0, 3, rates[7]),
-                               (1, 3, rates[8]),
-                               (3, 1, rates[9])], weight=key)
-
 def pos_5wl(center=[0, 0], radius=10):
     """
     Generate node positions for 5 state model with leakage
@@ -193,33 +152,6 @@ def pos_5wl(center=[0, 0], radius=10):
            3 : [-radius/2, -radius],
            4 : [radius/2, -radius]}
     return pos
-
-def edges_5wl(G, rates, key='k'):
-    """
-    Generate edges for 5 state model with leakage
-
-    Parameters
-    ----------
-    G : NetworkX MultiDiGraph
-        Input diagram
-    rates : list
-        List of kinetic rate constants
-    key : str (optional)
-        Definition of key in NetworkX diagram edges, used to call rate values.
-        Default is 'k'.
-    """
-    G.add_weighted_edges_from([(0, 1, rates[0]),
-                               (1, 0, rates[1]),
-                               (1, 2, rates[2]),
-                               (2, 1, rates[3]),
-                               (0, 2, rates[4]),
-                               (2, 0, rates[5]),
-                               (1, 3, rates[6]),
-                               (3, 1, rates[7]),
-                               (2, 4, rates[8]),
-                               (4, 2, rates[9]),
-                               (3, 4, rates[10]),
-                               (4, 3, rates[11])], weight=key)
 
 def pos_6(center=[0, 0], radius=10):
     """
@@ -249,30 +181,3 @@ def pos_6(center=[0, 0], radius=10):
     for i in range(N):
         pos[i] = array[i]*radius + center
     return pos
-
-def edges_6(G, rates, key='k'):
-    """
-    Generates edges for 6 state model
-
-    Parameters
-    ----------
-    G : NetworkX MultiDiGraph
-        Input diagram
-    rates : list
-        List of kinetic rate constants
-    key : str (optional)
-        Definition of key in NetworkX diagram edges, used to call rate values.
-        Default is 'k'.
-    """
-    G.add_weighted_edges_from([(0, 1, rates[0]),
-                               (1, 0, rates[1]),
-                               (1, 2, rates[2]),
-                               (2, 1, rates[3]),
-                               (2, 3, rates[4]),
-                               (3, 2, rates[5]),
-                               (3, 4, rates[6]),
-                               (4, 3, rates[7]),
-                               (4, 5, rates[8]),
-                               (5, 4, rates[9]),
-                               (5, 0, rates[10]),
-                               (0, 5, rates[11])], weight=key)

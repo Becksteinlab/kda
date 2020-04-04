@@ -158,9 +158,10 @@ def generate_directional_partial_diagrams(partials):
     return dir_partials
 
 
-def calc_state_probabilities(G, dir_partials, key='k'):
+def calc_state_probabilities(G, dir_partials, key, output_strings=False):
     """
-    Calculates state probabilities for N states in diagram G.
+    Calculates state probabilities and generates analytic function strings for
+    input diagram G.
 
     Parameters
     ----------
@@ -170,8 +171,10 @@ def calc_state_probabilities(G, dir_partials, key='k'):
         List of all directional partial diagrams for a given set of partial
         diagrams.
     key : str (optional)
-        Definition of key in NetworkX diagram edges, used to call rate values.
-        Default is 'k'. This needs to match the key used for the rate constants
+        Definition of key in NetworkX diagram edges, used to call edge rate
+        values or names. Default is 'val', which will use the edge values
+
+        This needs to match the key used for the rate constants
         in the input diagram G.
 
     Returns
@@ -180,79 +183,35 @@ def calc_state_probabilities(G, dir_partials, key='k'):
         Array of state probabilities for N states, [p1, p2, p3, ..., pN].
     """
     N = G.number_of_nodes() # Number of nodes/states
-    state_multiplicities = np.zeros(N)
-    for s in range(N):    # iterate over number of states, "s"
-        partial_multiplicities = np.zeros(len(dir_partials))    # generate zero array of length # of directional partial diagrams
-        for i in range(len(dir_partials)):      # iterate over the directional partial diagrams
-            edge_list = list(dir_partials[i].edges)     # get a list of all edges for partial directional diagram i
-            products = np.array([1])          # generate an array with a value of 1
+    partial_mults = []
+    for i in range(len(dir_partials)):      # iterate over the directional partial diagrams
+        edge_list = list(dir_partials[i].edges)     # get a list of all edges for partial directional diagram i
+        if output_strings == False:
+            products = 1          # generate an array with a value of 1
             for e in edge_list:                                 # iterate over the edges in the given directional partial diagram i
-                products *= G[e[0]][e[1]][e[2]][key]     # multiply the rate of each edge in edge_list
-            partial_multiplicities[i] = products[0]                 # for directional partial diagram i, assign product to partial multiplicity array
-        N_terms = np.int(len(dir_partials)/N) # calculate the number of terms to be summed for given state, s
-        for j in range(N):                            # iterate over number of states
-             # sum appropriate parts of partial multiplicity array for given state, s
-            state_multiplicities[j] = partial_multiplicities[N_terms*j:N_terms*j+N_terms].sum(axis=0)
-            # this gives you an array of all the state multiplicites
-    # calculate the state probabilities by normalizing over the sum of all state multiplicites
-    state_probabilities = state_multiplicities/state_multiplicities.sum(axis=0)
-    return state_probabilities
-
-
-def construct_string_funcs(G, dir_partials, rates, rate_names, key='k'):
-    """
-    Constructs analytic state multiplicity and normalization function strings
-    for the input diagram G.
-
-    Parameters
-    ----------
-    G : NetworkX MultiDiGraph
-        Input diagram
-    dir_partials : list
-        List of all directional partial diagrams for a given set of partial
-        diagrams.
-    rates : list
-        List of rate values associated with the edges of the input diagram G.
-        Each element should be the corresponding value for the input list of
-        strings 'rate_names', [x12, x21, x23...].
-    rate_names : list
-        List of strings, where each element is the name of the variable in the
-        input list 'rates', ["x12", "x21", "x23", ...].
-    key : str (optional)
-        Definition of key in NetworkX diagram edges, used to call rate values.
-        Default is 'k'. This needs to match the key used for the rate constants
-        in the input diagram G.
-
-    Returns
-    -------
-    state_mult_funcs : list of str
-        List of length 'N', where N is the number of states, that contains the
-        analytic multiplicity function for each state
-    norm_func : str
-        Sum of all state multiplicity functions, the normalization factor to
-        calculate the state probabilities
-    """
-    N = G.number_of_nodes() # Number of nodes/states
-    var_dict = dict.fromkeys(rates, {}) # generate dictionary with rates as keys
-    for i in range(len(rates)):
-        var_dict[rates[i]] = rate_names[i]  # assign appropriate rate names to rate values
-    state_mult_funcs = []    # create empty list to fill with summed terms
-    for s in range(N):    # iterate over number of states, "N"
-        part_mults = []    # generate empty list to put partial multiplicities in
-        for i in range(len(dir_partials)):      # iterate over the directional partial diagrams
-            edge_list = list(dir_partials[i].edges)     # get a list of all edges for partial directional diagram i
-            products = []          # generate an empty list to store individual variable names for each product
-            for edge in edge_list:
-                products.append(var_dict[G.edges[edge[0], edge[1], edge[2]][key]]) # append rate constant names from dir_par to list
-            part_mults.append(products)     # append list of rate constant names to part_mults
-    N_terms = int(len(part_mults)/N) # number of terms per state
-    term_list = []  # create empty list to put products of rate constants (terms) in
-    for vars in part_mults:
-        term_list.append("*".join(vars))    # join rate constants for each dir_par by delimeter "*"
-    for j in range(N):
-        state_mult_funcs.append("+".join(term_list[N_terms*j:N_terms*j+N_terms]))    # join appropriate terms for each state by delimeter "+"
-    norm_func = "+".join(state_mult_funcs)    # sum all terms to get normalization factor
-    return state_mult_funcs, norm_func
+                products *= G.edges[e[0], e[1], e[2]][key]    # multiply the rate of each edge in edge_list
+        if output_strings == True:
+            products = []
+            for e in edge_list:
+                products.append(G.edges[e[0], e[1], e[2]][key]) # append rate constant names from dir_par to list
+        partial_mults.append(products)
+    N_terms = np.int(len(dir_partials)/N) # calculate the number of terms to be summed for given state, s
+    state_mults = []
+    if output_strings == False:
+        partial_mults = np.array(partial_mults)
+        for s in range(N):    # iterate over number of states, "s"
+            state_mults.append(partial_mults[N_terms*s:N_terms*s+N_terms].sum(axis=0))
+        state_mults = np.array(state_mults)
+        state_probs = state_mults/state_mults.sum(axis=0)
+        return state_probs
+    if output_strings == True:
+        term_list = []  # create empty list to put products of rate constants (terms) in
+        for vars in partial_mults:
+            term_list.append("*".join(vars))    # join rate constants for each dir_par by delimeter "*"
+        for s in range(N):    # iterate over number of states, "s"
+            state_mults.append("+".join(term_list[N_terms*s:N_terms*s+N_terms]))    # join appropriate terms for each state by delimeter "+"
+        norm = "+".join(state_mults)    # sum all terms to get normalization factor
+        return state_mults, norm
 
 
 def construct_sympy_funcs(state_mult_funcs, norm_func):
@@ -307,8 +266,52 @@ def calc_cycle_fluxes(dir_pars):
     return NotImplementedError
 
 
-def assign_probs_and_analytic_functions_to_G(dir_pars):
-    return NotImplementedError
+def generate_edges(G, names, vals, name_key='name', val_key='val'):
+    """
+    Generate edges with attributes 'name' and 'val'.
+
+    Parameters
+    ----------
+    G : NetworkX MultiDiGraph
+        Input diagram
+    names : array
+        'NxN' array where 'N' is the number of nodes in the diagram G. Contains
+        the names of all of the attributes corresponding to the values in
+        'vals' as strings, i.e. [[0, "k12"], ["k21", 0]].
+    vals : array
+        'NxN' array where 'N' is the number of nodes in the diagram G. Contains
+        the values associated with the attribute names in 'names'. For example,
+        assuming k12 and k21 had already been assigned values, for a 2 state
+        diagram 'vals' = [[0, k12], [k21, 0]].
+    name_key : str (optional)
+        Key used to retrieve variable names in 'names'. Default is 'name'.
+    val_key : str (optional)
+        Key used to retrieve variable values in 'vals'. Default is 'val'.
+    """
+    for i, row in enumerate(vals):
+        for j, elem in enumerate(row):
+            if not elem == 0:
+                attrs = {name_key : names[i, j], val_key : elem}
+                G.add_edge(i, j, **attrs)
+
+
+def add_node_attribute(G, vals, name):
+    """
+    Sequentially add attributes to nodes from array of values, i.e. state
+    probabilities.
+
+    Parameters
+    ----------
+    G : NetworkX MultiDiGraph
+        Input diagram
+    vals : array like
+        Array or list of values of length 'n', where 'n' is the number of nodes
+        in the diagram G. Elements must be in order, i.e. [x1, x2, x3, ..., xn]
+    name : str
+        Name of new attribute to be assigned to nodes.
+    """
+    for i in range(G.number_of_nodes()):
+        G.nodes[i][name] = vals[i]
 
 
 def solve_ODE(P, K, t_max, max_step):
