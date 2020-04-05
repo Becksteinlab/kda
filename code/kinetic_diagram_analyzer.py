@@ -233,7 +233,7 @@ def generate_edges(G, names, vals, name_key='name', val_key='val'):
                 attrs = {name_key : names[i, j], val_key : elem}
                 G.add_edge(i, j, **attrs)
 
-def add_node_attribute(G, vals, label):
+def add_node_attribute(G, data, label):
     """
     Sequentially add attributes to nodes from array of values, i.e. state
     probabilities.
@@ -242,14 +242,29 @@ def add_node_attribute(G, vals, label):
     ----------
     G : NetworkX MultiDiGraph
         Input diagram
-    vals : array like
-        Array or list of values of length 'n', where 'n' is the number of nodes
-        in the diagram G. Elements must be in order, i.e. [x1, x2, x3, ..., xn]
+    data : array like
+        Array or list of length 'n', where 'n' is the number of nodes in the
+        diagram G. Elements must be in order, i.e. [x1, x2, x3, ..., xn]
     label : str
         Name of new attribute to be assigned to nodes.
     """
     for i in range(G.number_of_nodes()):
-        G.nodes[i][label] = vals[i]
+        G.nodes[i][label] = data[i]
+
+def add_graph_attribute(G, data, label):
+    """
+    Add attribute to graph G.
+
+    Parameters
+    ----------
+    G : NetworkX MultiDiGraph
+        Input diagram
+    data : anything
+        Data to be assigned as an attribute to G.
+    label : str
+        Name of new attribute to be assigned to nodes.
+    """
+    G.graph[label] = data
 
 def solve_ODE(P, K, t_max, method='RK45', t_eval=None,
               dense_output=False, events=None, vectorized=False):
