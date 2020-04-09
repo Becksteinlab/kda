@@ -133,10 +133,14 @@ def calc_state_probabilities(G, dir_partials, key, output_strings=False):
     for i in range(len(dir_partials)):      # iterate over the directional partial diagrams
         edge_list = list(dir_partials[i].edges)     # get a list of all edges for partial directional diagram i
         if output_strings == False:
+            if isinstance(G.edges[edge_list[0][0], edge_list[0][1], edge_list[0][2]][key], str):
+                raise Exception("To enter variable strings set parameter output_strings=True.")
             products = 1          # generate an array with a value of 1
             for e in edge_list:                                 # iterate over the edges in the given directional partial diagram i
                 products *= G.edges[e[0], e[1], e[2]][key]    # multiply the rate of each edge in edge_list
         if output_strings == True:
+            if not isinstance(G.edges[edge_list[0][0], edge_list[0][1], edge_list[0][2]][key], str):
+                raise Exception("To enter variable values set parameter output_strings=False.")
             products = []
             for e in edge_list:
                 products.append(G.edges[e[0], e[1], e[2]][key]) # append rate constant names from dir_par to list
