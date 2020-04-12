@@ -82,16 +82,19 @@ def plot_partials(partials, pos, panel=False, panel_scale=1, font_size=12, path=
         N = len(partials)
         Nrows = int(np.sqrt(N))
         Ncols = int(np.ceil(N/Nrows))
+        excess_plots = Nrows*Ncols - N
         fig, ax = plt.subplots(nrows=Nrows, ncols=Ncols, tight_layout=True)
         fig.set_figheight(Nrows*panel_scale)
         fig.set_figwidth(1.2*Ncols*panel_scale)
         for i, partial in enumerate(partials):
             ix = np.unravel_index(i, ax.shape)
             plt.sca(ax[ix])
+            ax[ix].set_axis_off()
             nx.draw_networkx_nodes(partial, pos, ax=ax[ix], node_size=150*panel_scale, nodelist=node_list, node_color='0.8')
             nx.draw_networkx_edges(partial, pos, ax=ax[ix], node_size=150*panel_scale, arrow_style='->')
             nx.draw_networkx_labels(partial, pos, labels, font_size=font_size, ax=ax[ix])
-            ax[ix].set_axis_off()
+        for i in range(excess_plots):
+            ax.flat[-i-1].set_visible(False)
         if not path == None:
             fig.savefig(path + "/{}_diagram_panel.png".format(label))
     else:

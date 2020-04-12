@@ -67,13 +67,18 @@ kda.add_node_attribute(G, lambdify_funcs, 'lambdify_func')
 
 # Plot
 
-path = 'C:/Users/nikol/phy495/kinetic-diagram-analyzer/data/plots'
+path = 'C:/Users/nikol/phy495/kinetic-diagram-analyzer/data/plots/plot_dump'
+
+# INSERT FANCY PLOTTING CODE HERE TO TEST IT
+# def fancy_plot(G, pos, node_sizes, path):
+#     node_sizes = state_probs*scale_factor
+
 
 # plotting.plot_input_diagram(G, pos)
-# plotting.fancy_plot(G, pos, state_probs*4e3)
+# fancy_plot(G, pos, state_probs*4e3)
 # plotting.plot_partials(partials, pos, panel=True)
-plotting.plot_partials(dir_partials, pos, panel=True, font_size=10, panel_scale=1)
-plt.show()
+# plotting.plot_partials(dir_partials, pos, panel=True, font_size=10, panel_scale=1)
+# plt.show()
 
 
 #==
