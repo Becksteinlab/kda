@@ -41,7 +41,7 @@ def plot_input_diagram(G, pos, path=None, label=None):
     if not path == None:
         fig.savefig(path + "/{}_input_diagram.png".format(label))
 
-def plot_partials(partials, pos, panel=False, panel_scale=1, font_size=12, path=None, label='partial'):
+def plot_partials(partials, pos, panel=False, panel_scale=1, font_size=12, cbt=False, path=None, label='partial'):
     """
     Plots all partial diagrams.
 
@@ -62,6 +62,9 @@ def plot_partials(partials, pos, panel=False, panel_scale=1, font_size=12, path=
         height and width. Default is 1.
     font_size : int (optional)
         Sets the font size for the figure. Default is 12.
+    cbt : bool (optional)
+        'Color by target' option that colors target state node with a coral red.
+        Default is False.
     path : str (optional)
         String of save path for figure. If path is given figure will be saved
         at the specified location. Default is None.
@@ -87,10 +90,19 @@ def plot_partials(partials, pos, panel=False, panel_scale=1, font_size=12, path=
         fig.set_figheight(Nrows*panel_scale)
         fig.set_figwidth(1.2*Ncols*panel_scale)
         for i, partial in enumerate(partials):
+            if cbt == True:
+                node_colors = []
+                for n in range(partial.number_of_nodes()):
+                    if partial.nodes[n]['is_target'] == True:
+                        node_colors.append('#FF8080')
+                    else:
+                        node_colors.append('0.8')
+            else:
+                node_colors = ['0.8' for n in range(len(partial))]
             ix = np.unravel_index(i, ax.shape)
             plt.sca(ax[ix])
             ax[ix].set_axis_off()
-            nx.draw_networkx_nodes(partial, pos, ax=ax[ix], node_size=150*panel_scale, nodelist=node_list, node_color='0.8')
+            nx.draw_networkx_nodes(partial, pos, ax=ax[ix], node_size=150*panel_scale, nodelist=node_list, node_color=node_colors)
             nx.draw_networkx_edges(partial, pos, ax=ax[ix], node_size=150*panel_scale, arrow_style='->')
             nx.draw_networkx_labels(partial, pos, labels, font_size=font_size, ax=ax[ix])
         for i in range(excess_plots):
@@ -99,9 +111,18 @@ def plot_partials(partials, pos, panel=False, panel_scale=1, font_size=12, path=
             fig.savefig(path + "/{}_diagram_panel.png".format(label))
     else:
         for i, partial in enumerate(partials):
+            if cbt == True:
+                node_colors = []
+                for n in range(partial.number_of_nodes()):
+                    if partial.nodes[n]['is_target'] == True:
+                        node_colors.append('#FF8080')
+                    else:
+                        node_colors.append('0.8')
+            else:
+                node_colors = ['0.8' for n in range(len(partial))]
             fig = plt.figure(figsize=(3, 3), tight_layout=True)
             fig.add_subplot(111)
-            nx.draw_networkx_nodes(partial, pos, nodelist=node_list, node_color='0.8')
+            nx.draw_networkx_nodes(partial, pos, nodelist=node_list, node_color=node_colors)
             nx.draw_networkx_edges(partial, pos, arrow_style='->')
             nx.draw_networkx_labels(partial, pos, labels, font_size=font_size)
             plt.axis('off')
