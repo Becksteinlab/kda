@@ -73,6 +73,32 @@ path = 'C:/Users/nikol/phy495/kinetic-diagram-analyzer/data/plots/plot_dump'
 # def fancy_plot(G, pos, node_sizes, path):
 #     node_sizes = state_probs*scale_factor
 
+# from sympy import *
+# Print LaTeX version of all state functions
+# for func in sympy_funcs:
+#     print(latex(func))
+
+# Simplify functions using SymPy
+# k_c, k_off, k_on, A_in, A_out, c_B = symbols('k_c k_off k_on A_in A_out, c_B')
+# k12, k21, k23, k32, k34, k43, k45, k54, k56, k65, k61, k16 = symbols("k12 k21 k23 k32 k34 k43 k45 k54 k56 k65 k61 k16")
+# sub_dict = {k23: k_c,
+#              k32: k_c,
+#              k56: k_c,
+#              k65: k_c,
+#              k21: k_off,
+#              k61: k_off,
+#              k54: k_off,
+#              k34: k_off,
+#              k43: k_on*A_in,
+#              k12: k_on*A_out,
+#              k45: k_on*c_B,
+#              k16: k_on*c_B}
+# new_sympy_funcs = []
+# for func in sympy_funcs:
+#     new_sympy_funcs.append(simplify(func.subs(sub_dict)))
+# for i, func in enumerate(new_sympy_funcs):
+#     print("State {}: {}".format(i+1, latex(func)))
+
 
 # plotting.plot_input_diagram(G, pos)
 # fancy_plot(G, pos, state_probs*4e3)

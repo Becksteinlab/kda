@@ -329,9 +329,10 @@ def solve_ODE(P, K, t_max, method='RK45', t_eval=None,
     k = convert_K(K)
     time = (0, t_max)
     y0 = np.array(P, dtype=np.float64)
+    max_step = t_max*1e-3
     return scipy.integrate.solve_ivp(fun=func, t_span=time, y0=y0,
-                                     method=method, t_eval=t_eval,
-                                     dense_output=dense_output,
+                                     max_step=max_step, method=method,
+                                     t_eval=t_eval, dense_output=dense_output,
                                      events=events, vectorized=vectorized)
 
 def find_unique_edges(G):

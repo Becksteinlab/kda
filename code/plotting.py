@@ -64,7 +64,7 @@ def plot_partials(partials, pos, panel=False, panel_scale=1, font_size=12, cbt=F
         Sets the font size for the figure. Default is 12.
     cbt : bool (optional)
         'Color by target' option that colors target state node with a coral red.
-        Default is False.
+        Should only be used with directional partial diagrams. Default is False.
     path : str (optional)
         String of save path for figure. If path is given figure will be saved
         at the specified location. Default is None.
