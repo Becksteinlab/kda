@@ -247,11 +247,11 @@ plotting.plot_partials(pars5wl, pos5wl, panel=True, panel_scale=2, font_size=10,
 plotting.plot_partials(pars6, pos6, panel=True, panel_scale=2, font_size=10, path=path, label='6_state_partial')
 
 # Save directional partial panels
-plotting.plot_partials(dir_pars3, pos3, panel=True, panel_scale=2, font_size=10, path=path, label='3_state_dir_partial')
-plotting.plot_partials(dir_pars4, pos4, panel=True, panel_scale=2, font_size=10, path=path, label='4_state_dir_partial')
-plotting.plot_partials(dir_pars4wl, pos4wl, panel=True, panel_scale=2, font_size=10, path=path, label='4wl_state_dir_partial')
-plotting.plot_partials(dir_pars5wl, pos5wl, panel=True, panel_scale=2, font_size=10, path=path, label='5wl_state_dir_partial')
-plotting.plot_partials(dir_pars6, pos6, panel=True, panel_scale=2, font_size=10, path=path, label='6_state_dir_partial')
+plotting.plot_partials(dir_pars3, pos3, panel=True, panel_scale=2, font_size=10, cbt=True, path=path, label='3_state_dir_partial')
+plotting.plot_partials(dir_pars4, pos4, panel=True, panel_scale=2, font_size=10, cbt=True, path=path, label='4_state_dir_partial')
+plotting.plot_partials(dir_pars4wl, pos4wl, panel=True, panel_scale=2, font_size=10, cbt=True, path=path, label='4wl_state_dir_partial')
+plotting.plot_partials(dir_pars5wl, pos5wl, panel=True, panel_scale=2, font_size=10, cbt=True, path=path, label='5wl_state_dir_partial')
+plotting.plot_partials(dir_pars6, pos6, panel=True, panel_scale=2, font_size=10, cbt=True, path=path, label='6_state_dir_partial')
 
 # Save ODE probability plots
 plotting.plot_ODE_probs(results3, path=path, label='3_state')
