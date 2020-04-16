@@ -2,19 +2,74 @@
 # Beckstein Lab
 # Arizona State University
 #
-# Biochemical Kinetic Diagram Analyzer Testing
+# Kinetic Diagram Analyzer Testing
 
+import pytest
 import numpy as np
+from numpy.testing import assert_almost_equal
 import networkx as nx
 import kinetic_diagram_analyzer as kda
 
-def test_three_state():
-    k12 = 2
-    k21 = 3
-    k23 = 5
-    k32 = 7
-    k13 = 11
-    k31 = 13
+
+@pytest.fixture(scope='function')
+def SP3(k12, k21, k23, k32, k13, k31):
+    P1 = k23*k31 + k32*k21 + k31*k21
+    P2 = k13*k32 + k32*k12 + k31*k12
+    P3 = k13*k23 + k12*k23 + k21*k13
+    Sigma = P1 + P2 + P3 # Normalization factor
+    return np.array([P1, P2, P3])/Sigma
+
+
+@pytest.fixture(scope='function')
+def SP4(k12, k21, k23, k32, k34, k43, k41, k14):
+    P1 = k43*k32*k21 + k23*k34*k41 + k21*k34*k41 + k41*k32*k21
+    P2 = k12*k43*k32 + k14*k43*k32 + k34*k41*k12 + k32*k41*k12
+    P3 = k43*k12*k23 + k23*k14*k43 + k21*k14*k43 + k41*k12*k23
+    P4 = k12*k23*k34 + k14*k23*k34 + k34*k21*k14 + k32*k21*k14
+    Sigma = P1 + P2 + P3 + P4 # Normalization factor
+    return np.array([P1, P2, P3, P4])/Sigma
+
+
+@pytest.fixture(scope='function')
+def SP4WL(k12, k21, k23, k32, k34, k43, k41, k14, k24, k42):
+    P1 = k43*k32*k21 + k23*k34*k41 + k21*k34*k41 + k41*k32*k21 + k32*k42*k21 + k24*k34*k41 + k34*k42*k21 + k32*k24*k41
+    P2 = k12*k43*k32 + k14*k43*k32 + k34*k41*k12 + k32*k41*k12 + k32*k42*k12 + k34*k14*k42 + k12*k34*k42 + k32*k14*k42
+    P3 = k43*k12*k23 + k23*k14*k43 + k21*k14*k43 + k41*k12*k23 + k12*k42*k23 + k14*k24*k43 + k12*k24*k43 + k14*k42*k23
+    P4 = k12*k23*k34 + k14*k23*k34 + k34*k21*k14 + k32*k21*k14 + k32*k12*k24 + k14*k24*k34 + k34*k12*k24 + k14*k32*k24
+    Sigma = P1 + P2 + P3 + P4 # Normalization factor
+    return np.array([P1, P2, P3, P4])/Sigma
+
+
+@pytest.fixture(scope='function')
+def SP5WL(k12, k21, k23, k32, k13, k31, k24, k42, k35, k53, k45, k54):
+    P1 = k35*k54*k42*k21 + k24*k45*k53*k31 + k21*k45*k53*k31 + k42*k21*k53*k31 + k54*k42*k21*k31 + k54*k42*k32*k21 + k45*k53*k23*k31 + k53*k32*k42*k21 + k42*k23*k53*k31 + k54*k42*k23*k31 + k45*k53*k32*k21
+    P2 = k12*k35*k54*k42 + k13*k35*k54*k42 + k45*k53*k31*k12 + k42*k53*k31*k12 + k31*k12*k54*k42 + k54*k42*k32*k12 + k45*k53*k13*k32 + k53*k32*k42*k12 + k53*k13*k32*k42 + k54*k42*k13*k32 + k45*k53*k32*k12
+    P3 = k12*k24*k45*k53 + k13*k24*k45*k53 + k21*k13*k45*k53 + k42*k21*k13*k53 + k54*k42*k21*k13 + k54*k42*k12*k23 + k45*k53*k23*k13 + k42*k12*k23*k53 + k42*k23*k13*k53 + k54*k42*k23*k13 + k45*k53*k12*k23
+    P4 = k12*k24*k35*k54 + k24*k13*k35*k54 + k21*k13*k35*k54 + k53*k31*k12*k24 + k54*k31*k12*k24 + k12*k32*k24*k54 + k13*k23*k35*k54 + k53*k32*k12*k24 + k13*k53*k32*k24 + k13*k32*k24*k54 + k12*k23*k35*k54
+    P5 = k35*k12*k24*k45 + k13*k35*k24*k45 + k45*k21*k13*k35 + k42*k21*k13*k35 + k31*k12*k24*k45 + k12*k32*k24*k45 + k13*k23*k35*k45 + k12*k42*k23*k35 + k42*k23*k13*k35 + k13*k32*k24*k45 + k12*k23*k35*k45
+    Sigma = P1 + P2 + P3 + P4 + P5 # Normalization factor
+    return np.array([P1, P2, P3, P4, P5])/Sigma
+
+
+@pytest.fixture(scope='function')
+def SP6(k12, k21, k23, k32, k34, k43, k45, k54, k56, k65, k61, k16):
+    P1 = k65*k54*k43*k32*k21 + k61*k54*k43*k32*k21 + k56*k61*k43*k32*k21 + k45*k56*k61*k32*k21 + k34*k45*k56*k61*k21 + k23*k34*k45*k56*k61
+    P2 = k12*k65*k54*k43*k32 + k61*k12*k54*k43*k32 + k56*k61*k12*k43*k32 + k45*k56*k61*k32*k12 + k34*k45*k56*k61*k12 + k16*k65*k54*k43*k32
+    P3 = k12*k23*k65*k54*k43 + k61*k12*k23*k54*k43 + k56*k61*k12*k23*k43 + k45*k56*k61*k12*k23 + k21*k16*k65*k54*k43 + k23*k16*k65*k54*k43
+    P4 = k65*k54*k12*k23*k34 + k54*k61*k12*k23*k34 + k56*k61*k12*k23*k34 + k32*k21*k16*k65*k54 + k21*k16*k65*k54*k34 + k16*k65*k54*k23*k34
+    P5 = k65*k12*k23*k34*k45 + k61*k12*k23*k34*k45 + k43*k32*k21*k16*k65 + k45*k32*k21*k16*k65 + k34*k45*k21*k16*k65 + k23*k34*k45*k16*k65
+    P6 = k12*k23*k34*k45*k56 + k54*k43*k32*k21*k16 + k56*k43*k32*k21*k16 + k45*k56*k32*k21*k16 + k34*k45*k56*k21*k16 + k16*k23*k34*k45*k56
+    Sigma = P1 + P2 + P3 + P4 + P5 + P6 # Normalization factor
+    return np.array([P1, P2, P3, P4, P5, P6])/Sigma
+
+
+@pytest.mark.parametrize('k21', [1e0, 1e1])
+@pytest.mark.parametrize('k23', [1e0, 1e1])
+@pytest.mark.parametrize('k32', [1e0, 1e1])
+@pytest.mark.parametrize('k13', [1e0, 1e1])
+@pytest.mark.parametrize('k31', [1e0, 1e1])
+@pytest.mark.parametrize('k12', [1e0, 1e1])
+def test_3(k12, k21, k23, k32, k13, k31, SP3):
     k3 = np.array([[0, k12, k13],
                   [k21, 0, k23],
                   [k31, k32, 0]])
@@ -24,51 +79,42 @@ def test_three_state():
     rate_names3 = ["k12", "k21", "k23", "k32", "k13", "k31"]
     G3 = nx.MultiDiGraph()
     kda.generate_edges(G3, k3s, k3, name_key='name', val_key='val')
-    #== State probabilitites =======================================================
     pars3 = kda.generate_partial_diagrams(G3)
     dir_pars3 = kda.generate_directional_partial_diagrams(pars3)
-    sp3_KDA = kda.calc_state_probabilities(G3, dir_pars3, key='val')
-    #== State Func probabilitites ==================================================
+    SP3_KDA = kda.calc_state_probabilities(G3, dir_pars3, key='val')
     state_mults3, norm3 = kda.calc_state_probabilities(G3, dir_pars3, key='name', output_strings=True)
     sympy_funcs3 = kda.construct_sympy_funcs(state_mults3, norm3)
     state_prob_funcs3 = kda.construct_lambdify_funcs(sympy_funcs3, rate_names3)
-    sp3_SymPy = []
+    SP3_SymPy = []
     for i in range(G3.number_of_nodes()):
-        sp3_SymPy.append(state_prob_funcs3[i](k12, k21, k23, k32, k13, k31))
-    sp3_SymPy = np.array(sp3_SymPy)
-    #== Manual =====================================================================
-    P1 = k23*k31 + k32*k21 + k31*k21
-    P2 = k13*k32 + k32*k12 + k31*k12
-    P3 = k13*k23 + k12*k23 + k21*k13
-    Sigma = P1 + P2 + P3 # Normalization factor
-    sp3_manual = np.array([P1, P2, P3])/Sigma
-    #== ODE ========================================================================
-    t_max = 5e0
-    N3 = 3   # number of states in cycle
-    p_list = np.random.rand(N3)  # generate random probabilities
-    sigma = p_list.sum(axis=0)  # normalization factor
-    p3 = p_list/sigma       # normalize probabilities
+        SP3_SymPy.append(state_prob_funcs3[i](k12, k21, k23, k32, k13, k31))
+    SP3_SymPy = np.array(SP3_SymPy)
+    t_max = 5e1
+    p3 = np.array([1, 1, 1])/3
     results3 = kda.solve_ODE(p3, k3, t_max)
-    probs3 = results3.y[:N3]
-    sp3_ODE = []
+    probs3 = results3.y[:3]
+    SP3_ODE = []
     for i in probs3:
-        sp3_ODE.append(i[-1])
-    sp3_ODE = np.array(sp3_ODE)
-    return NotImplementedError
+        SP3_ODE.append(i[-1])
+    SP3_ODE = np.array(SP3_ODE)
+    assert_almost_equal(SP3, SP3_KDA, decimal=15)
+    assert_almost_equal(SP3, SP3_SymPy, decimal=15)
+    assert_almost_equal(SP3, SP3_ODE, decimal=7)
 
-def test_four_state():
-    b12 = 2
-    b21 = 3
-    b23 = 5
-    b32 = 7
-    b34 = 11
-    b43 = 13
-    b41 = 17
-    b14 = 19
-    k4 = np.array([[0, b12, 0, b14],
-                   [b21, 0, b23, 0],
-                   [0, b32, 0, b34],
-                   [b41, 0, b43, 0]])
+
+@pytest.mark.parametrize('k12', [1e0, 1e1])
+@pytest.mark.parametrize('k21', [1e0, 1e1])
+@pytest.mark.parametrize('k23', [1e0, 1e1])
+@pytest.mark.parametrize('k32', [1e0, 1e1])
+@pytest.mark.parametrize('k34', [1e0, 1e1])
+@pytest.mark.parametrize('k43', [1e0, 1e1])
+@pytest.mark.parametrize('k41', [1e0, 1e1])
+@pytest.mark.parametrize('k14', [1e0, 1e1])
+def test_4(k12, k21, k23, k32, k34, k43, k41, k14, SP4):
+    k4 = np.array([[0, k12, 0, k14],
+                   [k21, 0, k23, 0],
+                   [0, k32, 0, k34],
+                   [k41, 0, k43, 0]])
     k4s = np.array([[0, "k12", 0, "k14"],
                     ["k21", 0, "k23", 0],
                     [0, "k32", 0, "k34"],
@@ -76,54 +122,44 @@ def test_four_state():
     rate_names4 = ["k12", "k21", "k23", "k32", "k34", "k43", "k41", "k14"]
     G4 = nx.MultiDiGraph()
     kda.generate_edges(G4, k4s, k4, name_key='name', val_key='val')
-    #== State probabilitites =======================================================
     pars4 = kda.generate_partial_diagrams(G4)
     dir_pars4 = kda.generate_directional_partial_diagrams(pars4)
-    sp4_KDA = kda.calc_state_probabilities(G4, dir_pars4, key='val')
-    #== State Func probabilitites ==================================================
+    SP4_KDA = kda.calc_state_probabilities(G4, dir_pars4, key='val')
     state_mults4, norm4 = kda.calc_state_probabilities(G4, dir_pars4, key='name', output_strings=True)
     sympy_funcs4 = kda.construct_sympy_funcs(state_mults4, norm4)
     state_prob_funcs4 = kda.construct_lambdify_funcs(sympy_funcs4, rate_names4)
-    sp4_SymPy = []
+    SP4_SymPy = []
     for i in range(G4.number_of_nodes()):
-        sp4_SymPy.append(state_prob_funcs4[i](b12, b21, b23, b32, b34, b43, b41, b14))
-    sp4_SymPy = np.array(sp4_SymPy)
-    #== Manual =====================================================================
-    P1 = b43*b32*b21 + b23*b34*b41 + b21*b34*b41 + b41*b32*b21
-    P2 = b12*b43*b32 + b14*b43*b32 + b34*b41*b12 + b32*b41*b12
-    P3 = b43*b12*b23 + b23*b14*b43 + b21*b14*b43 + b41*b12*b23
-    P4 = b12*b23*b34 + b14*b23*b34 + b34*b21*b14 + b32*b21*b14
-    Sigma = P1 + P2 + P3 + P4 # Normalization factor
-    sp4_manual = np.array([P1, P2, P3, P4])/Sigma
-    #== ODE ========================================================================
-    t_max = 5e0
-    N4 = 4   # number of states in cycle
-    p_list = np.random.rand(N4)  # generate random probabilities
-    sigma = p_list.sum(axis=0)  # normalization factor
-    p4 = p_list/sigma       # normalize probabilities
+        SP4_SymPy.append(state_prob_funcs4[i](k12, k21, k23, k32, k34, k43, k41, k14))
+    SP4_SymPy = np.array(SP4_SymPy)
+    t_max = 5e1
+    p4 = np.array([1, 1, 1, 1])/4
     results4 = kda.solve_ODE(p4, k4, t_max)
-    probs4 = results4.y[:N4]
-    sp4_ODE = []
+    probs4 = results4.y[:4]
+    SP4_ODE = []
     for i in probs4:
-        sp4_ODE.append(i[-1])
-    sp4_ODE = np.array(sp4_ODE)
-    return NotImplementedError
+        SP4_ODE.append(i[-1])
+    SP4_ODE = np.array(SP4_ODE)
+    assert_almost_equal(SP4, SP4_KDA, decimal=15)
+    assert_almost_equal(SP4, SP4_SymPy, decimal=15)
+    assert_almost_equal(SP4, SP4_ODE, decimal=5)
 
-def test_four_state_with_leakage():
-    b12 = 2
-    b21 = 3
-    b23 = 5
-    b32 = 7
-    b34 = 11
-    b43 = 13
-    b41 = 17
-    b14 = 19
-    b24 = 23
-    b42 = 29
-    k4wl = np.array([[0, b12, 0, b14],
-                    [b21, 0, b23, b24],
-                    [0, b32, 0, b34],
-                    [b41, b42, b43, 0]])
+
+@pytest.mark.parametrize('k12', [1e0, 1e1])
+@pytest.mark.parametrize('k21', [1e0, 1e1])
+@pytest.mark.parametrize('k23', [1e0, 1e1])
+@pytest.mark.parametrize('k32', [1e0, 1e1])
+@pytest.mark.parametrize('k34', [1e0, 1e1])
+@pytest.mark.parametrize('k43', [1e0, 1e1])
+@pytest.mark.parametrize('k41', [1e0, 1e1])
+@pytest.mark.parametrize('k14', [1e0, 1e1])
+@pytest.mark.parametrize('k24', [1e0, 1e1])
+@pytest.mark.parametrize('k42', [1e0, 1e1])
+def test_4WL(k12, k21, k23, k32, k34, k43, k41, k14, k24, k42, SP4WL):
+    k4wl = np.array([[0, k12, 0, k14],
+                    [k21, 0, k23, k24],
+                    [0, k32, 0, k34],
+                    [k41, k42, k43, 0]])
     k4wls = np.array([[0, "k12", 0, "k14"],
                       ["k21", 0, "k23", "k24"],
                       [0, "k32", 0, "k34"],
@@ -131,57 +167,47 @@ def test_four_state_with_leakage():
     rate_names4wl = ["k12", "k21", "k23", "k32", "k34", "k43", "k41", "k14", "k24", "k42"]
     G4wl = nx.MultiDiGraph()
     kda.generate_edges(G4wl, k4wls, k4wl, name_key='name', val_key='val')
-    #== State probabilitites =======================================================
     pars4wl = kda.generate_partial_diagrams(G4wl)
     dir_pars4wl = kda.generate_directional_partial_diagrams(pars4wl)
-    sp4wl_KDA = kda.calc_state_probabilities(G4wl, dir_pars4wl, key='val')
-    #== State Func probabilitites ==================================================
+    SP4WL_KDA = kda.calc_state_probabilities(G4wl, dir_pars4wl, key='val')
     state_mults4wl, norm4wl = kda.calc_state_probabilities(G4wl, dir_pars4wl, key='name', output_strings=True)
     sympy_funcs4wl = kda.construct_sympy_funcs(state_mults4wl, norm4wl)
     state_prob_funcs4wl = kda.construct_lambdify_funcs(sympy_funcs4wl, rate_names4wl)
-    sp4wl_SymPy = []
+    SP4WL_SymPy = []
     for i in range(G4wl.number_of_nodes()):
-        sp4wl_SymPy.append(state_prob_funcs4wl[i](b12, b21, b23, b32, b34, b43, b41, b14, b24, b42))
-    sp4wl_SymPy = np.array(sp4wl_SymPy)
-    #== Manual =====================================================================
-    P1 = b43*b32*b21 + b23*b34*b41 + b21*b34*b41 + b41*b32*b21 + b32*b42*b21 + b24*b34*b41 + b34*b42*b21 + b32*b24*b41
-    P2 = b12*b43*b32 + b14*b43*b32 + b34*b41*b12 + b32*b41*b12 + b32*b42*b12 + b34*b14*b42 + b12*b34*b42 + b32*b14*b42
-    P3 = b43*b12*b23 + b23*b14*b43 + b21*b14*b43 + b41*b12*b23 + b12*b42*b23 + b14*b24*b43 + b12*b24*b43 + b14*b42*b23
-    P4 = b12*b23*b34 + b14*b23*b34 + b34*b21*b14 + b32*b21*b14 + b32*b12*b24 + b14*b24*b34 + b34*b12*b24 + b14*b32*b24
-    Sigma = P1 + P2 + P3 + P4 # Normalization factor
-    sp4wl_manual = np.array([P1, P2, P3, P4])/Sigma
-    #== ODE ========================================================================
-    t_max = 5e0
-    N4wl = 4   # number of states in cycle
-    p_list = np.random.rand(N4wl)  # generate random probabilities
-    sigma = p_list.sum(axis=0)  # normalization factor
-    p4wl = p_list/sigma       # normalize probabilities
+        SP4WL_SymPy.append(state_prob_funcs4wl[i](k12, k21, k23, k32, k34, k43, k41, k14, k24, k42))
+    SP4WL_SymPy = np.array(SP4WL_SymPy)
+    t_max = 5e1
+    p4wl = np.array([1, 1, 1, 1])/4
     results4wl = kda.solve_ODE(p4wl, k4wl, t_max)
-    probs4wl = results4wl.y[:N4wl]
-    sp4wl_ODE = []
+    probs4wl = results4wl.y[:4]
+    SP4WL_ODE = []
     for i in probs4wl:
-        sp4wl_ODE.append(i[-1])
-    sp4wl_ODE = np.array(sp4wl_ODE)
-    return NotImplementedError
+        SP4WL_ODE.append(i[-1])
+    SP4WL_ODE = np.array(SP4WL_ODE)
+    assert_almost_equal(SP4WL, SP4WL_KDA, decimal=15)
+    assert_almost_equal(SP4WL, SP4WL_SymPy, decimal=15)
+    assert_almost_equal(SP4WL, SP4WL_ODE, decimal=5)
 
-def test_five_state_with_leakage():
-    c12 = 2
-    c21 = 3
-    c23 = 5
-    c32 = 7
-    c13 = 11
-    c31 = 13
-    c24 = 17
-    c42 = 19
-    c35 = 31
-    c53 = 37
-    c45 = 23
-    c54 = 29
-    k5wl = np.array([[  0, c12, c13,   0,   0],
-                     [c21,   0, c23, c24,   0],
-                     [c31, c32,   0,   0, c35],
-                     [  0, c42,   0,   0, c45],
-                     [  0,   0, c53, c54,   0]])
+
+@pytest.mark.parametrize('k12', [1e0, 1e1])
+@pytest.mark.parametrize('k21', [1e0, 1e1])
+@pytest.mark.parametrize('k23', [1e0, 1e1])
+@pytest.mark.parametrize('k32', [1e0, 1e1])
+@pytest.mark.parametrize('k13', [1e0, 1e1])
+@pytest.mark.parametrize('k31', [1e0, 1e1])
+@pytest.mark.parametrize('k24', [1e0, 1e1])
+@pytest.mark.parametrize('k42', [1e0, 1e1])
+@pytest.mark.parametrize('k35', [1e0, 1e1])
+@pytest.mark.parametrize('k53', [1e0, 1e1])
+@pytest.mark.parametrize('k45', [1e0, 1e1])
+@pytest.mark.parametrize('k54', [1e0, 1e1])
+def test_SP5WL(k12, k21, k23, k32, k13, k31, k24, k42, k35, k53, k45, k54, SP5WL):
+    k5wl = np.array([[  0, k12, k13,   0,   0],
+                     [k21,   0, k23, k24,   0],
+                     [k31, k32,   0,   0, k35],
+                     [  0, k42,   0,   0, k45],
+                     [  0,   0, k53, k54,   0]])
     k5wls = np.array([[  0, "k12", "k13",   0,   0],
                       ["k21",   0, "k23", "k24",   0],
                       ["k31", "k32",   0,   0, "k35"],
@@ -190,59 +216,48 @@ def test_five_state_with_leakage():
     rate_names5wl = ["k12", "k21", "k23", "k32", "k13", "k31", "k24", "k42", "k35", "k53", "k45", "k54"]
     G5wl = nx.MultiDiGraph()
     kda.generate_edges(G5wl, k5wls, k5wl, name_key='name', val_key='val')
-    #== State probabilitites =======================================================
     pars5wl = kda.generate_partial_diagrams(G5wl)
     dir_pars5wl = kda.generate_directional_partial_diagrams(pars5wl)
-    sp5wl_KDA = kda.calc_state_probabilities(G5wl, dir_pars5wl, key='val')
-    #== State Func probabilitites ==================================================
+    SP5WL_KDA = kda.calc_state_probabilities(G5wl, dir_pars5wl, key='val')
     state_mults5wl, norm5wl = kda.calc_state_probabilities(G5wl, dir_pars5wl, key='name', output_strings=True)
     sympy_funcs5wl = kda.construct_sympy_funcs(state_mults5wl, norm5wl)
     state_prob_funcs5wl = kda.construct_lambdify_funcs(sympy_funcs5wl, rate_names5wl)
-    sp5wl_SymPy = []
+    SP5WL_SymPy = []
     for i in range(G5wl.number_of_nodes()):
-        sp5wl_SymPy.append(state_prob_funcs5wl[i](c12, c21, c23, c32, c13, c31, c24, c42, c35, c53, c45, c54))
-    sp5wl_SymPy = np.array(sp5wl_SymPy)
-    #== Manual =====================================================================
-    P1 = c35*c54*c42*c21 + c24*c45*c53*c31 + c21*c45*c53*c31 + c42*c21*c53*c31 + c54*c42*c21*c31 + c54*c42*c32*c21 + c45*c53*c23*c31 + c53*c32*c42*c21 + c42*c23*c53*c31 + c54*c42*c23*c31 + c45*c53*c32*c21
-    P2 = c12*c35*c54*c42 + c13*c35*c54*c42 + c45*c53*c31*c12 + c42*c53*c31*c12 + c31*c12*c54*c42 + c54*c42*c32*c12 + c45*c53*c13*c32 + c53*c32*c42*c12 + c53*c13*c32*c42 + c54*c42*c13*c32 + c45*c53*c32*c12
-    P3 = c12*c24*c45*c53 + c13*c24*c45*c53 + c21*c13*c45*c53 + c42*c21*c13*c53 + c54*c42*c21*c13 + c54*c42*c12*c23 + c45*c53*c23*c13 + c42*c12*c23*c53 + c42*c23*c13*c53 + c54*c42*c23*c13 + c45*c53*c12*c23
-    P4 = c12*c24*c35*c54 + c24*c13*c35*c54 + c21*c13*c35*c54 + c53*c31*c12*c24 + c54*c31*c12*c24 + c12*c32*c24*c54 + c13*c23*c35*c54 + c53*c32*c12*c24 + c13*c53*c32*c24 + c13*c32*c24*c54 + c12*c23*c35*c54
-    P5 = c35*c12*c24*c45 + c13*c35*c24*c45 + c45*c21*c13*c35 + c42*c21*c13*c35 + c31*c12*c24*c45 + c12*c32*c24*c45 + c13*c23*c35*c45 + c12*c42*c23*c35 + c42*c23*c13*c35 + c13*c32*c24*c45 + c12*c23*c35*c45
-    Sigma = P1 + P2 + P3 + P4 + P5 # Normalization factor
-    sp5wl_manual = np.array([P1, P2, P3, P4, P5])/Sigma
-    #== ODE ========================================================================
-    t_max = 5e0
-    N5wl = 5   # number of states in cycle
-    p_list = np.random.rand(N5wl)  # generate random probabilities
-    sigma = p_list.sum(axis=0)  # normalization factor
-    p5wl = p_list/sigma       # normalize probabilities
+        SP5WL_SymPy.append(state_prob_funcs5wl[i](k12, k21, k23, k32, k13, k31, k24, k42, k35, k53, k45, k54))
+    SP5WL_SymPy = np.array(SP5WL_SymPy)
+    t_max = 5e1
+    p5wl = np.array([1, 1, 1, 1, 1])/5
     results5wl = kda.solve_ODE(p5wl, k5wl, t_max)
-    probs5wl = results5wl.y[:N5wl]
-    sp5wl_ODE = []
+    probs5wl = results5wl.y[:5]
+    SP5WL_ODE = []
     for i in probs5wl:
-        sp5wl_ODE.append(i[-1])
-    sp5wl_ODE = np.array(sp5wl_ODE)
-    return NotImplementedError
+        SP5WL_ODE.append(i[-1])
+    SP5WL_ODE = np.array(SP5WL_ODE)
+    assert_almost_equal(SP5WL, SP5WL_KDA, decimal=15)
+    assert_almost_equal(SP5WL, SP5WL_SymPy, decimal=15)
+    assert_almost_equal(SP5WL, SP5WL_ODE, decimal=5)
 
-def test_six_state():
-    a12 = 2
-    a21 = 3
-    a23 = 5
-    a32 = 7
-    a34 = 11
-    a43 = 13
-    a45 = 17
-    a54 = 19
-    a56 = 23
-    a65 = 29
-    a61 = 31
-    a16 = 37
-    k6 = np.array([[  0, a12,   0,   0,   0, a16],
-                   [a21,   0, a23,   0,   0,   0],
-                   [  0, a32,   0, a34,   0,   0],
-                   [  0,   0, a43,   0, a45,   0],
-                   [  0,   0,   0, a54,   0, a56],
-                   [a61,   0,   0,   0, a65,   0]])
+
+@pytest.mark.parametrize('k12', [1e0, 1e1])
+@pytest.mark.parametrize('k21', [1e0, 1e1])
+@pytest.mark.parametrize('k23', [1e0, 1e1])
+@pytest.mark.parametrize('k32', [1e0, 1e1])
+@pytest.mark.parametrize('k34', [1e0, 1e1])
+@pytest.mark.parametrize('k43', [1e0, 1e1])
+@pytest.mark.parametrize('k45', [1e0, 1e1])
+@pytest.mark.parametrize('k54', [1e0, 1e1])
+@pytest.mark.parametrize('k56', [1e0, 1e1])
+@pytest.mark.parametrize('k65', [1e0, 1e1])
+@pytest.mark.parametrize('k61', [1e0, 1e1])
+@pytest.mark.parametrize('k16', [1e0, 1e1])
+def test_SP6(k12, k21, k23, k32, k34, k43, k45, k54, k56, k65, k61, k16, SP6):
+    k6 = np.array([[  0, k12,   0,   0,   0, k16],
+                   [k21,   0, k23,   0,   0,   0],
+                   [  0, k32,   0, k34,   0,   0],
+                   [  0,   0, k43,   0, k45,   0],
+                   [  0,   0,   0, k54,   0, k56],
+                   [k61,   0,   0,   0, k65,   0]])
     k6s = np.array([[  0, "k12",   0,   0,   0, "k16"],
                     ["k21",   0, "k23",   0,   0,   0],
                     [  0, "k32",   0, "k34",   0,   0],
@@ -252,41 +267,24 @@ def test_six_state():
     rate_names6 = ["k12", "k21", "k23", "k32", "k34", "k43", "k45", "k54", "k56", "k65", "k61", "k16"]
     G6 = nx.MultiDiGraph()
     kda.generate_edges(G6, k6s, k6, name_key='name', val_key='val')
-    #== State probabilitites =======================================================
     pars6 = kda.generate_partial_diagrams(G6)
     dir_pars6 = kda.generate_directional_partial_diagrams(pars6)
-    sp6_KDA = kda.calc_state_probabilities(G6, dir_pars6, key='val')
-    #== State Func probabilitites ==================================================
+    SP6_KDA = kda.calc_state_probabilities(G6, dir_pars6, key='val')
     state_mults6, norm6 = kda.calc_state_probabilities(G6, dir_pars6, key='name', output_strings=True)
     sympy_funcs6 = kda.construct_sympy_funcs(state_mults6, norm6)
     state_prob_funcs6 = kda.construct_lambdify_funcs(sympy_funcs6, rate_names6)
-    sp6_SymPy = []
+    SP6_SymPy = []
     for i in range(G6.number_of_nodes()):
-        sp6_SymPy.append(state_prob_funcs6[i](a12, a21, a23, a32, a34, a43, a45, a54, a56, a65, a61, a16))
-    sp6_SymPy = np.array(sp6_SymPy)
-    #== Manual =====================================================================
-    P1 = a65*a54*a43*a32*a21 + a61*a54*a43*a32*a21 + a56*a61*a43*a32*a21 + a45*a56*a61*a32*a21 + a34*a45*a56*a61*a21 + a23*a34*a45*a56*a61
-    P2 = a12*a65*a54*a43*a32 + a61*a12*a54*a43*a32 + a56*a61*a12*a43*a32 + a45*a56*a61*a32*a12 + a34*a45*a56*a61*a12 + a16*a65*a54*a43*a32
-    P3 = a12*a23*a65*a54*a43 + a61*a12*a23*a54*a43 + a56*a61*a12*a23*a43 + a45*a56*a61*a12*a23 + a21*a16*a65*a54*a43 + a23*a16*a65*a54*a43
-    P4 = a65*a54*a12*a23*a34 + a54*a61*a12*a23*a34 + a56*a61*a12*a23*a34 + a32*a21*a16*a65*a54 + a21*a16*a65*a54*a34 + a16*a65*a54*a23*a34
-    P5 = a65*a12*a23*a34*a45 + a61*a12*a23*a34*a45 + a43*a32*a21*a16*a65 + a45*a32*a21*a16*a65 + a34*a45*a21*a16*a65 + a23*a34*a45*a16*a65
-    P6 = a12*a23*a34*a45*a56 + a54*a43*a32*a21*a16 + a56*a43*a32*a21*a16 + a45*a56*a32*a21*a16 + a34*a45*a56*a21*a16 + a16*a23*a34*a45*a56
-    Sigma = P1 + P2 + P3 + P4 + P5 + P6 # Normalization factor
-    sp6_manual = np.array([P1, P2, P3, P4, P5, P6])/Sigma
-    #== ODE ========================================================================
-    t_max = 5e0
-    N6 = 6   # number of states in cycle
-    p_list = np.random.rand(N6)  # generate random probabilities
-    sigma = p_list.sum(axis=0)  # normalization factor
-    p6 = p_list/sigma       # normalize probabilities
+        SP6_SymPy.append(state_prob_funcs6[i](k12, k21, k23, k32, k34, k43, k45, k54, k56, k65, k61, k16))
+    SP6_SymPy = np.array(SP6_SymPy)
+    t_max = 5e1
+    p6 = np.array([1, 1, 1, 1, 1, 1])/6
     results6 = kda.solve_ODE(p6, k6, t_max)
-    probs6 = results6.y[:N6]
-    sp6_ODE = []
+    probs6 = results6.y[:6]
+    SP6_ODE = []
     for i in probs6:
-        sp6_ODE.append(i[-1])
-    sp6_ODE = np.array(sp6_ODE)
-    return NotImplementedError
-
-
-
-#===
+        SP6_ODE.append(i[-1])
+    SP6_ODE = np.array(SP6_ODE)
+    assert_almost_equal(SP6, SP6_KDA, decimal=15)
+    assert_almost_equal(SP6, SP6_SymPy, decimal=15)
+    assert_almost_equal(SP6, SP6_ODE, decimal=5)
