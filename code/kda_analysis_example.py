@@ -107,4 +107,33 @@ path = 'C:/Users/nikol/phy495/kinetic-diagram-analyzer/data/plots/plot_dump'
 # plt.show()
 
 
+
+
+
+# def convert_K(K):
+#     """
+#     Sets the diagonal elements of the input k matrix to zero, then takes the
+#     transpose, and lastly sets the diagonals equal to the negative of the
+#     sum of the column elements.
+#     """
+#     N = len(K)
+#     np.fill_diagonal(K, 0)
+#     K = K.T
+#     for i in range(N):
+#         K[i, i] = -K[:, i].sum(axis=0)
+#     return K
+#
+# K = convert_K(kvals)
+# p = np.array([0, 0, 0, 0, 0, 0])
+# np.lstsq(K, p)
+
+p = np.array([1, 1, 1, 1, 1, 1])/6
+sol = kda.solve_ODE(p, kvals, t_max=1e2, tol=1e-16)
+print(sol)
+SP6_ODE = sol.y.T[-1]
+print(state_probs - SP6_ODE)
+
+
+
+
 #==

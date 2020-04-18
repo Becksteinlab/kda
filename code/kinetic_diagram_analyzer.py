@@ -275,8 +275,7 @@ def add_graph_attribute(G, data, label):
     """
     G.graph[label] = data
 
-def solve_ODE(P, K, t_max, method='RK45', t_eval=None,
-              dense_output=False, events=None, vectorized=False):
+def solve_ODE(P, K, t_max, tol=1e-16, **options):
     """
     Integrates state probability ODE's to find steady state probabilities.
 
@@ -291,8 +290,12 @@ def solve_ODE(P, K, t_max, method='RK45', t_eval=None,
         matrix.
     t_max : int
         Length of time for integrator to run, in seconds.
-    max_step : int
-        Maximum step size for integrator.
+    tol : float (optional)
+        Tolerance value used as convergence criteria. Once all dp/dt values for
+        each state are less than the tolerance the integrator will terminate.
+        Default is 1e-16.
+    options
+        Options passed to scipy.integrate.solve_ivp().
 
     Returns
     -------
@@ -320,20 +323,34 @@ def solve_ODE(P, K, t_max, method='RK45', t_eval=None,
             K[i, i] = -K[:, i].sum(axis=0)
         return K
 
-    def func(t, y):
+    def KdotP(t, y):
         """
         y = [p1, p2, p3, ... , pn]
         """
-        return np.dot(k, y)
+        return np.matmul(k, y, dtype=np.float64)
 
+    t_vals = []
+    y_vals = []
+    def stop(t, y):
+        t_vals.append(t)
+        y_vals.append(y)
+        if len(t_vals) < 2:
+            return 1
+        else:
+            yf = y_vals[-1]
+            yi = y_vals[-2]
+            tf = t_vals[-1]
+            ti = t_vals[-2]
+            y_prime = (yf - yi)/(tf - ti)
+            if all(elem < tol for elem in y_prime) == True:
+                return 0
+            else:
+                return 1
+    stop.terminal = True
     k = convert_K(K)
-    time = (0, t_max)
     y0 = np.array(P, dtype=np.float64)
-    max_step = t_max*1e-3
-    return scipy.integrate.solve_ivp(fun=func, t_span=time, y0=y0,
-                                     max_step=max_step, method=method,
-                                     t_eval=t_eval, dense_output=dense_output,
-                                     events=events, vectorized=vectorized)
+    return scipy.integrate.solve_ivp(fun=KdotP, t_span=(0, t_max), y0=y0,
+                                     events=[stop], **options)
 
 def find_unique_edges(G):
     """

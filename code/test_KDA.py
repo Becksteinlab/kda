@@ -89,17 +89,12 @@ def test_3(k12, k21, k23, k32, k13, k31, SP3):
     for i in range(G3.number_of_nodes()):
         SP3_SymPy.append(state_prob_funcs3[i](k12, k21, k23, k32, k13, k31))
     SP3_SymPy = np.array(SP3_SymPy)
-    t_max = 5e1
     p3 = np.array([1, 1, 1])/3
-    results3 = kda.solve_ODE(p3, k3, t_max)
-    probs3 = results3.y[:3]
-    SP3_ODE = []
-    for i in probs3:
-        SP3_ODE.append(i[-1])
-    SP3_ODE = np.array(SP3_ODE)
+    results3 = kda.solve_ODE(p3, k3, t_max=1e2, tol=1e-12, atol=1e-16, rtol=1e-13)
+    SP3_ODE = results3.y.T[-1]
     assert_almost_equal(SP3, SP3_KDA, decimal=15)
     assert_almost_equal(SP3, SP3_SymPy, decimal=15)
-    assert_almost_equal(SP3, SP3_ODE, decimal=7)
+    assert_almost_equal(SP3, SP3_ODE, decimal=10)
 
 
 @pytest.mark.parametrize('k12', [1e0, 1e1])
@@ -132,17 +127,12 @@ def test_4(k12, k21, k23, k32, k34, k43, k41, k14, SP4):
     for i in range(G4.number_of_nodes()):
         SP4_SymPy.append(state_prob_funcs4[i](k12, k21, k23, k32, k34, k43, k41, k14))
     SP4_SymPy = np.array(SP4_SymPy)
-    t_max = 5e1
     p4 = np.array([1, 1, 1, 1])/4
-    results4 = kda.solve_ODE(p4, k4, t_max)
-    probs4 = results4.y[:4]
-    SP4_ODE = []
-    for i in probs4:
-        SP4_ODE.append(i[-1])
-    SP4_ODE = np.array(SP4_ODE)
+    results4 = kda.solve_ODE(p4, k4, t_max=1e2, tol=1e-12, atol=1e-16, rtol=1e-13)
+    SP4_ODE = results4.y.T[-1]
     assert_almost_equal(SP4, SP4_KDA, decimal=15)
     assert_almost_equal(SP4, SP4_SymPy, decimal=15)
-    assert_almost_equal(SP4, SP4_ODE, decimal=5)
+    assert_almost_equal(SP4, SP4_ODE, decimal=10)
 
 
 @pytest.mark.parametrize('k12', [1e0, 1e1])
@@ -177,17 +167,12 @@ def test_4WL(k12, k21, k23, k32, k34, k43, k41, k14, k24, k42, SP4WL):
     for i in range(G4wl.number_of_nodes()):
         SP4WL_SymPy.append(state_prob_funcs4wl[i](k12, k21, k23, k32, k34, k43, k41, k14, k24, k42))
     SP4WL_SymPy = np.array(SP4WL_SymPy)
-    t_max = 5e1
     p4wl = np.array([1, 1, 1, 1])/4
-    results4wl = kda.solve_ODE(p4wl, k4wl, t_max)
-    probs4wl = results4wl.y[:4]
-    SP4WL_ODE = []
-    for i in probs4wl:
-        SP4WL_ODE.append(i[-1])
-    SP4WL_ODE = np.array(SP4WL_ODE)
+    results4wl = kda.solve_ODE(p4wl, k4wl, t_max=1e2, tol=1e-12, atol=1e-16, rtol=1e-13)
+    SP4WL_ODE = results4wl.y.T[-1]
     assert_almost_equal(SP4WL, SP4WL_KDA, decimal=15)
     assert_almost_equal(SP4WL, SP4WL_SymPy, decimal=15)
-    assert_almost_equal(SP4WL, SP4WL_ODE, decimal=5)
+    assert_almost_equal(SP4WL, SP4WL_ODE, decimal=10)
 
 
 @pytest.mark.parametrize('k12', [1e0, 1e1])
@@ -226,17 +211,12 @@ def test_SP5WL(k12, k21, k23, k32, k13, k31, k24, k42, k35, k53, k45, k54, SP5WL
     for i in range(G5wl.number_of_nodes()):
         SP5WL_SymPy.append(state_prob_funcs5wl[i](k12, k21, k23, k32, k13, k31, k24, k42, k35, k53, k45, k54))
     SP5WL_SymPy = np.array(SP5WL_SymPy)
-    t_max = 5e1
     p5wl = np.array([1, 1, 1, 1, 1])/5
-    results5wl = kda.solve_ODE(p5wl, k5wl, t_max)
-    probs5wl = results5wl.y[:5]
-    SP5WL_ODE = []
-    for i in probs5wl:
-        SP5WL_ODE.append(i[-1])
-    SP5WL_ODE = np.array(SP5WL_ODE)
+    results5wl = kda.solve_ODE(p5wl, k5wl, t_max=1e2, tol=1e-12, atol=1e-16, rtol=1e-13)
+    SP5WL_ODE = results5wl.y.T[-1]
     assert_almost_equal(SP5WL, SP5WL_KDA, decimal=15)
     assert_almost_equal(SP5WL, SP5WL_SymPy, decimal=15)
-    assert_almost_equal(SP5WL, SP5WL_ODE, decimal=5)
+    assert_almost_equal(SP5WL, SP5WL_ODE, decimal=10)
 
 
 @pytest.mark.parametrize('k12', [1e0, 1e1])
@@ -277,14 +257,9 @@ def test_SP6(k12, k21, k23, k32, k34, k43, k45, k54, k56, k65, k61, k16, SP6):
     for i in range(G6.number_of_nodes()):
         SP6_SymPy.append(state_prob_funcs6[i](k12, k21, k23, k32, k34, k43, k45, k54, k56, k65, k61, k16))
     SP6_SymPy = np.array(SP6_SymPy)
-    t_max = 5e1
     p6 = np.array([1, 1, 1, 1, 1, 1])/6
-    results6 = kda.solve_ODE(p6, k6, t_max)
-    probs6 = results6.y[:6]
-    SP6_ODE = []
-    for i in probs6:
-        SP6_ODE.append(i[-1])
-    SP6_ODE = np.array(SP6_ODE)
+    results6 = kda.solve_ODE(p6, k6, t_max=1e2, tol=1e-12, atol=1e-16, rtol=1e-13)
+    SP6_ODE = results6.y.T[-1]
     assert_almost_equal(SP6, SP6_KDA, decimal=15)
     assert_almost_equal(SP6, SP6_SymPy, decimal=15)
-    assert_almost_equal(SP6, SP6_ODE, decimal=5)
+    assert_almost_equal(SP6, SP6_ODE, decimal=10)

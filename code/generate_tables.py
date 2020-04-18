@@ -369,7 +369,7 @@ sp4wl_probs = np.vstack((sp4wl_manual, sp4wl_probs)).T
 sp5wl_probs = np.vstack((sp5wl_manual, sp5wl_probs)).T
 sp6_probs = np.vstack((sp6_manual, sp6_probs)).T
 
-# Generate dataframes, print, and output to html
+# Generate dataframes, print, and output to LaTeX
 generate_probability_table(sp3_probs, name="sp3_probs")
 generate_probability_table(sp4_probs, name="sp4_probs")
 generate_probability_table(sp4wl_probs, name="sp4wl_probs")
@@ -385,7 +385,7 @@ sp4wl_err = np.vstack((sp4wl_diffs, sp4wl_error)).T
 sp5wl_err = np.vstack((sp5wl_diffs, sp5wl_error)).T
 sp6_err = np.vstack((sp6_diffs, sp6_error)).T
 
-# Generate dataframes, print, and output to html
+# Generate dataframes, print, and output to LaTeX
 generate_error_table(sp3_err, name="sp3_error")
 generate_error_table(sp4_err, name="sp4_error")
 generate_error_table(sp4wl_err, name="sp4wl_error")
