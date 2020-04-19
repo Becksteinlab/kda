@@ -23,7 +23,7 @@ setup(
     # Self-descriptive entries which should always be present
     name='kda',
     author='Nikolaus Awtrey',
-    author_email='nawtrey@asu.edu[D[D[D[C[C[C[C[C[D[D',
+    author_email='nawtrey@asu.edu',
     description=short_description[0],
     long_description=long_description,
     long_description_content_type="text/markdown",
