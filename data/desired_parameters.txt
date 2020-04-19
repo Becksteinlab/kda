@@ -1,0 +1,16 @@
+Nikolaus Awtrey
+Antiporter Model
+
+Parameters:
+ - Binding rate (on rate/association rate constant)
+ - Unbinding rate (off rate/dissociation rate constant)
+ - Conformational change rate
+ - Initial proton concentration inside and outside of cell: pH = 7.2 => C = 1e-7.2
+ - Initial ion (i.e. sodium) concentration inside and outside of cell: ~1e-3 M
+ - State concentrations: 
+ - Turnover number: on the order of 1e2 to 1e4 depending on the transporter
+ - Intracellular volume: on the order of 1e-18 m^3
+ - Transporter density inside of cell membrane
+ - Arrhenius equation (would replace necessity of on rate):
+    o Collision frequency at a given temperature
+    o Activation energy at a given temperature
