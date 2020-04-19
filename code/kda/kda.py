@@ -12,20 +12,13 @@ kinetic diagrams, using the methods of Hill.
 """
 
 import numpy as np
-
 import networkx as nx
-
 import scipy.integrate
-
-import functools
-
-import itertools
-
 import sympy
-
 from sympy import *
-
 from sympy.parsing.sympy_parser import parse_expr
+import functools
+import itertools
 
 
 def generate_partial_diagrams(G):
