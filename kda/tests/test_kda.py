@@ -8,7 +8,7 @@ import pytest
 import numpy as np
 from numpy.testing import assert_almost_equal
 import networkx as nx
-import kinetic_diagram_analyzer as kda
+import kda
 
 
 @pytest.fixture(scope='function')

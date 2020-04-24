@@ -322,28 +322,18 @@ def solve_ODE(P, K, t_max, tol=1e-16, **options):
         """
         return np.matmul(k, y, dtype=np.float64)
 
-    t_vals = []
-    y_vals = []
-    def stop(t, y):
-        t_vals.append(t)
-        y_vals.append(y)
-        if len(t_vals) < 2:
-            return 1
+    def terminate(t, y):
+        y_prime = np.matmul(k, y, dtype=np.float64)
+        if all(elem < tol for elem in y_prime) == True:
+            return False
         else:
-            yf = y_vals[-1]
-            yi = y_vals[-2]
-            tf = t_vals[-1]
-            ti = t_vals[-2]
-            y_prime = (yf - yi)/(tf - ti)
-            if all(elem < tol for elem in y_prime) == True:
-                return 0
-            else:
-                return 1
-    stop.terminal = True
+            return True
+
+    terminate.terminal = True
     k = convert_K(K)
     y0 = np.array(P, dtype=np.float64)
     return scipy.integrate.solve_ivp(fun=KdotP, t_span=(0, t_max), y0=y0,
-                                     events=[stop], **options)
+                                     events=[terminate], **options)
 
 def find_unique_edges(G):
     """
