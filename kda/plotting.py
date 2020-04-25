@@ -10,7 +10,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 
-def plot_input_diagram(G, pos, path=None, label=None):
+def plot_diagram(G, pos=None, path=None, label=None):
     """
     Plots the input diagram G.
 
@@ -18,9 +18,10 @@ def plot_input_diagram(G, pos, path=None, label=None):
     ----------
     G : NetworkX MultiDiGraph
         Input diagram
-    pos : dict
+    pos : dict (optional)
         Dictionary where keys are the indexed states (0, 1, 2, ..., N) and
-        the values are NumPy arrays of x, y coordinates for each node.
+        the values are NumPy arrays of x, y coordinates for each node. Default
+        is None, nx.spring_layout() is used.
     path : str (optional)
         String of save path for figure. If path is given figure will be saved
         at the specified location as 'input_diagram.png'. Default is None.
@@ -28,6 +29,8 @@ def plot_input_diagram(G, pos, path=None, label=None):
         Figure label, used to create unique figure label if a save path is
         given. Default is None.
     """
+    if pos == None:
+        pos = nx.spring_layout(G)
     fig = plt.figure(figsize=(4, 4), tight_layout=True)
     fig.add_subplot(111)
     node_list = [i for i in range(G.number_of_nodes())]
@@ -41,18 +44,19 @@ def plot_input_diagram(G, pos, path=None, label=None):
     if not path == None:
         fig.savefig(path + "/{}_input_diagram.png".format(label))
 
-def plot_partials(partials, pos, panel=False, panel_scale=1, font_size=12, cbt=False, path=None, label='partial'):
+def plot_diagrams(diagrams, pos=None, panel=False, panel_scale=1, font_size=12, cbt=False, path=None, label='partial'):
     """
-    Plots all partial diagrams.
+    Plots array of diagrams.
 
     Parameters
     ----------
-    partials : list
+    diagrams : list
         List of NetworkX MultiDiGraphs where each graph is a unique partial
         or directional partial diagram with no loops.
-    pos : dict
+    pos : dict (optional)
         Dictionary where keys are the indexed states (0, 1, 2, ..., N) and
-        the values are NumPy arrays of x, y coordinates for each node.
+        the values are NumPy arrays of x, y coordinates for each node. Default
+        is None, nx.spring_layout() is used. 
     panel : bool (optional)
         Tells the function to output diagrams as an 'NxM' matrix of subplots,
         where 'N' and 'M' are determined by the function. True will output panel
@@ -74,22 +78,24 @@ def plot_partials(partials, pos, panel=False, panel_scale=1, font_size=12, cbt=F
 
     Notes
     -----
-    When using panel=True, if number of partials is not a perfect square, extra
+    When using panel=True, if number of diagrams is not a perfect square, extra
     plots will be generated as empty coordinate axes.
     """
+    if pos == None:
+        pos = nx.spring_layout(diagrams[0])
     labels = {}
-    for j in range(partials[0].number_of_nodes()):
+    for j in range(diagrams[0].number_of_nodes()):
         labels[j] = r"${}$".format(j+1)
-    node_list = [i for i in range(partials[0].number_of_nodes())]
+    node_list = [i for i in range(diagrams[0].number_of_nodes())]
     if panel == True:
-        N = len(partials)
+        N = len(diagrams)
         Nrows = int(np.sqrt(N))
         Ncols = int(np.ceil(N/Nrows))
         excess_plots = Nrows*Ncols - N
         fig, ax = plt.subplots(nrows=Nrows, ncols=Ncols, tight_layout=True)
         fig.set_figheight(Nrows*panel_scale)
         fig.set_figwidth(1.2*Ncols*panel_scale)
-        for i, partial in enumerate(partials):
+        for i, partial in enumerate(diagrams):
             if cbt == True:
                 node_colors = []
                 for n in range(partial.number_of_nodes()):
@@ -110,7 +116,7 @@ def plot_partials(partials, pos, panel=False, panel_scale=1, font_size=12, cbt=F
         if not path == None:
             fig.savefig(path + "/{}_diagram_panel.png".format(label))
     else:
-        for i, partial in enumerate(partials):
+        for i, partial in enumerate(diagrams):
             if cbt == True:
                 node_colors = []
                 for n in range(partial.number_of_nodes()):
