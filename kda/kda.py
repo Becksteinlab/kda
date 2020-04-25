@@ -207,7 +207,7 @@ def construct_lambdify_funcs(sympy_funcs, rate_names):
         state_prob_funcs.append(lambdify(rate_names, func, "numpy"))    # convert into "lambdified" functions that work with NumPy arrays
     return state_prob_funcs
 
-def generate_edges(G, names, vals, name_key='name', val_key='val'):
+def generate_edges(G, vals, names=[None], name_key='name', val_key='val'):
     """
     Generate edges with attributes 'name' and 'val'.
 
@@ -215,25 +215,33 @@ def generate_edges(G, names, vals, name_key='name', val_key='val'):
     ----------
     G : NetworkX MultiDiGraph
         Input diagram
-    names : array
-        'NxN' array where 'N' is the number of nodes in the diagram G. Contains
-        the names of all of the attributes corresponding to the values in
-        'vals' as strings, i.e. [[0, "k12"], ["k21", 0]].
     vals : array
         'NxN' array where 'N' is the number of nodes in the diagram G. Contains
         the values associated with the attribute names in 'names'. For example,
         assuming k12 and k21 had already been assigned values, for a 2 state
         diagram 'vals' = [[0, k12], [k21, 0]].
+    names : array (optional)
+        'NxN' array where 'N' is the number of nodes in the diagram G. Contains
+        the names of all of the attributes corresponding to the values in
+        'vals' as strings, i.e. [[0, "k12"], ["k21", 0]].
     name_key : str (optional)
         Key used to retrieve variable names in 'names'. Default is 'name'.
     val_key : str (optional)
         Key used to retrieve variable values in 'vals'. Default is 'val'.
     """
-    for i, row in enumerate(vals):
-        for j, elem in enumerate(row):
-            if not elem == 0:
-                attrs = {name_key : names[i, j], val_key : elem}
-                G.add_edge(i, j, **attrs)
+    np.fill_diagonal(vals, 0) # Make sure diagonal elements are set to zero
+    if len(names) == 1:
+        for i, row in enumerate(vals):
+            for j, elem in enumerate(row):
+                if not elem == 0:
+                    attrs = {val_key : elem}
+                    G.add_edge(i, j, **attrs)
+    else:
+        for i, row in enumerate(vals):
+            for j, elem in enumerate(row):
+                if not elem == 0:
+                    attrs = {name_key : names[i, j], val_key : elem}
+                    G.add_edge(i, j, **attrs)
 
 def add_node_attribute(G, data, label):
     """
