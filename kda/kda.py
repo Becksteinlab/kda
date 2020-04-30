@@ -58,7 +58,7 @@ def generate_partial_diagrams(G):
             valid_partials.append(i)
     return valid_partials
 
-def generate_directional_partial_diagrams(partials):
+def generate_directional_partial_diagrams(G):
     """
     Generates all directional partial diagrams for input diagram G.
 
@@ -74,7 +74,8 @@ def generate_directional_partial_diagrams(partials):
         List of all directional partial diagrams for a given set of partial
         diagrams.
     """
-    N_targets = partials[0].number_of_nodes()
+    partials = generate_partial_diagrams(G)
+    N_targets = G.number_of_nodes()
     dir_partials = []
     for target in range(N_targets):
         for i in range(len(partials)):
@@ -133,7 +134,7 @@ def calc_state_probabilities(G, dir_partials, key, output_strings=False):
         if output_strings == False:
             if isinstance(G.edges[edge_list[0][0], edge_list[0][1], edge_list[0][2]][key], str):
                 raise Exception("To enter variable strings set parameter output_strings=True.")
-            products = 1          # generate an array with a value of 1
+            products = 1          # assign initial value of 1
             for e in edge_list:                                 # iterate over the edges in the given directional partial diagram i
                 products *= G.edges[e[0], e[1], e[2]][key]    # multiply the rate of each edge in edge_list
         if output_strings == True:
@@ -411,3 +412,490 @@ def get_directional_edges(cons):
         for neighb in cons[target]:
             values.append((neighb, target, 0))
     return values
+
+def get_unique_uncommon_edges(G, diagrams):
+    """
+    Finds unique uncommon edges between G and each diagram in diagrams.
+
+    Parameters
+    ----------
+    G : NetworkX MultiDiGraph object
+        Input diagram
+    diagrams : list of NetworkX MultiDiGraph objects
+        List of diagrams of interest.
+
+    Returns
+    -------
+    unique_uncommon_edges : list of lists of tuples
+        List of lists where each list contains the edges that are unique
+        between G and the given diagram.
+    """
+    all_uncommon_edges = []
+    for diag in diagrams:
+        uncommon_edges = []
+        for edge in list(G.edges()):
+            if not edge in list(diag.edges()):
+                uncommon_edges.append(edge)
+        all_uncommon_edges.append(uncommon_edges)
+    unique_uncommon_edges = []
+    for edges in all_uncommon_edges:
+        unique_uncommon_edges.append(list(set([(e[0], e[1]) for e in np.sort(edges)])))
+    return unique_uncommon_edges
+
+def get_indices_of_flux_diagrams(cycles, flux_diagrams):
+    """
+    Finds the indices of the input list of flux diagrams that correspond to the
+    input cycle(s). If a single cycle is input it will only return a list of
+    the corresponding flux diagram list indices. If a list of cycles is input
+    it will return a list of lists of indices, where each list contains the
+    indices associated with that cycle.
+
+    Parameters
+    ----------
+    cycles : list of int or list of lists of int
+        List of cycles where each cycle is a list of nodes corresponding to a
+        cycle in a diagram.
+    flux_diagrams : list of NetworkX MultiDiGraph objects
+        List of flux diagrams corresponding to the input cycles.
+
+    Returns
+    -------
+    cycle_idx : list of int
+        List of input flux diagram list indices.
+    all_cycle_idx : list of lists of int
+        List of lists of indices of input flux diagram list, where each index
+        corresponds to a flux diagram that contains the cycle in that list.
+    """
+    if isinstance(cycles[0], int):
+        cycle_idx = []
+        for i, diag in enumerate(flux_diagrams):
+            main_cycles = [set(c) for c in list(nx.simple_cycles(diag)) if len(c) > 2]
+            if set(cycles) in main_cycles:
+                cycle_idx.append(i)
+        return cycle_idx
+    else:
+        all_cycle_idx = []
+        for cycle in cycles:
+            cycle_idx = []
+            for i, diag in enumerate(flux_diagrams):
+                main_cycles = [set(c) for c in list(nx.simple_cycles(diag)) if len(c) > 2]
+                if set(cycle) in main_cycles:
+                    cycle_idx.append(i)
+            all_cycle_idx.append(cycle_idx)
+        return all_cycle_idx
+
+def find_unique_cycles(diagram):
+    """
+    Finds unique cycles for an input diagram.
+
+    Parameters
+    ----------
+    diagram : NetworkX MultiDiGraph object
+        Diagram of interest.
+
+    Returns
+    -------
+    unique_cycles : list of lists of int
+        List of cycles, where each cycle is a list of nodes in that cycle.
+    """
+    cycles = [c for c in nx.simple_cycles(diagram) if len(c) > 2]
+    unique_cycles = []
+    unique_cycles_ordered = []
+    for cycle in cycles:
+        ordered_cycle = set(cycle)
+        if not ordered_cycle in unique_cycles_ordered:
+            unique_cycles_ordered.append(ordered_cycle)
+            unique_cycles.append(cycle)
+    unique_cycles = [list(c) for c in unique_cycles]
+    return unique_cycles
+
+def construct_cycle_edges(cycle):
+    """
+    Constucts edge tuples in a cycle using the node indices in the cycle. It
+    is important for the cycle to be in the correct order and not sorted, as
+    a sorted cycle list will return incorrect edges.
+
+    Parameters
+    ----------
+    cycle : list of int
+        List of node indices for cycle of interest, index zero. Order of node
+        indices does not matter.
+
+    Returns
+    -------
+    reverse_list : list of tuples
+        List of edge tuples corresponding to the input cycle.
+    """
+    reverse_list = list(zip(cycle[:-1], cycle[1:], np.zeros(len(cycle), dtype=int)))
+    reverse_list.append((cycle[-1], cycle[0], 0))
+    return reverse_list
+
+def get_ordered_cycle(G, cycle):
+    """
+    Takes in arbitrary list of nodes and returns list of nodes in correct order.
+    Can be used in conjunction with construct_cycle_edges() to generate list of
+    edge tuples for an arbitrary input cycle. Assumes input cycle only exists
+    once in the input diagram G.
+
+    Parameters
+    ----------
+    G : NetworkX MultiDiGraph Object
+        Input diagram
+    cycle : list of int
+        List of node indices for cycle of interest, index zero. Order of node
+        indices does not matter.
+
+    Returns
+    -------
+    ordered_cycle : list of int
+        Ordered list of integers for the input cycle.
+    """
+    ordered_cycles = find_unique_cycles(G)
+    for ordered_cycle in ordered_cycles:
+        if set(ordered_cycle) == set(cycle):
+            return ordered_cycle
+
+def generate_two_way_flux_diagrams(G):
+    """
+    Creates two-way flux diagrams for the input diagram G. Created by adding one
+    more edge per diagram than are added for partial diagrams.
+
+    Parameters
+    ----------
+    G : NetworkX MultiDiGraph Object
+        Input diagram
+
+    Returns
+    -------
+    valid_flux_diags : list of NetworkX MultiDiGraph objects
+        List of diagrams with the same number of unique edges as nodes, and
+        only 1 complete cycle.
+    """
+    # Calculate number of edges needed for each flux diagram
+    N_flux_edges = G.number_of_nodes()
+    # Get list of all possible combinations of unique edges (N choose n)
+    combinations = list(itertools.combinations(find_unique_edges(G), N_flux_edges))
+    # Using combinations, generate all possible partial diagrams (including closed loops)
+    flux_diags_all = []
+    for i in combinations:
+        diag = G.copy()
+        diag.remove_edges_from(list(G.edges()))
+        edges = []
+        for j in i:
+            edges.append((j[0], j[1]))  # Add edge from combinations
+            edges.append((j[1], j[0]))  # Add reverse edge
+        diag.add_edges_from(edges)
+        flux_diags_all.append(diag)
+    # Remove unwanted diagrams (more than 1 closed loop)
+    valid_flux_diags = []
+    for diag in flux_diags_all:
+        n_cycles = len(find_unique_cycles(diag))
+        if n_cycles == 1:
+            valid_flux_diags.append(diag)
+    return valid_flux_diags
+
+def generate_flux_diagrams(G, cycle):
+    """
+    Creates all of the directional flux diagrams for the given cycle in the
+    diagram G.
+
+    Parameters
+    ----------
+    G : NetworkX MultiDiGraph Object
+        Input diagram
+    cycle : list of int
+        List of node indices for cycle of interest, index zero. Order of node
+        indices does not matter.
+
+    Returns
+    -------
+    flux_diagram : NetworkX MultiDiGraph object
+        Flux diagram returned in the event that there is only one directional
+        flux diagram for the input cycle in the input diagram G. Cycle nodes
+        are labeled by attribute 'istarget'.
+    directional_flux_diagrams : list of NetworkX MultiDiGraph objects
+        List of directional flux diagrams. Diagrams contain the input cycle
+        where remaining edges follow path pointing to cycle. Cycle nodes are
+        labeled by attribute 'istarget'.
+    """
+    two_way_flux_diagrams = generate_two_way_flux_diagrams(G)
+    cycle_idx = get_indices_of_flux_diagrams(cycle, two_way_flux_diagrams)
+    relevant_flux_diags = [two_way_flux_diagrams[i] for i in cycle_idx]
+    if len(relevant_flux_diags) == 1:
+        print("Only 1 flux diagram detected for cycle ({}). Sigma K value is 1.".format(cycle))
+        for target in relevant_flux_diags[0].nodes():
+            flux_diagram = relevant_flux_diags[0]
+            if target in cycle:
+                flux_diagram.nodes[target]['is_target'] = True
+            else:
+                flux_diagram.nodes[target]['is_target'] = False
+        return flux_diagram
+    else:
+        diag_cycles = [c for c in list(nx.simple_cycles(relevant_flux_diags[0])) if len(c) > 2]
+        cycle_edges = [construct_cycle_edges(cyc) for cyc in diag_cycles]
+        cycle_edges_flat = [edge for edges in cycle_edges for edge in edges]
+        directional_flux_diagrams = []
+        for diagram in relevant_flux_diags:
+            diag = diagram.copy()
+            edges = find_unique_edges(diag)
+            unique_edges = [edge for edge in edges if not edge in cycle_edges_flat]
+            dir_edges = []
+            for target in cycle:
+                cons = get_directional_connections(target, unique_edges)
+                if not len(cons) == 0:
+                    dir_edges.append(get_directional_edges(cons))
+            dir_edges_flat = [edge for edges in dir_edges for edge in edges]
+            diag.remove_edges_from(list(diag.edges()))
+            for edge in dir_edges_flat:
+                diag.add_edge(edge[0], edge[1], edge[2])
+            for edge in cycle_edges_flat:
+                diag.add_edge(edge[0], edge[1], 0)
+            for target in diag.nodes():
+                if target in cycle:
+                    diag.nodes[target]['is_target'] = True
+                else:
+                    diag.nodes[target]['is_target'] = False
+            directional_flux_diagrams.append(diag)
+        return directional_flux_diagrams
+
+def calculate_sigma_K(G, cycle, flux_diags, key, output_strings=False):
+    """
+    Calculates sigma_K, the sum of all directional flux diagrams.
+
+    Parameters
+    ----------
+    G : NetworkX MultiDiGraph Object
+        Input diagram
+    cycle : list of int
+        List of node indices for cycle of interest, index zero. Order of node
+        indices does not matter.
+    flux_diags : list
+        List of relevant directional flux diagrams for input cycle.
+    key : str
+        Definition of key in NetworkX diagram edges, used to call edge rate
+        values or names. This needs to match the key used for the rate
+        constants names or values in the input diagram G.
+    output_strings : bool (optional)
+        Used to denote whether values or strings will be combined. Default
+        is False, which tells the function to calculate the state
+        probabilities using numbers. If True, this will assume the input
+        'key' will return strings of variable names to join into the
+        analytic function.
+
+    Returns
+    -------
+    sigma_K : float
+        Sum of rate products of directional flux diagram edges pointing to
+        input cycle.
+    sigma_K : str
+        Sum of rate products of directional flux diagram edges pointing to
+        input cycle in string form.
+    """
+    if isinstance(flux_diags, list) == False:
+        print("Only 1 flux diagram detected for cycle ({}). Sigma K value is 1.".format(cycle))
+        return 1
+    else:
+        ordered_cycle = get_ordered_cycle(G, cycle)
+        cycle_edges = construct_cycle_edges(ordered_cycle)
+        if output_strings == False:
+            if isinstance(G.edges[cycle_edges[0][0], cycle_edges[0][1], cycle_edges[0][2]][key], str):
+                raise Exception("To enter variable strings set parameter output_strings=True.")
+            rate_products = []
+            for diagram in flux_diags:
+                diag = diagram.copy()
+                for edge in cycle_edges:
+                    diag.remove_edge(edge[0], edge[1], edge[2])
+                    diag.remove_edge(edge[1], edge[0], edge[2])
+                vals = 1
+                for edge in diag.edges:
+                    vals *= G.edges[edge[0], edge[1], edge[2]][key]
+                rate_products.append(vals)
+            sigma_K = np.array(rate_products).sum(axis=0)
+            return sigma_K
+        if output_strings == True:
+            if not isinstance(G.edges[cycle_edges[0][0], cycle_edges[0][1], cycle_edges[0][2]][key], str):
+                raise Exception("To enter variable values set parameter output_strings=False.")
+            rate_products = []
+            for diagram in flux_diags:
+                diag = diagram.copy()
+                for edge in cycle_edges:
+                    diag.remove_edge(edge[0], edge[1], edge[2])
+                    diag.remove_edge(edge[1], edge[0], edge[2])
+                rates = []
+                for edge in diag.edges:
+                    rates.append(G.edges[edge[0], edge[1], edge[2]][key])
+                rate_products.append("*".join(rates))
+            sigma_K_str = "+".join(rate_products)
+            return sigma_K_str
+
+def calculate_pi_difference(G, cycle, key, output_strings=False):
+    """
+    Calculates the difference of the forward and reverse rate products for a
+    given cycle, where forward rates are defined as counter clockwise.
+
+    Parameters
+    ----------
+    G : NetworkX MultiDiGraph Object
+        Input diagram
+    cycle : list of int
+        List of node indices for cycle of interest, index zero. Order of node
+        indices does not matter.
+    key : str
+        Definition of key in NetworkX diagram edges, used to call edge rate
+        values or names. This needs to match the key used for the rate
+        constants names or values in the input diagram G.
+    output_strings : bool (optional)
+        Used to denote whether values or strings will be combined. Default
+        is False, which tells the function to calculate the state
+        probabilities using numbers. If True, this will assume the input
+        'key' will return strings of variable names to join into the
+        analytic function.
+
+    Returns
+    -------
+    pi_diff : float
+        Difference of product of counter clockwise cycle rates and clockwise
+        cycle rates.
+    pi_diff_str : str
+        String of difference of product of counter clockwise cycle rates and
+        clockwise cycle rates.
+    """
+    cycle_edges = construct_cycle_edges(get_ordered_cycle(G, cycle))
+    if output_strings == False:
+        if isinstance(G.edges[cycle_edges[0][0], cycle_edges[0][1], cycle_edges[0][2]][key], str):
+            raise Exception("To enter variable strings set parameter output_strings=True.")
+        ccw_rates = 1
+        cw_rates = 1
+        for edge in cycle_edges:
+            ccw_rates *= G.edges[edge[0], edge[1], edge[2]][key]
+            cw_rates *= G.edges[edge[1], edge[0], edge[2]][key]
+        pi_difference = ccw_rates - cw_rates
+        return pi_difference
+    if output_strings == True:
+        if not isinstance(G.edges[cycle_edges[0][0], cycle_edges[0][1], cycle_edges[0][2]][key], str):
+            raise Exception("To enter variable values set parameter output_strings=False.")
+        ccw_rates = []
+        cw_rates = []
+        for edge in cycle_edges:
+            ccw_rates.append(G.edges[edge[0], edge[1], edge[2]][key])
+            cw_rates.append(G.edges[edge[1], edge[0], edge[2]][key])
+        pi_difference = "-".join(["*".join(ccw_rates), "*".join(cw_rates)])
+        return pi_difference
+
+def calc_state_probs(G, key, output_strings=False):
+    """
+    Calculates state probabilities directly.
+
+    Parameters
+    ----------
+    G : NetworkX MultiDiGraph Object
+        Input diagram
+    key : str
+        Definition of key in NetworkX diagram edges, used to call edge rate
+        values or names. This needs to match the key used for the rate
+        constants names or values in the input diagram G.
+    output_strings : bool (optional)
+        Used to denote whether values or strings will be combined. Default
+        is False, which tells the function to calculate the state
+        probabilities using numbers. If True, this will assume the input
+        'key' will return strings of variable names to join into the
+        analytic state multplicity and normalization function.
+
+    Returns
+    -------
+    state_probs : NumPy array
+        Array of state probabilities for N states, [p1, p2, p3, ..., pN].
+    state_mults : list of str
+        List of analytic state multiplicity functions in string form.
+    norm : str
+        Analytic state multiplicity function normalization function in
+        string form. This is the sum of all multiplicty functions.
+    """
+    dir_pars = generate_directional_partial_diagrams(G)
+    if output_strings == False:
+        state_probs = calc_state_probabilities(G, dir_pars, key, output_strings=output_strings)
+        return state_probs
+    if output_strings == True:
+        state_mults, norm = calc_state_probabilities(G, dir_pars, key, output_strings=output_strings)
+        return state_mults, norm
+
+def calc_cycle_flux(G, cycle, key, output_strings=False):
+    """
+    Calculates cycle flux for a given cycle in diagram G.
+
+    Parameters
+    ----------
+    G : NetworkX MultiDiGraph Object
+        Input diagram
+    cycle : list of int
+        List of node indices for cycle of interest, index zero. Order of node
+        indices does not matter.
+    key : str
+        Definition of key in NetworkX diagram edges, used to call edge rate
+        values or names. This needs to match the key used for the rate
+        constants names or values in the input diagram G.
+    output_strings : bool (optional)
+        Used to denote whether values or strings will be combined. Default
+        is False, which tells the function to calculate the state
+        probabilities using numbers. If True, this will assume the input
+        'key' will return strings of variable names to join into the
+        analytic cycle flux function.
+
+    Returns
+    -------
+    cycle_flux : float
+        Cycle flux for input cycle.
+    pi_diff_str : str
+        String of difference of product of counter clockwise cycle rates and
+        clockwise cycle rates.
+    sigma_K : str
+        Sum of rate products of directional flux diagram edges pointing to
+        input cycle in string form.
+    sigma_str : str
+        Sum of rate products of all directional partial diagrams for input
+        diagram G, in string form.
+    """
+    dir_pars = generate_directional_partial_diagrams(G)
+    flux_diags = generate_flux_diagrams(G, cycle)
+    if output_strings == False:
+        pi_diff = calculate_pi_difference(G, cycle, key, output_strings=output_strings)
+        sigma_K = calculate_sigma_K(G, cycle, flux_diags, key, output_strings=output_strings)
+        sigma = calc_sigma(G, dir_pars, key, output_strings=output_strings)
+        cycle_flux = pi_diff*sigma_K/sigma
+        return cycle_flux
+    if output_strings == True:
+        pi_diff_str = calculate_pi_difference(G=G, cycle=cycle, key=key, output_strings=output_strings)
+        sigma_K_str = calculate_sigma_K(G, cycle, flux_diags, key, output_strings=output_strings)
+        sigma_str = calc_sigma(G, dir_pars, key=key, output_strings=output_strings)
+        return pi_diff_str, sigma_K_str, sigma_str
+
+def calc_sigma(G, dir_pars, key, output_strings=False):
+    """
+    FIX CALC_STATE_PROBABILITIES() TO ONLY CHECK IF STRINGS ONE TIME
+    
+    Parameters
+    ----------
+    G : NetworkX MultiDiGraph Object
+        Input diagram
+    key : str
+        Definition of key in NetworkX diagram edges, used to call edge rate
+        values or names. This needs to match the key used for the rate
+        constants names or values in the input diagram G.
+    output_strings : bool (optional)
+        Used to denote whether values or strings will be combined. Default
+        is False, which tells the function to calculate the state
+        probabilities using numbers. If True, this will assume the input
+        'key' will return strings of variable names to join into the
+        analytic cycle flux function.
+    Returns
+    -------
+    sigma : float
+
+    sigma_str : str
+        Sum of rate products of all directional partial diagrams for input
+        diagram G, in string form.
+    """
+    if output_strings == False:
+        return sigma
+    if output_strings == True:
+        return sigma_str
