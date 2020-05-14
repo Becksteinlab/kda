@@ -75,23 +75,23 @@ def generate_directional_partial_diagrams(G):
         diagrams.
     """
     partials = generate_partial_diagrams(G)
-    N_targets = G.number_of_nodes()
+    targets = list(G.nodes)
     dir_partials = []
-    for target in range(N_targets):
+    for target in targets:
         for i in range(len(partials)):
-            diag = partials[i].copy()               # Make a copy of directional partial diagram
-            unique_edges = find_unique_edges(diag)      # Find unique edges of that diagram
+            partial = partials[i].copy()               # Make a copy of directional partial diagram
+            unique_edges = find_unique_edges(partial)      # Find unique edges of that diagram
             cons = get_directional_connections(target, unique_edges)   # Get dictionary of connections
             dir_edges = get_directional_edges(cons)                    # Get directional edges from connections
-            diag.remove_edges_from(list(diag.edges()))                 # Remove all edges from partial diagram
+            partial.remove_edges_from(list(partial.edges()))                 # Remove all edges from partial diagram
             for e in dir_edges:
-                diag.add_edge(e[0], e[1], e[2])                        # Add relevant edges to partial diagram
-            for n in range(diag.number_of_nodes()):                    # Add node attrbutes to label target nodes
-                if n == target:
-                    diag.nodes[n]['is_target'] = True
+                partial.add_edge(e[0], e[1], e[2])                        # Add relevant edges to partial diagram
+            for t in targets:                    # Add node attrbutes to label target nodes
+                if t == target:
+                    partial.nodes[t]['is_target'] = True
                 else:
-                    diag.nodes[n]['is_target'] = False
-            dir_partials.append(diag)                                  # Append to list of partial diagrams
+                    partial.nodes[t]['is_target'] = False
+            dir_partials.append(partial)                                  # Append to list of partial diagrams
     return dir_partials
 
 def calc_state_probabilities(G, dir_partials, key, output_strings=False):

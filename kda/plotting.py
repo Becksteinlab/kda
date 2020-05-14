@@ -33,11 +33,11 @@ def plot_diagram(G, pos=None, path=None, label=None):
         pos = nx.spring_layout(G)
     fig = plt.figure(figsize=(4, 4), tight_layout=True)
     fig.add_subplot(111)
-    node_list = [i for i in range(G.number_of_nodes())]
+    node_list = list(G.nodes)
     nx.draw_networkx_nodes(G, pos, node_size=500, nodelist=node_list, node_color='0.8')
     nx.draw_networkx_edges(G, pos, node_size=500, width=4, arrow_style='->', arrowsize=15)
     labels = {}
-    for i in range(G.number_of_nodes()):
+    for i in node_list:
         labels[i] = r"${}$".format(i+1)
     nx.draw_networkx_labels(G, pos, labels, font_size=16)
     plt.axis('off')
@@ -56,7 +56,7 @@ def plot_diagrams(diagrams, pos=None, panel=False, panel_scale=1, font_size=12, 
     pos : dict (optional)
         Dictionary where keys are the indexed states (0, 1, 2, ..., N) and
         the values are NumPy arrays of x, y coordinates for each node. Default
-        is None, nx.spring_layout() is used. 
+        is None, nx.spring_layout() is used.
     panel : bool (optional)
         Tells the function to output diagrams as an 'NxM' matrix of subplots,
         where 'N' and 'M' are determined by the function. True will output panel
@@ -83,10 +83,10 @@ def plot_diagrams(diagrams, pos=None, panel=False, panel_scale=1, font_size=12, 
     """
     if pos == None:
         pos = nx.spring_layout(diagrams[0])
+    node_list = list(diagrams[0].nodes)
     labels = {}
-    for j in range(diagrams[0].number_of_nodes()):
+    for j in node_list:
         labels[j] = r"${}$".format(j+1)
-    node_list = [i for i in range(diagrams[0].number_of_nodes())]
     if panel == True:
         N = len(diagrams)
         Nrows = int(np.sqrt(N))
