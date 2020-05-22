@@ -634,15 +634,25 @@ def generate_flux_diagrams(G, cycle):
     two_way_flux_diagrams = generate_two_way_flux_diagrams(G)
     cycle_idx = get_indices_of_flux_diagrams(cycle, two_way_flux_diagrams)
     relevant_flux_diags = [two_way_flux_diagrams[i] for i in cycle_idx]
-    if len(relevant_flux_diags) == 1:
-        print("Only 1 flux diagram detected for cycle ({}). Sigma K value is 1.".format(cycle))
-        for target in relevant_flux_diags[0].nodes():
-            flux_diagram = relevant_flux_diags[0]
-            if target in cycle:
-                flux_diagram.nodes[target]['is_target'] = True
-            else:
-                flux_diagram.nodes[target]['is_target'] = False
-        return flux_diagram
+    if all(n == m for n, m in list(zip(np.sort(cycle), np.sort(list(G.nodes))))) == True:
+        print("Input cycle contains all nodes, no directional flux diagrams can be constructed for cycle ({}). Sigma K value is 1.".format(cycle))
+        if len(relevant_flux_diags) == 1:
+            for target in relevant_flux_diags[0].nodes():
+                flux_diagram = relevant_flux_diags[0]
+                if target in cycle:
+                    flux_diagram.nodes[target]['is_target'] = True
+                else:
+                    flux_diagram.nodes[target]['is_target'] = False
+            return flux_diagram
+        else:
+            print("{} flux diagrams constructed for cycle ({}). Constructed diagrams contain multiple cycles and should only be used for determining logic errors.".format(len(relevant_flux_diags), cycle))
+            for diag in relevant_flux_diags:
+                for target in diag.nodes():
+                    if target in cycle:
+                        diag.nodes[target]['is_target'] = True
+                    else:
+                        diag.nodes[target]['is_target'] = False
+            return relevant_flux_diags
     else:
         diag_cycles = [c for c in list(nx.simple_cycles(relevant_flux_diags[0])) if len(c) > 2]
         cycle_edges = [construct_cycle_edges(cyc) for cyc in diag_cycles]
