@@ -75,7 +75,7 @@ def generate_directional_partial_diagrams(G):
         diagrams.
     """
     partials = generate_partial_diagrams(G)
-    targets = list(G.nodes)
+    targets = np.sort(list(G.nodes))
     dir_partials = []
     for target in targets:
         for i in range(len(partials)):
@@ -625,34 +625,24 @@ def generate_flux_diagrams(G, cycle):
     flux_diagram : NetworkX MultiDiGraph object
         Flux diagram returned in the event that there is only one directional
         flux diagram for the input cycle in the input diagram G. Cycle nodes
-        are labeled by attribute 'istarget'.
+        are labeled by attribute 'is_target'.
     directional_flux_diagrams : list of NetworkX MultiDiGraph objects
         List of directional flux diagrams. Diagrams contain the input cycle
         where remaining edges follow path pointing to cycle. Cycle nodes are
-        labeled by attribute 'istarget'.
+        labeled by attribute 'is_target'.
     """
     two_way_flux_diagrams = generate_two_way_flux_diagrams(G)
     cycle_idx = get_indices_of_flux_diagrams(cycle, two_way_flux_diagrams)
     relevant_flux_diags = [two_way_flux_diagrams[i] for i in cycle_idx]
-    if all(n == m for n, m in list(zip(np.sort(cycle), np.sort(list(G.nodes))))) == True:
-        print("Input cycle contains all nodes, no directional flux diagrams can be constructed for cycle ({}). Sigma K value is 1.".format(cycle))
-        if len(relevant_flux_diags) == 1:
-            for target in relevant_flux_diags[0].nodes():
-                flux_diagram = relevant_flux_diags[0]
-                if target in cycle:
-                    flux_diagram.nodes[target]['is_target'] = True
-                else:
-                    flux_diagram.nodes[target]['is_target'] = False
-            return flux_diagram
-        else:
-            print("{} flux diagrams constructed for cycle ({}). Constructed diagrams contain multiple cycles and should only be used for determining logic errors.".format(len(relevant_flux_diags), cycle))
-            for diag in relevant_flux_diags:
-                for target in diag.nodes():
-                    if target in cycle:
-                        diag.nodes[target]['is_target'] = True
-                    else:
-                        diag.nodes[target]['is_target'] = False
-            return relevant_flux_diags
+    if len(relevant_flux_diags) == 1:
+        print("Only 1 flux diagram detected for cycle ({}). Sigma K value is 1.".format(cycle))
+        for target in relevant_flux_diags[0].nodes():
+            flux_diagram = relevant_flux_diags[0]
+            if target in cycle:
+                flux_diagram.nodes[target]['is_target'] = True
+            else:
+                flux_diagram.nodes[target]['is_target'] = False
+        return flux_diagram
     else:
         diag_cycles = [c for c in list(nx.simple_cycles(relevant_flux_diags[0])) if len(c) > 2]
         cycle_edges = [construct_cycle_edges(cyc) for cyc in diag_cycles]
@@ -978,3 +968,39 @@ def construct_sympy_cycle_flux_funcs(pi_diff_str, sigma_K_str, sigma_str):
     else:
         cycle_flux_func = (parse_expr(pi_diff_str)*parse_expr(sigma_K_str))/parse_expr(sigma_str)
         return cycle_flux_func
+
+
+def solve_matrix(K, tol=1e-12):
+    """
+    Calculates the steady-state probabilities for an N-state model using matrix
+    methods.
+
+    Parameters
+    ----------
+    K : array
+        'NxN' matrix, where N is the number of states. Element i, j represents
+        the rate constant from state i to state j. Diagonal elements should be
+        zero, but does not have to be in input K matrix.
+    tol : float (optional)
+        Tolerance used for singular value determination. Values are considered
+        singular if they are less than the input tolerance. Default is 1e-12.
+
+    Returns
+    -------
+    state_probs : NumPy array
+        Array of state probabilities for N states, [p1, p2, p3, ..., pN].
+    """
+    N = len(K)                  # get number of states
+    np.fill_diagonal(K, 0)      # fill the diagonal elements with zeros
+    Kc = K.T                    # take the transpose of K
+    for i in range(N):
+        Kc[i, i] = -Kc[:, i].sum(axis=0)    # set the diagonal elements equal to the negative sum of the columns
+    U, w, VT = np.linalg.svd(Kc)            # use SVD to find the wj's
+    singular_values = np.abs(w) < tol       # find the singular values from the wj's
+    Kc = Kc.astype('float64')               # make Kc values floats
+    Kc[singular_values] = 1/N               # set singular value rows equal to 1/N (equal probability)
+    pdot = np.zeros(N)                      # generate time-derivative array
+    pdot[singular_values] = 1               # assign 1 to corresponding pdot component
+    x = np.linalg.solve(Kc, pdot)           # solve system of equations
+    state_probs = x/x.sum(axis=0)           # normalize probabilities
+    return state_probs
