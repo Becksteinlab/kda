@@ -12,9 +12,8 @@ import versioneer
 needs_pytest = {'pytest', 'test', 'ptr'}.intersection(sys.argv)
 pytest_runner = ['pytest-runner'] if needs_pytest else []
 
-try:
-    with open("README.md", "r") as handle:
-        long_description = handle.read()
+with open("README.md", "r") as handle:
+    long_description = handle.read()
 
 setup(
     # Self-descriptive entries which should always be present
