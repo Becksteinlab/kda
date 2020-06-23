@@ -27,7 +27,7 @@ setup(
     version=versioneer.get_version(),
     cmdclass=versioneer.get_cmdclass(),
     license='LGPLv3',
-    keywords="science kinetic",
+    keywords="science kinetics chemistry physics",
     project_urls={
         'Source': 'https://github.com/Becksteinlab/kda/',
         'Issue Tracker': 'https://github.com/Becksteinlab/kda/issues',
@@ -38,8 +38,6 @@ setup(
         'networkx',
         'scipy',
         'sympy',
-        'functools',
-        'itertools',
         'matplotlib',
     ],
     tests_require=[
