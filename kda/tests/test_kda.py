@@ -81,7 +81,7 @@ def test_3(k12, k21, k23, k32, k13, k31, SP3):
     kda.generate_edges(G3, k3, k3s, name_key='name', val_key='val')
     SP3_KDA = kda.calc_state_probs(G3, key='val')
     state_mults3, norm3 = kda.calc_state_probs(G3, key='name', output_strings=True)
-    sympy_funcs3 = kda.construct_sympy_funcs(state_mults3, norm3)
+    sympy_funcs3 = kda.construct_sympy_prob_funcs(state_mults3, norm3)
     state_prob_funcs3 = kda.construct_lambdify_funcs(sympy_funcs3, rate_names3)
     SP3_SymPy = []
     for i in range(G3.number_of_nodes()):
@@ -117,7 +117,7 @@ def test_4(k12, k21, k23, k32, k34, k43, k41, k14, SP4):
     kda.generate_edges(G4, k4, k4s, name_key='name', val_key='val')
     SP4_KDA = kda.calc_state_probs(G4, key='val')
     state_mults4, norm4 = kda.calc_state_probs(G4, key='name', output_strings=True)
-    sympy_funcs4 = kda.construct_sympy_funcs(state_mults4, norm4)
+    sympy_funcs4 = kda.construct_sympy_prob_funcs(state_mults4, norm4)
     state_prob_funcs4 = kda.construct_lambdify_funcs(sympy_funcs4, rate_names4)
     SP4_SymPy = []
     for i in range(G4.number_of_nodes()):
@@ -155,7 +155,7 @@ def test_4WL(k12, k21, k23, k32, k34, k43, k41, k14, k24, k42, SP4WL):
     kda.generate_edges(G4wl, k4wl, k4wls, name_key='name', val_key='val')
     SP4WL_KDA = kda.calc_state_probs(G4wl, key='val')
     state_mults4wl, norm4wl = kda.calc_state_probs(G4wl, key='name', output_strings=True)
-    sympy_funcs4wl = kda.construct_sympy_funcs(state_mults4wl, norm4wl)
+    sympy_funcs4wl = kda.construct_sympy_prob_funcs(state_mults4wl, norm4wl)
     state_prob_funcs4wl = kda.construct_lambdify_funcs(sympy_funcs4wl, rate_names4wl)
     SP4WL_SymPy = []
     for i in range(G4wl.number_of_nodes()):
@@ -197,7 +197,7 @@ def test_SP5WL(k12, k21, k23, k32, k13, k31, k24, k42, k35, k53, k45, k54, SP5WL
     kda.generate_edges(G5wl, k5wl, k5wls, name_key='name', val_key='val')
     SP5WL_KDA = kda.calc_state_probs(G5wl, key='val')
     state_mults5wl, norm5wl = kda.calc_state_probs(G5wl, key='name', output_strings=True)
-    sympy_funcs5wl = kda.construct_sympy_funcs(state_mults5wl, norm5wl)
+    sympy_funcs5wl = kda.construct_sympy_prob_funcs(state_mults5wl, norm5wl)
     state_prob_funcs5wl = kda.construct_lambdify_funcs(sympy_funcs5wl, rate_names5wl)
     SP5WL_SymPy = []
     for i in range(G5wl.number_of_nodes()):
@@ -241,7 +241,7 @@ def test_SP6(k12, k21, k23, k32, k34, k43, k45, k54, k56, k65, k61, k16, SP6):
     kda.generate_edges(G6, k6, k6s, name_key='name', val_key='val')
     SP6_KDA = kda.calc_state_probs(G6, key='val')
     state_mults6, norm6 = kda.calc_state_probs(G6, key='name', output_strings=True)
-    sympy_funcs6 = kda.construct_sympy_funcs(state_mults6, norm6)
+    sympy_funcs6 = kda.construct_sympy_prob_funcs(state_mults6, norm6)
     state_prob_funcs6 = kda.construct_lambdify_funcs(sympy_funcs6, rate_names6)
     SP6_SymPy = []
     for i in range(G6.number_of_nodes()):

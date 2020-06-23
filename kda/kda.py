@@ -194,12 +194,12 @@ def construct_sympy_prob_funcs(state_mult_funcs, norm_func):
 
 def construct_lambdify_funcs(sympy_funcs, rate_names):
     """
-    Constructs lambdified analytic state probability functions.
+    Constructs lambdified functions.
 
     Parameters
     ----------
     sympy_funcs : list of SymPy functions
-        List of analytic state probability SymPy functions.
+        List of SymPy functions.
     rate_names : list
         List of strings, where each element is the name of the variables for
         the input probability functions, ["x12", "x21", "x23", ...].
