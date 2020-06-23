@@ -15,9 +15,6 @@ pytest_runner = ['pytest-runner'] if needs_pytest else []
 try:
     with open("README.md", "r") as handle:
         long_description = handle.read()
-except:
-    long_description = "\n".join(short_description[2:])
-
 
 setup(
     # Self-descriptive entries which should always be present
@@ -25,7 +22,7 @@ setup(
     author='Nikolaus Awtrey',
     author_email='nawtrey@asu.edu',
     url='https://github.com/Becksteinlab/kda/',
-    description=short_description[0],
+    description="Kinetic Diagram Analysis tools",
     long_description=long_description,
     long_description_content_type="text/markdown",
     version=versioneer.get_version(),
