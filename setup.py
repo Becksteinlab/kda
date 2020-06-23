@@ -9,7 +9,6 @@ import sys
 from setuptools import setup, find_packages
 import versioneer
 
-short_description = __doc__.split("\n")
 needs_pytest = {'pytest', 'test', 'ptr'}.intersection(sys.argv)
 pytest_runner = ['pytest-runner'] if needs_pytest else []
 

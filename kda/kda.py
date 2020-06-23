@@ -970,10 +970,10 @@ def construct_sympy_cycle_flux_funcs(pi_diff_str, sigma_K_str, sigma_str):
         return cycle_flux_func
 
 
-def solve_matrix(K, tol=1e-12):
+def SVD(K, tol=1e-12):
     """
-    Calculates the steady-state probabilities for an N-state model using matrix
-    methods.
+    Calculates the steady-state probabilities for an N-state model using
+    singular value decomposition.
 
     Parameters
     ----------
@@ -991,16 +991,19 @@ def solve_matrix(K, tol=1e-12):
         Array of state probabilities for N states, [p1, p2, p3, ..., pN].
     """
     N = len(K)                  # get number of states
-    np.fill_diagonal(K, 0)      # fill the diagonal elements with zeros
-    Kc = K.T                    # take the transpose of K
+    Kc = K.copy()                # Make a copy of input matrix K
+    np.fill_diagonal(Kc, 0)      # fill the diagonal elements with zeros
+    Kc = Kc.T                    # take the transpose
     for i in range(N):
         Kc[i, i] = -Kc[:, i].sum(axis=0)    # set the diagonal elements equal to the negative sum of the columns
-    U, w, VT = np.linalg.svd(Kc)            # use SVD to find the wj's
-    singular_values = np.abs(w) < tol       # find the singular values from the wj's
-    Kc = Kc.astype('float64')               # make Kc values floats
-    Kc[singular_values] = 1                 # set singular value rows equal to 1
-    pdot = np.zeros(N)                      # generate time-derivative array
-    pdot[singular_values] = 1               # assign 1 to corresponding pdot component
-    x = np.linalg.solve(Kc, pdot)           # solve system of equations
-    state_probs = x/x.sum(axis=0)           # normalize probabilities
+    prob_norm = np.ones(N)                  # create array of ones
+    Kcs = np.vstack((Kc, prob_norm))        # stack ODE equations with probability equation
+    U, w, VT = np.linalg.svd(Kcs, full_matrices=False)  # use SVD to generate U, w, and V.T matrices
+    singular_vals = np.abs(w) < tol                     # find any singular values in w matrix
+    inv_w = 1/w                                         # Take the inverse of the w matrix
+    inv_w[singular_vals] = 0                            # Set any singular values to zero
+    Kcs_inv = VT.T.dot(np.diag(inv_w)).dot(U.T)         # construct the pseudo inverse of Kcs
+    pdot = np.zeros(N+1)                                # create steady state solution matrix (pdot = 0), add additional entry for probaility equation
+    pdot[-1] = 1                                        # set last value to 1 for probability normalization
+    state_probs = Kcs_inv.dot(pdot)                     # dot Kcs and pdot matrices together
     return state_probs
