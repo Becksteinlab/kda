@@ -78,11 +78,9 @@ def test_3(k12, k21, k23, k32, k13, k31, SP3):
                     ["k31", "k32", 0]])
     rate_names3 = ["k12", "k21", "k23", "k32", "k13", "k31"]
     G3 = nx.MultiDiGraph()
-    kda.generate_edges(G3, k3s, k3, name_key='name', val_key='val')
-    pars3 = kda.generate_partial_diagrams(G3)
-    dir_pars3 = kda.generate_directional_partial_diagrams(pars3)
-    SP3_KDA = kda.calc_state_probabilities(G3, dir_pars3, key='val')
-    state_mults3, norm3 = kda.calc_state_probabilities(G3, dir_pars3, key='name', output_strings=True)
+    kda.generate_edges(G3, k3, k3s, name_key='name', val_key='val')
+    SP3_KDA = kda.calc_state_probs(G3, key='val')
+    state_mults3, norm3 = kda.calc_state_probs(G3, key='name', output_strings=True)
     sympy_funcs3 = kda.construct_sympy_funcs(state_mults3, norm3)
     state_prob_funcs3 = kda.construct_lambdify_funcs(sympy_funcs3, rate_names3)
     SP3_SymPy = []
@@ -116,11 +114,9 @@ def test_4(k12, k21, k23, k32, k34, k43, k41, k14, SP4):
                     ["k41", 0, "k43", 0]])
     rate_names4 = ["k12", "k21", "k23", "k32", "k34", "k43", "k41", "k14"]
     G4 = nx.MultiDiGraph()
-    kda.generate_edges(G4, k4s, k4, name_key='name', val_key='val')
-    pars4 = kda.generate_partial_diagrams(G4)
-    dir_pars4 = kda.generate_directional_partial_diagrams(pars4)
-    SP4_KDA = kda.calc_state_probabilities(G4, dir_pars4, key='val')
-    state_mults4, norm4 = kda.calc_state_probabilities(G4, dir_pars4, key='name', output_strings=True)
+    kda.generate_edges(G4, k4, k4s, name_key='name', val_key='val')
+    SP4_KDA = kda.calc_state_probs(G4, key='val')
+    state_mults4, norm4 = kda.calc_state_probs(G4, key='name', output_strings=True)
     sympy_funcs4 = kda.construct_sympy_funcs(state_mults4, norm4)
     state_prob_funcs4 = kda.construct_lambdify_funcs(sympy_funcs4, rate_names4)
     SP4_SymPy = []
@@ -156,11 +152,9 @@ def test_4WL(k12, k21, k23, k32, k34, k43, k41, k14, k24, k42, SP4WL):
                       ["k41", "k42", "k43", 0]])
     rate_names4wl = ["k12", "k21", "k23", "k32", "k34", "k43", "k41", "k14", "k24", "k42"]
     G4wl = nx.MultiDiGraph()
-    kda.generate_edges(G4wl, k4wls, k4wl, name_key='name', val_key='val')
-    pars4wl = kda.generate_partial_diagrams(G4wl)
-    dir_pars4wl = kda.generate_directional_partial_diagrams(pars4wl)
-    SP4WL_KDA = kda.calc_state_probabilities(G4wl, dir_pars4wl, key='val')
-    state_mults4wl, norm4wl = kda.calc_state_probabilities(G4wl, dir_pars4wl, key='name', output_strings=True)
+    kda.generate_edges(G4wl, k4wl, k4wls, name_key='name', val_key='val')
+    SP4WL_KDA = kda.calc_state_probs(G4wl, key='val')
+    state_mults4wl, norm4wl = kda.calc_state_probs(G4wl, key='name', output_strings=True)
     sympy_funcs4wl = kda.construct_sympy_funcs(state_mults4wl, norm4wl)
     state_prob_funcs4wl = kda.construct_lambdify_funcs(sympy_funcs4wl, rate_names4wl)
     SP4WL_SymPy = []
@@ -200,11 +194,9 @@ def test_SP5WL(k12, k21, k23, k32, k13, k31, k24, k42, k35, k53, k45, k54, SP5WL
                       [  0,   0, "k53", "k54",   0]])
     rate_names5wl = ["k12", "k21", "k23", "k32", "k13", "k31", "k24", "k42", "k35", "k53", "k45", "k54"]
     G5wl = nx.MultiDiGraph()
-    kda.generate_edges(G5wl, k5wls, k5wl, name_key='name', val_key='val')
-    pars5wl = kda.generate_partial_diagrams(G5wl)
-    dir_pars5wl = kda.generate_directional_partial_diagrams(pars5wl)
-    SP5WL_KDA = kda.calc_state_probabilities(G5wl, dir_pars5wl, key='val')
-    state_mults5wl, norm5wl = kda.calc_state_probabilities(G5wl, dir_pars5wl, key='name', output_strings=True)
+    kda.generate_edges(G5wl, k5wl, k5wls, name_key='name', val_key='val')
+    SP5WL_KDA = kda.calc_state_probs(G5wl, key='val')
+    state_mults5wl, norm5wl = kda.calc_state_probs(G5wl, key='name', output_strings=True)
     sympy_funcs5wl = kda.construct_sympy_funcs(state_mults5wl, norm5wl)
     state_prob_funcs5wl = kda.construct_lambdify_funcs(sympy_funcs5wl, rate_names5wl)
     SP5WL_SymPy = []
@@ -246,11 +238,9 @@ def test_SP6(k12, k21, k23, k32, k34, k43, k45, k54, k56, k65, k61, k16, SP6):
                     ["k61",   0,   0,   0, "k65",   0]])
     rate_names6 = ["k12", "k21", "k23", "k32", "k34", "k43", "k45", "k54", "k56", "k65", "k61", "k16"]
     G6 = nx.MultiDiGraph()
-    kda.generate_edges(G6, k6s, k6, name_key='name', val_key='val')
-    pars6 = kda.generate_partial_diagrams(G6)
-    dir_pars6 = kda.generate_directional_partial_diagrams(pars6)
-    SP6_KDA = kda.calc_state_probabilities(G6, dir_pars6, key='val')
-    state_mults6, norm6 = kda.calc_state_probabilities(G6, dir_pars6, key='name', output_strings=True)
+    kda.generate_edges(G6, k6, k6s, name_key='name', val_key='val')
+    SP6_KDA = kda.calc_state_probs(G6, key='val')
+    state_mults6, norm6 = kda.calc_state_probs(G6, key='name', output_strings=True)
     sympy_funcs6 = kda.construct_sympy_funcs(state_mults6, norm6)
     state_prob_funcs6 = kda.construct_lambdify_funcs(sympy_funcs6, rate_names6)
     SP6_SymPy = []
