@@ -169,19 +169,19 @@ def test_4WL(k12, k21, k23, k32, k34, k43, k41, k14, k24, k42, SP4WL):
     assert_almost_equal(SP4WL, SP4WL_ODE, decimal=10)
 
 
-@pytest.mark.parametrize('k12', [1e0, 1e1])
-@pytest.mark.parametrize('k21', [1e0, 1e1])
-@pytest.mark.parametrize('k23', [1e0, 1e1])
-@pytest.mark.parametrize('k32', [1e0, 1e1])
-@pytest.mark.parametrize('k13', [1e0, 1e1])
-@pytest.mark.parametrize('k31', [1e0, 1e1])
-@pytest.mark.parametrize('k24', [1e0, 1e1])
-@pytest.mark.parametrize('k42', [1e0, 1e1])
-@pytest.mark.parametrize('k35', [1e0, 1e1])
-@pytest.mark.parametrize('k53', [1e0, 1e1])
-@pytest.mark.parametrize('k45', [1e0, 1e1])
-@pytest.mark.parametrize('k54', [1e0, 1e1])
-def test_SP5WL(k12, k21, k23, k32, k13, k31, k24, k42, k35, k53, k45, k54, SP5WL):
+@pytest.mark.parametrize('k12', [1e0])
+@pytest.mark.parametrize('k21', [1e0])
+@pytest.mark.parametrize('k23', [1e0])
+@pytest.mark.parametrize('k32', [1e0])
+@pytest.mark.parametrize('k13', [1e0])
+@pytest.mark.parametrize('k31', [1e0])
+@pytest.mark.parametrize('k24', [1e0])
+@pytest.mark.parametrize('k42', [1e0])
+@pytest.mark.parametrize('k35', [1e0])
+@pytest.mark.parametrize('k53', [1e0])
+@pytest.mark.parametrize('k45', [1e0])
+@pytest.mark.parametrize('k54', [1e0])
+def test_5WL(k12, k21, k23, k32, k13, k31, k24, k42, k35, k53, k45, k54, SP5WL):
     k5wl = np.array([[  0, k12, k13,   0,   0],
                      [k21,   0, k23, k24,   0],
                      [k31, k32,   0,   0, k35],
@@ -211,19 +211,19 @@ def test_SP5WL(k12, k21, k23, k32, k13, k31, k24, k42, k35, k53, k45, k54, SP5WL
     assert_almost_equal(SP5WL, SP5WL_ODE, decimal=10)
 
 
-@pytest.mark.parametrize('k12', [1e0, 1e1])
-@pytest.mark.parametrize('k21', [1e0, 1e1])
-@pytest.mark.parametrize('k23', [1e0, 1e1])
-@pytest.mark.parametrize('k32', [1e0, 1e1])
-@pytest.mark.parametrize('k34', [1e0, 1e1])
-@pytest.mark.parametrize('k43', [1e0, 1e1])
-@pytest.mark.parametrize('k45', [1e0, 1e1])
-@pytest.mark.parametrize('k54', [1e0, 1e1])
-@pytest.mark.parametrize('k56', [1e0, 1e1])
-@pytest.mark.parametrize('k65', [1e0, 1e1])
-@pytest.mark.parametrize('k61', [1e0, 1e1])
-@pytest.mark.parametrize('k16', [1e0, 1e1])
-def test_SP6(k12, k21, k23, k32, k34, k43, k45, k54, k56, k65, k61, k16, SP6):
+@pytest.mark.parametrize('k12', [1e0])
+@pytest.mark.parametrize('k21', [1e0])
+@pytest.mark.parametrize('k23', [1e0])
+@pytest.mark.parametrize('k32', [1e0])
+@pytest.mark.parametrize('k34', [1e0])
+@pytest.mark.parametrize('k43', [1e0])
+@pytest.mark.parametrize('k45', [1e0])
+@pytest.mark.parametrize('k54', [1e0])
+@pytest.mark.parametrize('k56', [1e0])
+@pytest.mark.parametrize('k65', [1e0])
+@pytest.mark.parametrize('k61', [1e0])
+@pytest.mark.parametrize('k16', [1e0])
+def test_6(k12, k21, k23, k32, k34, k43, k45, k54, k56, k65, k61, k16, SP6):
     k6 = np.array([[  0, k12,   0,   0,   0, k16],
                    [k21,   0, k23,   0,   0,   0],
                    [  0, k32,   0, k34,   0,   0],
