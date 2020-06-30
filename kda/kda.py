@@ -635,7 +635,6 @@ def generate_flux_diagrams(G, cycle):
     cycle_idx = get_indices_of_flux_diagrams(cycle, two_way_flux_diagrams)
     relevant_flux_diags = [two_way_flux_diagrams[i] for i in cycle_idx]
     if len(relevant_flux_diags) == 1:
-        print("Only 1 flux diagram detected for cycle ({}). Sigma K value is 1.".format(cycle))
         for target in relevant_flux_diags[0].nodes():
             flux_diagram = relevant_flux_diags[0]
             if target in cycle:
