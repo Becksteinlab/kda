@@ -119,7 +119,7 @@ def plot_diagrams(diagrams, pos=None, panel=False, panel_scale=1, font_size=12, 
         for i, partial in enumerate(diagrams):
             if cbt == True:
                 node_colors = []
-                for n in range(partial.number_of_nodes()):
+                for n in list(partial.nodes):
                     if partial.nodes[n]['is_target'] == True:
                         node_colors.append('#FF8080')
                     else:

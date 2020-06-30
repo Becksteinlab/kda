@@ -631,44 +631,48 @@ def generate_flux_diagrams(G, cycle):
         where remaining edges follow path pointing to cycle. Cycle nodes are
         labeled by attribute 'is_target'.
     """
-    two_way_flux_diagrams = generate_two_way_flux_diagrams(G)
-    cycle_idx = get_indices_of_flux_diagrams(cycle, two_way_flux_diagrams)
-    relevant_flux_diags = [two_way_flux_diagrams[i] for i in cycle_idx]
-    if len(relevant_flux_diags) == 1:
-        for target in relevant_flux_diags[0].nodes():
-            flux_diagram = relevant_flux_diags[0]
-            if target in cycle:
-                flux_diagram.nodes[target]['is_target'] = True
-            else:
-                flux_diagram.nodes[target]['is_target'] = False
-        return flux_diagram
+    if all(i == j for i, j in list(zip(np.sort(cycle), np.sort(list(G.nodes))))):
+        print("Input cycle contains all nodes. Returning None.")
+        return None
     else:
-        diag_cycles = [c for c in list(nx.simple_cycles(relevant_flux_diags[0])) if len(c) > 2]
-        cycle_edges = [construct_cycle_edges(cyc) for cyc in diag_cycles]
-        cycle_edges_flat = [edge for edges in cycle_edges for edge in edges]
-        directional_flux_diagrams = []
-        for diagram in relevant_flux_diags:
-            diag = diagram.copy()
-            edges = find_unique_edges(diag)
-            unique_edges = [edge for edge in edges if not edge in cycle_edges_flat]
-            dir_edges = []
-            for target in cycle:
-                cons = get_directional_connections(target, unique_edges)
-                if not len(cons) == 0:
-                    dir_edges.append(get_directional_edges(cons))
-            dir_edges_flat = [edge for edges in dir_edges for edge in edges]
-            diag.remove_edges_from(list(diag.edges()))
-            for edge in dir_edges_flat:
-                diag.add_edge(edge[0], edge[1], edge[2])
-            for edge in cycle_edges_flat:
-                diag.add_edge(edge[0], edge[1], 0)
-            for target in diag.nodes():
+        two_way_flux_diagrams = generate_two_way_flux_diagrams(G)
+        cycle_idx = get_indices_of_flux_diagrams(cycle, two_way_flux_diagrams)
+        relevant_flux_diags = [two_way_flux_diagrams[i] for i in cycle_idx]
+        if len(relevant_flux_diags) == 1:
+            for target in relevant_flux_diags[0].nodes():
+                flux_diagram = relevant_flux_diags[0]
                 if target in cycle:
-                    diag.nodes[target]['is_target'] = True
+                    flux_diagram.nodes[target]['is_target'] = True
                 else:
-                    diag.nodes[target]['is_target'] = False
-            directional_flux_diagrams.append(diag)
-        return directional_flux_diagrams
+                    flux_diagram.nodes[target]['is_target'] = False
+            return flux_diagram
+        else:
+            diag_cycles = [c for c in list(nx.simple_cycles(relevant_flux_diags[0])) if len(c) > 2]
+            cycle_edges = [construct_cycle_edges(cyc) for cyc in diag_cycles]
+            cycle_edges_flat = [edge for edges in cycle_edges for edge in edges]
+            directional_flux_diagrams = []
+            for diagram in relevant_flux_diags:
+                diag = diagram.copy()
+                edges = find_unique_edges(diag)
+                unique_edges = [edge for edge in edges if not edge in cycle_edges_flat]
+                dir_edges = []
+                for target in cycle:
+                    cons = get_directional_connections(target, unique_edges)
+                    if not len(cons) == 0:
+                        dir_edges.append(get_directional_edges(cons))
+                dir_edges_flat = [edge for edges in dir_edges for edge in edges]
+                diag.remove_edges_from(list(diag.edges()))
+                for edge in dir_edges_flat:
+                    diag.add_edge(edge[0], edge[1], edge[2])
+                for edge in cycle_edges_flat:
+                    diag.add_edge(edge[0], edge[1], 0)
+                for target in diag.nodes():
+                    if target in cycle:
+                        diag.nodes[target]['is_target'] = True
+                    else:
+                        diag.nodes[target]['is_target'] = False
+                directional_flux_diagrams.append(diag)
+            return directional_flux_diagrams
 
 def calc_sigma(G, dir_partials, key, output_strings=False):
     """
