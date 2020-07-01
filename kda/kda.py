@@ -632,7 +632,10 @@ def generate_flux_diagrams(G, cycle):
         labeled by attribute 'is_target'.
     """
     if all(i == j for i, j in list(zip(np.sort(cycle), np.sort(list(G.nodes))))):
-        print("Input cycle contains all nodes. Returning None.")
+        print("""Input cycle {} contains all nodes in G. For this case, the
+        order of the nodes can affect the cycle flux. Use
+        kda.find_all_node_cycles() to find all unique cycles containing all
+        nodes in G. Value of None returned.""".format(cycle))
         return None
     else:
         two_way_flux_diagrams = generate_two_way_flux_diagrams(G)
@@ -645,6 +648,8 @@ def generate_flux_diagrams(G, cycle):
                     flux_diagram.nodes[target]['is_target'] = True
                 else:
                     flux_diagram.nodes[target]['is_target'] = False
+            if not len(find_unique_cycles(flux_diagram)) == 1:
+                raise Exception("Generated flux diagram has more than 1 cycle.")
             return flux_diagram
         else:
             diag_cycles = [c for c in list(nx.simple_cycles(relevant_flux_diags[0])) if len(c) > 2]
@@ -672,6 +677,9 @@ def generate_flux_diagrams(G, cycle):
                     else:
                         diag.nodes[target]['is_target'] = False
                 directional_flux_diagrams.append(diag)
+            for diag in directional_flux_diagrams:
+                if not len(find_unique_cycles(diag)) == 1:
+                    raise Exception("Generated flux diagram has more than 1 cycle.")
             return directional_flux_diagrams
 
 def calc_sigma(G, dir_partials, key, output_strings=False):
@@ -767,7 +775,7 @@ def calculate_sigma_K(G, cycle, flux_diags, key, output_strings=False):
         input cycle in string form.
     """
     if isinstance(flux_diags, list) == False:
-        print("Only 1 flux diagram detected for cycle ({}). Sigma K value is 1.".format(cycle))
+        print("Only 1 flux diagram detected for cycle {}. Sigma K value is 1.".format(cycle))
         return 1
     else:
         ordered_cycle = get_ordered_cycle(G, cycle)
@@ -901,7 +909,7 @@ def calc_cycle_flux(G, cycle, key, output_strings=False):
     Parameters
     ----------
     G : NetworkX MultiDiGraph Object
-        Input diagram
+        Input diagram.
     cycle : list of int
         List of node indices for cycle of interest, index zero. Order of node
         indices does not matter.
@@ -972,7 +980,6 @@ def construct_sympy_cycle_flux_funcs(pi_diff_str, sigma_K_str, sigma_str):
         cycle_flux_func = (parse_expr(pi_diff_str)*parse_expr(sigma_K_str))/parse_expr(sigma_str)
         return cycle_flux_func
 
-
 def SVD(K, tol=1e-12):
     """
     Calculates the steady-state probabilities for an N-state model using
@@ -1010,3 +1017,36 @@ def SVD(K, tol=1e-12):
     pdot[-1] = 1                                        # set last value to 1 for probability normalization
     state_probs = Kcs_inv.dot(pdot)                     # dot Kcs and pdot matrices together
     return state_probs
+
+def find_all_node_cycles(G):
+    """
+    Finds all all-node cycles, meaning every cycle that contains all nodes in
+    the input diagram G.
+
+    Parameters
+    ----------
+    G : NetworkX MultiDiGraph Object
+        Input diagram.
+
+    Returns
+    -------
+    valid_perms : list of lists of int
+        The final list of all valid cycles containing all nodes in the input
+        diagram.
+    """
+    permuts = list(itertools.permutations(G.nodes))
+    diagram_filtered_edges = []
+    order_filtered_edges = []
+    valid_perms = []
+    for perm in permuts:
+        cycle_edges = construct_cycle_edges(perm)
+        if all(edges in G.edges for edges in cycle_edges):
+            diagram_filtered_edges.append([cycle_edges, perm])
+    for edge_list, perm in diagram_filtered_edges:
+        edge_list = sorted(edge_list)
+        reversed_edge_list = sorted(construct_cycle_edges(list(perm)[::-1]))
+        if not (edge_list and reversed_edge_list) in order_filtered_edges:
+            order_filtered_edges.append(edge_list)
+            order_filtered_edges.append(reversed_edge_list)
+            valid_perms.append(list(perm))
+    return valid_perms
