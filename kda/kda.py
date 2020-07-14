@@ -369,7 +369,7 @@ def find_unique_edges(G):
     """
     edges = list(G.edges)           # Get list of edges
     sorted_edges = np.sort(edges)      # Sort list of edges
-    tuples = [(sorted_edges[i, 1], sorted_edges[i, 2]) for i in range(len(sorted_edges))]   # Make list of edges tuples
+    tuples = [(sorted_edges[i, 1], sorted_edges[i, 2]) for i in range(len(sorted_edges))]   # Make list of edge tuples
     return list(set(tuples))
 
 def combine(x, y):
@@ -482,7 +482,7 @@ def get_indices_of_flux_diagrams(cycles, flux_diagrams):
     if isinstance(cycles[0], int):
         cycle_idx = []
         for i, diag in enumerate(flux_diagrams):
-            main_cycles = [set(c) for c in list(nx.simple_cycles(diag)) if len(c) > 2]
+            main_cycles = [set(c) for c in nx.simple_cycles(diag) if len(c) > 2]
             if set(cycles) in main_cycles:
                 cycle_idx.append(i)
         return cycle_idx
@@ -491,19 +491,19 @@ def get_indices_of_flux_diagrams(cycles, flux_diagrams):
         for cycle in cycles:
             cycle_idx = []
             for i, diag in enumerate(flux_diagrams):
-                main_cycles = [set(c) for c in list(nx.simple_cycles(diag)) if len(c) > 2]
+                main_cycles = [set(c) for c in nx.simple_cycles(diag) if len(c) > 2]
                 if set(cycle) in main_cycles:
                     cycle_idx.append(i)
             all_cycle_idx.append(cycle_idx)
         return all_cycle_idx
 
-def find_unique_cycles(diagram):
+def find_all_unique_cycles(G):
     """
-    Finds unique cycles for an input diagram.
+    Finds all unique cycles for an input diagram G.
 
     Parameters
     ----------
-    diagram : NetworkX MultiDiGraph object
+    G : NetworkX MultiDiGraph object
         Diagram of interest.
 
     Returns
@@ -511,16 +511,46 @@ def find_unique_cycles(diagram):
     unique_cycles : list of lists of int
         List of cycles, where each cycle is a list of nodes in that cycle.
     """
-    cycles = [c for c in nx.simple_cycles(diagram) if len(c) > 2]
+    temp = []
     unique_cycles = []
-    unique_cycles_ordered = []
-    for cycle in cycles:
-        ordered_cycle = set(cycle)
-        if not ordered_cycle in unique_cycles_ordered:
-            unique_cycles_ordered.append(ordered_cycle)
+    for cycle in nx.simple_cycles(G):
+        temp.append(cycle)
+        reverse_cycle = [cycle[0]] + cycle[len(G.nodes):0:-1]
+        if not reverse_cycle in temp:
             unique_cycles.append(cycle)
-    unique_cycles = [list(c) for c in unique_cycles]
     return unique_cycles
+
+def get_ordered_cycle(G, cycle):
+    """
+    Takes in arbitrary list of nodes and returns list of nodes in correct order.
+    Can be used in conjunction with construct_cycle_edges() to generate list of
+    edge tuples for an arbitrary input cycle. Assumes input cycle only exists
+    once in the input diagram G.
+
+    Parameters
+    ----------
+    G : NetworkX MultiDiGraph Object
+        Input diagram
+    cycle : list of int
+        List of node indices for cycle of interest, index zero. Order of node
+        indices does not matter.
+
+    Returns
+    -------
+    ordered_cycles : list of int, list of lists of int
+        Ordered list of nodes for the input cycle, or if several cycles are
+        found, a list of lists of nodes for the input cycle.
+    """
+    ordered_cycles = []
+    for cyc in find_all_unique_cycles(G):
+        if sorted(cyc) == sorted(cycle):
+            ordered_cycles.append(cyc)
+    if ordered_cycles == []:
+        print("No cycles found for nodes {}.".format(cycle))
+    elif len(ordered_cycles) > 1:
+        return ordered_cycles
+    else:
+        return ordered_cycles[0]
 
 def construct_cycle_edges(cycle):
     """
@@ -543,69 +573,111 @@ def construct_cycle_edges(cycle):
     reverse_list.append((cycle[-1], cycle[0], 0))
     return reverse_list
 
-def get_ordered_cycle(G, cycle):
+def find_uncommon_edges(edges1, edges2):
     """
-    Takes in arbitrary list of nodes and returns list of nodes in correct order.
-    Can be used in conjunction with construct_cycle_edges() to generate list of
-    edge tuples for an arbitrary input cycle. Assumes input cycle only exists
-    once in the input diagram G.
+    Function for removing edges when both lists contain forward and reverse edges
+    for both diagrams.
 
     Parameters
     ----------
-    G : NetworkX MultiDiGraph Object
-        Input diagram
+    edges1 : list of tuples
+        List of edge tuples to be compared. This list should be the longer list
+        of the two.
+    edges2 : list of tuples
+        List of edge tuples to be compared. This list should be the shorter
+        list of the two.
+
+    Returns
+    -------
+    uncommon_edges : list of tuples
+        List of uncommon edges between input list "edges1" and "edges2".
+    """
+    all_uncommon_edges = []
+    for edge in edges1:
+        if not edge in edges2:
+            all_uncommon_edges.append(edge)
+    uncommon_edges = []
+    temp = []
+    for edge in all_uncommon_edges:
+        temp.append((edge[1], edge[0], 0))
+        if not edge in temp:
+            uncommon_edges.append(edge)
+    return uncommon_edges
+
+def find_unique_uncommon_edges(edges1, edges2):
+    """
+    Function for removing edges when edge lists contain only
+    unique edges in diagrams. "edges1" is assumed to be the larger list.
+
+    Parameters
+    ----------
+    edges1 : list of tuples
+        List of unique edge tuples to be compared. This list should be the
+        longer list of the two.
+    edges2 : list of tuples
+        List of unique edge tuples to be compared. This list should be the
+        shorter list of the two.
+
+    Returns
+    -------
+    uncommon_unique_edges : list of tuples
+        List of uncommon edges between input list "edges1" and "edges2". Since
+        these should be unique edges (no reverse edges), these are the unique
+        uncommon edges between two diagrams (normal use case).
+    """
+    sorted_edges1 = [sorted(edge) for edge in edges1]
+    sorted_edges2 = [sorted(edge) for edge in edges2]
+    uncommon_unique_edges = [tuple(edge) for edge in sorted_edges1 if not edge in sorted_edges2]
+    return uncommon_unique_edges
+
+def find_node_edges(cycle, r=2):
+    """
+    Function for generating all possible edges that contain 2 nodes. First finds
+    all combinations of pairs of nodes, then appends the reverse edges.
+
+    Parameters
+    ----------
     cycle : list of int
         List of node indices for cycle of interest, index zero. Order of node
         indices does not matter.
+    r : int (optional)
+        Length of tuples to be generated, default is 2.
 
     Returns
     -------
-    ordered_cycle : list of int
-        Ordered list of integers for the input cycle.
+    node_edges : list of tuples
+        List of all possible pairs of nodes, where node pairs are in tuple form.
     """
-    ordered_cycles = find_unique_cycles(G)
-    for ordered_cycle in ordered_cycles:
-        if set(ordered_cycle) == set(cycle):
-            return ordered_cycle
+    node_edges = list(itertools.combinations(cycle, r)) # generate node edges
+    for edge in node_edges.copy():
+        node_edges.append((edge[1], edge[0])) # append reverse edge
+    return node_edges
 
-def generate_two_way_flux_diagrams(G):
+def flux_edge_conditions(edge_list, N):
     """
-    Creates two-way flux diagrams for the input diagram G. Created by adding one
-    more edge per diagram than are added for partial diagrams.
+    Conditions that need to be true for flux edges to be valid.
 
     Parameters
     ----------
-    G : NetworkX MultiDiGraph Object
-        Input diagram
-
-    Returns
-    -------
-    valid_flux_diags : list of NetworkX MultiDiGraph objects
-        List of diagrams with the same number of unique edges as nodes, and
-        only 1 complete cycle.
+    edge_list : list of tuples
+        List of edges (tuples) to be checked. Common cases that need to be
+        filtered out are where half the edges are the same but reversed, or
+        there are simply too many edges to be a flux diagram.
+    N : int
+        Number of unique edges in given flux diagram. Defined as the difference
+        between the number of nodes in the diagram of interest and the number of
+        unique cycle edges in the cycle of interest.
     """
-    # Calculate number of edges needed for each flux diagram
-    N_flux_edges = G.number_of_nodes()
-    # Get list of all possible combinations of unique edges (N choose n)
-    combinations = list(itertools.combinations(find_unique_edges(G), N_flux_edges))
-    # Using combinations, generate all possible partial diagrams (including closed loops)
-    flux_diags_all = []
-    for i in combinations:
-        diag = G.copy()
-        diag.remove_edges_from(list(G.edges()))
-        edges = []
-        for j in i:
-            edges.append((j[0], j[1]))  # Add edge from combinations
-            edges.append((j[1], j[0]))  # Add reverse edge
-        diag.add_edges_from(edges)
-        flux_diags_all.append(diag)
-    # Remove unwanted diagrams (more than 1 closed loop)
-    valid_flux_diags = []
-    for diag in flux_diags_all:
-        n_cycles = len(find_unique_cycles(diag))
-        if n_cycles == 1:
-            valid_flux_diags.append(diag)
-    return valid_flux_diags
+    sorted_edges = np.sort(edge_list)
+    tuples = [(sorted_edges[i, 1], sorted_edges[i, 2]) for i in range(len(sorted_edges))]
+    unique_edges = list(set(tuples))
+    if len(edge_list) == N:  # the number of edges must equal the number of edges in the list
+        if len(unique_edges) == len(edge_list):
+            return True
+        else:
+            return False
+    else:
+        return False
 
 def generate_flux_diagrams(G, cycle):
     """
@@ -622,65 +694,83 @@ def generate_flux_diagrams(G, cycle):
 
     Returns
     -------
-    flux_diagram : NetworkX MultiDiGraph object
-        Flux diagram returned in the event that there is only one directional
-        flux diagram for the input cycle in the input diagram G. Cycle nodes
-        are labeled by attribute 'is_target'.
-    directional_flux_diagrams : list of NetworkX MultiDiGraph objects
+    flux_diagrams : list of NetworkX MultiDiGraph objects
         List of directional flux diagrams. Diagrams contain the input cycle
         where remaining edges follow path pointing to cycle. Cycle nodes are
         labeled by attribute 'is_target'.
     """
-    if all(i == j for i, j in list(zip(np.sort(cycle), np.sort(list(G.nodes))))):
-        print("""Input cycle {} contains all nodes in G. For this case, the
-        order of the nodes can affect the cycle flux. Use
-        kda.find_all_node_cycles() to find all unique cycles containing all
-        nodes in G. Value of None returned.""".format(cycle))
-        return None
+    if sorted(cycle) == sorted(list(G.nodes)):
+        print("""Cycle {} contains all nodes in G, no flux
+        diagrams can be generated. Value of None Returned.""".format(cycle))
     else:
-        two_way_flux_diagrams = generate_two_way_flux_diagrams(G)
-        cycle_idx = get_indices_of_flux_diagrams(cycle, two_way_flux_diagrams)
-        relevant_flux_diags = [two_way_flux_diagrams[i] for i in cycle_idx]
-        if len(relevant_flux_diags) == 1:
-            for target in relevant_flux_diags[0].nodes():
-                flux_diagram = relevant_flux_diags[0]
-                if target in cycle:
-                    flux_diagram.nodes[target]['is_target'] = True
-                else:
-                    flux_diagram.nodes[target]['is_target'] = False
-            if not len(find_unique_cycles(flux_diagram)) == 1:
-                raise Exception("Generated flux diagram has more than 1 cycle.")
-            return flux_diagram
-        else:
-            diag_cycles = [c for c in list(nx.simple_cycles(relevant_flux_diags[0])) if len(c) > 2]
-            cycle_edges = [construct_cycle_edges(cyc) for cyc in diag_cycles]
-            cycle_edges_flat = [edge for edges in cycle_edges for edge in edges]
-            directional_flux_diagrams = []
-            for diagram in relevant_flux_diags:
-                diag = diagram.copy()
-                edges = find_unique_edges(diag)
-                unique_edges = [edge for edge in edges if not edge in cycle_edges_flat]
-                dir_edges = []
-                for target in cycle:
-                    cons = get_directional_connections(target, unique_edges)
-                    if not len(cons) == 0:
-                        dir_edges.append(get_directional_edges(cons))
-                dir_edges_flat = [edge for edges in dir_edges for edge in edges]
-                diag.remove_edges_from(list(diag.edges()))
+        cycle_edges = construct_cycle_edges(cycle)
+        G_edges = find_unique_edges(G)
+        non_cycle_edges = find_unique_uncommon_edges(G_edges, cycle_edges) # get edges that are uncommon between cycle and G
+        node_edges = find_node_edges(cycle) # generate edges that only contain 2 nodes
+        valid_non_cycle_edges = [edge for edge in non_cycle_edges if not edge in node_edges] # remove node edges
+        N = G.number_of_nodes() - len(cycle_edges) # number of non-cycle edges in flux diagram
+        flux_edge_lists = list(itertools.combinations(valid_non_cycle_edges, r=N)) # all combinations of valid edges
+        # generates too many edge lists: some create cycles, some use both forward and reverse edges
+        flux_diagrams = []
+        for edge_list in flux_edge_lists:
+            dir_edges = []
+            for target in cycle:
+                cons = get_directional_connections(target, edge_list)
+                if not len(cons) == 0:
+                    dir_edges.append(get_directional_edges(cons))
+            dir_edges_flat = [edge for edges in dir_edges for edge in edges]
+            if flux_edge_conditions(dir_edges_flat, N) == True:
+                diag = G.copy()
+                diag.remove_edges_from(G.edges)
                 for edge in dir_edges_flat:
                     diag.add_edge(edge[0], edge[1], edge[2])
-                for edge in cycle_edges_flat:
+                for edge in cycle_edges:
                     diag.add_edge(edge[0], edge[1], 0)
-                for target in diag.nodes():
-                    if target in cycle:
-                        diag.nodes[target]['is_target'] = True
-                    else:
-                        diag.nodes[target]['is_target'] = False
-                directional_flux_diagrams.append(diag)
-            for diag in directional_flux_diagrams:
-                if not len(find_unique_cycles(diag)) == 1:
-                    raise Exception("Generated flux diagram has more than 1 cycle.")
-            return directional_flux_diagrams
+                    diag.add_edge(edge[1], edge[0], 0)
+                included_nodes = np.unique(diag.edges)
+                if sorted(G.nodes) == sorted(included_nodes):
+                    for target in diag.nodes():
+                        if target in cycle:
+                            diag.nodes[target]['is_target'] = True
+                        else:
+                            diag.nodes[target]['is_target'] = False
+                    flux_diagrams.append(diag)
+                else:
+                    continue
+            else:
+                continue
+        return flux_diagrams
+
+def generate_all_flux_diagrams(G):
+    """
+    Creates all of the directional flux diagrams for the diagram G.
+
+    Parameters
+    ----------
+    G : NetworkX MultiDiGraph Object
+        Input diagram
+
+    Returns
+    -------
+    all_flux_diagrams : list of lists of NetworkX MultiDiGraph objects
+        List of lists of flux diagrams, where each list is for a different cycle
+        in G.
+    """
+    all_cycles = find_all_unique_cycles(G)
+    all_flux_diagrams = []
+    for cycle in all_cycles:
+        flux_diagrams = generate_flux_diagrams(G, cycle)
+        if flux_diagrams == None:
+            continue
+        else:
+            for diag in flux_diagrams:
+                unique_cycles = find_all_unique_cycles(diag)
+                if len(unique_cycles) == 1: # check if there is only 1 unique cycle
+                    continue
+                else:
+                    raise Exception("Flux diagram has more than 1 closed loop for cycle {}.".format(cycle))
+            all_flux_diagrams.append(flux_diagrams)
+    return all_flux_diagrams
 
 def calc_sigma(G, dir_partials, key, output_strings=False):
     """
@@ -751,7 +841,7 @@ def calculate_sigma_K(G, cycle, flux_diags, key, output_strings=False):
         Input diagram
     cycle : list of int
         List of node indices for cycle of interest, index zero. Order of node
-        indices does not matter.
+        indices does not matter but should not contain all nodes.
     flux_diags : list
         List of relevant directional flux diagrams for input cycle.
     key : str
@@ -822,7 +912,7 @@ def calculate_pi_difference(G, cycle, key, output_strings=False):
         Input diagram
     cycle : list of int
         List of node indices for cycle of interest, index zero. Order of node
-        indices does not matter.
+        indices does not matter unless your cycle contains all nodes.
     key : str
         Definition of key in NetworkX diagram edges, used to call edge rate
         values or names. This needs to match the key used for the rate
@@ -843,7 +933,17 @@ def calculate_pi_difference(G, cycle, key, output_strings=False):
         String of difference of product of counter clockwise cycle rates and
         clockwise cycle rates.
     """
-    cycle_edges = construct_cycle_edges(get_ordered_cycle(G, cycle))
+    cycle_count = 0
+    for cyc in find_all_unique_cycles(G):
+        if sorted(cycle) == sorted(cyc):
+            cycle_count += 1
+    if cycle_count > 1:
+        cycle_edges = construct_cycle_edges(cycle)
+    elif cycle_count == 1:
+        ordered_cycle = get_ordered_cycle(G, cycle)
+        cycle_edges = construct_cycle_edges(ordered_cycle)
+    else:
+        raise Exception("Cycle {} could not be found in G.".format(cycle))
     if output_strings == False:
         if isinstance(G.edges[cycle_edges[0][0], cycle_edges[0][1], cycle_edges[0][2]][key], str):
             raise Exception("To enter variable strings set parameter output_strings=True.")
@@ -1017,36 +1117,3 @@ def SVD(K, tol=1e-12):
     pdot[-1] = 1                                        # set last value to 1 for probability normalization
     state_probs = Kcs_inv.dot(pdot)                     # dot Kcs and pdot matrices together
     return state_probs
-
-def find_all_node_cycles(G):
-    """
-    Finds all all-node cycles, meaning every cycle that contains all nodes in
-    the input diagram G.
-
-    Parameters
-    ----------
-    G : NetworkX MultiDiGraph Object
-        Input diagram.
-
-    Returns
-    -------
-    valid_perms : list of lists of int
-        The final list of all valid cycles containing all nodes in the input
-        diagram.
-    """
-    permuts = list(itertools.permutations(G.nodes))
-    diagram_filtered_edges = []
-    order_filtered_edges = []
-    valid_perms = []
-    for perm in permuts:
-        cycle_edges = construct_cycle_edges(perm)
-        if all(edges in G.edges for edges in cycle_edges):
-            diagram_filtered_edges.append([cycle_edges, perm])
-    for edge_list, perm in diagram_filtered_edges:
-        edge_list = sorted(edge_list)
-        reversed_edge_list = sorted(construct_cycle_edges(list(perm)[::-1]))
-        if not (edge_list and reversed_edge_list) in order_filtered_edges:
-            order_filtered_edges.append(edge_list)
-            order_filtered_edges.append(reversed_edge_list)
-            valid_perms.append(list(perm))
-    return valid_perms
