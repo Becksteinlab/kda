@@ -701,7 +701,7 @@ def generate_all_flux_diagrams(G):
             all_flux_diagrams.append(flux_diagrams)
     return all_flux_diagrams
 
-def calc_sigma(G, dir_partials, key, output_strings=False):
+def calculate_sigma(G, dir_partials, key, output_strings=False):
     """
     Calculates sigma, the normalization factor for calculating state
     probabilities and cycle fluxes for a given diagram G.
@@ -718,8 +718,8 @@ def calc_sigma(G, dir_partials, key, output_strings=False):
         constants names or values in the input diagram G.
     output_strings : bool (optional)
         Used to denote whether values or strings will be combined. Default
-        is False, which tells the function to calculate the state
-        probabilities using numbers. If True, this will assume the input
+        is False, which tells the function to calculate the normalization factor
+        using numbers. If True, this will assume the input
         'key' will return strings of variable names to join into the
         analytic cycle flux function.
     Returns
@@ -779,9 +779,9 @@ def calculate_sigma_K(G, cycle, flux_diags, key, output_strings=False):
         constants names or values in the input diagram G.
     output_strings : bool (optional)
         Used to denote whether values or strings will be combined. Default
-        is False, which tells the function to calculate the state
-        probabilities using numbers. If True, this will assume the input
-        'key' will return strings of variable names to join into the
+        is False, which tells the function to calculate the sum of all
+        directional flux diagrams using numbers. If True, this will assume the
+        input 'key' will return strings of variable names to join into the
         analytic function.
 
     Returns
@@ -848,10 +848,9 @@ def calculate_pi_difference(G, cycle, key, output_strings=False):
         constants names or values in the input diagram G.
     output_strings : bool (optional)
         Used to denote whether values or strings will be combined. Default
-        is False, which tells the function to calculate the state
-        probabilities using numbers. If True, this will assume the input
-        'key' will return strings of variable names to join into the
-        analytic function.
+        is False, which tells the function to calculate the difference using
+        numbers. If True, this will assume the input 'key' will return strings
+        of variable names to join into the analytic function.
 
     Returns
     -------
@@ -893,6 +892,75 @@ def calculate_pi_difference(G, cycle, key, output_strings=False):
             cw_rates.append(G.edges[edge[1], edge[0], edge[2]][key])
         pi_difference = "-".join(["*".join(ccw_rates), "*".join(cw_rates)])
         return pi_difference
+
+def calculate_thermo_force(G, cycle, key, output_strings=False):
+    """
+    Calculates the thermodynamic driving force for a given cycle in diagram G.
+    The driving force is calculated as the natural log of the ratio of the
+    forward rate product and the reverse rate product in the cycle, where the
+    forward direction is defined as counter clockwise. The value returned should
+    be multiplied by 'kT' to obtain the actual thermodynamic force, in units of
+    energy.
+
+    Parameters
+    ----------
+    G : NetworkX MultiDiGraph Object
+        Input diagram
+    cycle : list of int
+        List of node indices for cycle of interest, index zero. Order of node
+        indices does not matter unless your cycle contains all nodes.
+    key : str
+        Definition of key in NetworkX diagram edges, used to call edge rate
+        values or names. This needs to match the key used for the rate
+        constants names or values in the input diagram G.
+    output_strings : bool (optional)
+        Used to denote whether values or strings will be combined. Default
+        is False, which tells the function to calculate the thermodynamic force
+        using numbers. If True, this will assume the input
+        'key' will return strings of variable names to join into the
+        analytic function.
+
+    Returns
+    -------
+    thermo_force : float
+        The calculated thermodynamic force for the input cycle. This value is
+        unitless and should be multiplied by 'kT'.
+    parsed_thermo_force_str : SymPy function
+        The thermodynamic force equation in SymPy function form. Should be
+        multiplied by 'kT' to get actual thermodynamic force.
+    """
+    cycle_count = 0
+    for cyc in find_all_unique_cycles(G):
+        if sorted(cycle) == sorted(cyc):
+            cycle_count += 1
+    if cycle_count > 1:
+        cycle_edges = construct_cycle_edges(cycle)
+    elif cycle_count == 1:
+        ordered_cycle = get_ordered_cycle(G, cycle)
+        cycle_edges = construct_cycle_edges(ordered_cycle)
+    else:
+        raise Exception("Cycle {} could not be found in G.".format(cycle))
+    if output_strings == False:
+        if isinstance(G.edges[cycle_edges[0][0], cycle_edges[0][1], cycle_edges[0][2]][key], str):
+            raise Exception("To enter variable strings set parameter output_strings=True.")
+        ccw_rates = 1
+        cw_rates = 1
+        for edge in cycle_edges:
+            ccw_rates *= G.edges[edge[0], edge[1], edge[2]][key]
+            cw_rates *= G.edges[edge[1], edge[0], edge[2]][key]
+        thermo_force = np.log(ccw_rates/cw_rates)
+        return thermo_force
+    elif output_strings == True:
+        if not isinstance(G.edges[cycle_edges[0][0], cycle_edges[0][1], cycle_edges[0][2]][key], str):
+            raise Exception("To enter variable values set parameter output_strings=False.")
+        ccw_rates = []
+        cw_rates = []
+        for edge in cycle_edges:
+            ccw_rates.append(G.edges[edge[0], edge[1], edge[2]][key])
+            cw_rates.append(G.edges[edge[1], edge[0], edge[2]][key])
+        thermo_force_str = 'ln(' + "*".join(ccw_rates) + ') - ln(' + "*".join(cw_rates) + ')'
+        parsed_thermo_force_str = logcombine(parse_expr(thermo_force_str), force=True)
+        return parsed_thermo_force_str
 
 def calc_state_probs(G, key, output_strings=False):
     """
@@ -948,10 +1016,9 @@ def calc_cycle_flux(G, cycle, key, output_strings=False):
         constants names or values in the input diagram G.
     output_strings : bool (optional)
         Used to denote whether values or strings will be combined. Default
-        is False, which tells the function to calculate the state
-        probabilities using numbers. If True, this will assume the input
-        'key' will return strings of variable names to join into the
-        analytic cycle flux function.
+        is False, which tells the function to calculate the cycle flux using
+        numbers. If True, this will assume the input 'key' will return strings
+        of variable names to join into the analytic cycle flux function.
 
     Returns
     -------
@@ -972,13 +1039,13 @@ def calc_cycle_flux(G, cycle, key, output_strings=False):
     if output_strings == False:
         pi_diff = calculate_pi_difference(G, cycle, key, output_strings=output_strings)
         sigma_K = calculate_sigma_K(G, cycle, flux_diags, key, output_strings=output_strings)
-        sigma = calc_sigma(G, dir_pars, key, output_strings=output_strings)
+        sigma = calculate_sigma(G, dir_pars, key, output_strings=output_strings)
         cycle_flux = pi_diff*sigma_K/sigma
         return cycle_flux
     if output_strings == True:
         pi_diff_str = calculate_pi_difference(G, cycle, key, output_strings=output_strings)
         sigma_K_str = calculate_sigma_K(G, cycle, flux_diags, key, output_strings=output_strings)
-        sigma_str = calc_sigma(G, dir_pars, key, output_strings=output_strings)
+        sigma_str = calculate_sigma(G, dir_pars, key, output_strings=output_strings)
         return pi_diff_str, sigma_K_str, sigma_str
 
 def construct_sympy_cycle_flux_funcs(pi_diff_str, sigma_K_str, sigma_str):
