@@ -42,6 +42,7 @@ setup(
     ],
     tests_require=[
         'pytest',
+        'pytest-xdist'
     ],
     include_package_data=True,
     setup_requires=[] + pytest_runner,

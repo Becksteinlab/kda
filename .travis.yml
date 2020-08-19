@@ -39,7 +39,7 @@ install:
 
 
 script:
-  - pytest -v --cov=kda kda/tests/
+  - pytest -v -n 2 --cov=kda kda/tests/
 
 notifications:
     email: false
