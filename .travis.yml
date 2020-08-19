@@ -34,7 +34,7 @@ before_install:
 install:
 
     # Install the package locally
-  - pip install -U pytest pytest-cov codecov
+  - pip install -U pytest pytest-cov pytest-xdist codecov
   - pip install -e .
 
 
