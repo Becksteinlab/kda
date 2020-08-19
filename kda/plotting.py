@@ -8,6 +8,7 @@ import numpy as np
 import networkx as nx
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import kda
 
 
 def plot_diagram(G, pos=None, path=None, label=None):
@@ -39,6 +40,70 @@ def plot_diagram(G, pos=None, path=None, label=None):
     labels = {}
     for i in node_list:
         labels[i] = r"${}$".format(i+1)
+    nx.draw_networkx_labels(G, pos, labels, font_size=16)
+    plt.axis('off')
+    if not path == None:
+        fig.savefig(path + "/{}_input_diagram.png".format(label))
+
+def plot_cycle(G, cycle, pos=None, path=None, label=None, cbt=False):
+    """
+    Plots a diagram with a cycle labeled.
+
+    Parameters
+    ----------
+    G : NetworkX MultiDiGraph
+        Input diagram
+    pos : dict (optional)
+        Dictionary where keys are the indexed states (0, 1, 2, ..., N) and
+        the values are NumPy arrays of x, y coordinates for each node. Default
+        is None, nx.spring_layout() is used.
+    path : str (optional)
+        String of save path for figure. If path is given figure will be saved
+        at the specified location as 'input_diagram.png'. Default is None.
+    label : str (optional)
+        Figure label, used to create unique figure label if a save path is
+        given. Default is None.
+    cbt : bool (optional)
+        'Color by target' option that colors target state node with a coral red.
+        Should only be used with directional partial diagrams. Default is False.
+
+    Notes
+    -----
+    When using panel=True, if number of diagrams is not a perfect square, extra
+    plots will be generated as empty coordinate axes.
+    """
+    if pos == None:
+        pos = nx.spring_layout(G)
+    nodes = list(G.nodes)
+    if len(cycle) == len(nodes):    # if cycle contains all nodes
+        labels = {}
+        for i in list(G.nodes):
+            labels[i] = r"${}$".format(i+1)
+        if cbt == True:
+            node_colors = ['#FF8080' for n in nodes]
+        else:
+            node_colors = ['0.8' for n in nodes]
+        node_list = nodes
+    else:                           # if cycle doesn't contain all nodes
+        labels = {}
+        for i in cycle:
+            labels[i] = r"${}$".format(i+1)
+        if cbt == True:
+            node_colors = ['#FF8080' for n in cycle]
+        else:
+            node_colors = ['0.8' for n in cycle]
+        pos_copy = pos.copy()
+        pos = {}
+        for n, position in pos_copy.items():
+            if n in cycle:
+                pos[n] = position
+        node_list = cycle
+    cycle_edges = kda.construct_cycle_edges(cycle)
+    edge_list = kda.append_reverse_edges(cycle_edges)
+    fig = plt.figure(figsize=(4, 4), tight_layout=True)
+    fig.add_subplot(111)
+    nx.draw_networkx_nodes(G, pos, nodelist=node_list, node_size=500, node_color=node_colors)
+    nx.draw_networkx_edges(G, pos, edgelist=edge_list, node_size=500, width=4, arrow_style='->', arrowsize=15)
     nx.draw_networkx_labels(G, pos, labels, font_size=16)
     plt.axis('off')
     if not path == None:

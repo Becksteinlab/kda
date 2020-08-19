@@ -447,7 +447,10 @@ def find_all_unique_cycles(G):
         reverse_cycle = [cycle[0]] + cycle[len(G.nodes):0:-1]
         if not reverse_cycle in temp:
             unique_cycles.append(cycle)
-    return unique_cycles
+    if len(unique_cycles) == 1:
+        return unique_cycles[0]
+    else:
+        return unique_cycles
 
 def get_ordered_cycle(G, cycle):
     """
@@ -480,6 +483,27 @@ def get_ordered_cycle(G, cycle):
         return ordered_cycles
     else:
         return ordered_cycles[0]
+
+def append_reverse_edges(edge_list):
+    """
+    Returns a list that contains original edges and reverse edges.
+
+    Parameters
+    ----------
+    edge_list : list of edge tuples
+        List of unidirectional edges to have reverse edges appended to.
+
+    Returns
+    -------
+    new_edge_list : list of edge tuples
+        List of edge tuples with both forward and reverse edges. 
+    """
+    new_edge_list = []
+    for edge in edge_list:
+        if not edge in new_edge_list:
+            new_edge_list.append(edge)
+            new_edge_list.append((edge[1], edge[0], edge[2]))
+    return new_edge_list
 
 def construct_cycle_edges(cycle):
     """
