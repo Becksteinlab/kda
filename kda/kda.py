@@ -496,7 +496,7 @@ def append_reverse_edges(edge_list):
     Returns
     -------
     new_edge_list : list of edge tuples
-        List of edge tuples with both forward and reverse edges. 
+        List of edge tuples with both forward and reverse edges.
     """
     new_edge_list = []
     for edge in edge_list:
@@ -718,7 +718,7 @@ def generate_all_flux_diagrams(G):
         else:
             for diag in flux_diagrams:
                 unique_cycles = find_all_unique_cycles(diag)
-                if len(unique_cycles) == 1: # check if there is only 1 unique cycle
+                if isinstance(unique_cycles[0], int): # check if there is only 1 unique cycle
                     continue
                 else:
                     raise Exception("Flux diagram has more than 1 closed loop for cycle {}.".format(cycle))

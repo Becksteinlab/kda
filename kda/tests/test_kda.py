@@ -90,6 +90,8 @@ def test_3(k12, k21, k23, k32, k13, k31, SP3):
     p3 = np.array([1, 1, 1])/3
     results3 = kda.solve_ODE(p3, k3, t_max=1e2, tol=1e-12, atol=1e-16, rtol=1e-13)
     SP3_ODE = results3.y.T[-1]
+    SP3_SVD = kda.SVD(k3, tol=1e-15)
+    assert_almost_equal(SP3, SP3_SVD, decimal=12)
     assert_almost_equal(SP3, SP3_KDA, decimal=15)
     assert_almost_equal(SP3, SP3_SymPy, decimal=15)
     assert_almost_equal(SP3, SP3_ODE, decimal=10)
@@ -126,6 +128,8 @@ def test_4(k12, k21, k23, k32, k34, k43, k41, k14, SP4):
     p4 = np.array([1, 1, 1, 1])/4
     results4 = kda.solve_ODE(p4, k4, t_max=1e2, tol=1e-12, atol=1e-16, rtol=1e-13)
     SP4_ODE = results4.y.T[-1]
+    SP4_SVD = kda.SVD(k4, tol=1e-15)
+    assert_almost_equal(SP4, SP4_SVD, decimal=12)
     assert_almost_equal(SP4, SP4_KDA, decimal=15)
     assert_almost_equal(SP4, SP4_SymPy, decimal=15)
     assert_almost_equal(SP4, SP4_ODE, decimal=10)
@@ -164,23 +168,25 @@ def test_4WL(k12, k21, k23, k32, k34, k43, k41, k14, k24, k42, SP4WL):
     p4wl = np.array([1, 1, 1, 1])/4
     results4wl = kda.solve_ODE(p4wl, k4wl, t_max=1e2, tol=1e-12, atol=1e-16, rtol=1e-13)
     SP4WL_ODE = results4wl.y.T[-1]
+    SP4WL_SVD = kda.SVD(k4wl, tol=1e-15)
+    assert_almost_equal(SP4WL, SP4WL_SVD, decimal=12)
     assert_almost_equal(SP4WL, SP4WL_KDA, decimal=15)
     assert_almost_equal(SP4WL, SP4WL_SymPy, decimal=15)
     assert_almost_equal(SP4WL, SP4WL_ODE, decimal=10)
 
 
-@pytest.mark.parametrize('k12', [1e0])
-@pytest.mark.parametrize('k21', [1e0])
-@pytest.mark.parametrize('k23', [1e0])
-@pytest.mark.parametrize('k32', [1e0])
-@pytest.mark.parametrize('k13', [1e0])
-@pytest.mark.parametrize('k31', [1e0])
-@pytest.mark.parametrize('k24', [1e0])
-@pytest.mark.parametrize('k42', [1e0])
-@pytest.mark.parametrize('k35', [1e0])
-@pytest.mark.parametrize('k53', [1e0])
-@pytest.mark.parametrize('k45', [1e0])
-@pytest.mark.parametrize('k54', [1e0])
+@pytest.mark.parametrize('k12', [1e0, 1e1])
+@pytest.mark.parametrize('k21', [1e0, 1e1])
+@pytest.mark.parametrize('k23', [1e0, 1e1])
+@pytest.mark.parametrize('k32', [1e0, 1e1])
+@pytest.mark.parametrize('k13', [1e0, 1e1])
+@pytest.mark.parametrize('k31', [1e0, 1e1])
+@pytest.mark.parametrize('k24', [1e0, 1e1])
+@pytest.mark.parametrize('k42', [1e0, 1e1])
+@pytest.mark.parametrize('k35', [1e0, 1e1])
+@pytest.mark.parametrize('k53', [1e0, 1e1])
+@pytest.mark.parametrize('k45', [1e0, 1e1])
+@pytest.mark.parametrize('k54', [1e0, 1e1])
 def test_5WL(k12, k21, k23, k32, k13, k31, k24, k42, k35, k53, k45, k54, SP5WL):
     k5wl = np.array([[  0, k12, k13,   0,   0],
                      [k21,   0, k23, k24,   0],
@@ -206,23 +212,25 @@ def test_5WL(k12, k21, k23, k32, k13, k31, k24, k42, k35, k53, k45, k54, SP5WL):
     p5wl = np.array([1, 1, 1, 1, 1])/5
     results5wl = kda.solve_ODE(p5wl, k5wl, t_max=1e2, tol=1e-12, atol=1e-16, rtol=1e-13)
     SP5WL_ODE = results5wl.y.T[-1]
+    SP5WL_SVD = kda.SVD(k5wl, tol=1e-15)
+    assert_almost_equal(SP5WL, SP5WL_SVD, decimal=12)
     assert_almost_equal(SP5WL, SP5WL_KDA, decimal=15)
     assert_almost_equal(SP5WL, SP5WL_SymPy, decimal=15)
     assert_almost_equal(SP5WL, SP5WL_ODE, decimal=10)
 
 
-@pytest.mark.parametrize('k12', [1e0])
-@pytest.mark.parametrize('k21', [1e0])
-@pytest.mark.parametrize('k23', [1e0])
-@pytest.mark.parametrize('k32', [1e0])
-@pytest.mark.parametrize('k34', [1e0])
-@pytest.mark.parametrize('k43', [1e0])
-@pytest.mark.parametrize('k45', [1e0])
-@pytest.mark.parametrize('k54', [1e0])
-@pytest.mark.parametrize('k56', [1e0])
-@pytest.mark.parametrize('k65', [1e0])
-@pytest.mark.parametrize('k61', [1e0])
-@pytest.mark.parametrize('k16', [1e0])
+@pytest.mark.parametrize('k12', [1e0, 1e1])
+@pytest.mark.parametrize('k21', [1e0, 1e1])
+@pytest.mark.parametrize('k23', [1e0, 1e1])
+@pytest.mark.parametrize('k32', [1e0, 1e1])
+@pytest.mark.parametrize('k34', [1e0, 1e1])
+@pytest.mark.parametrize('k43', [1e0, 1e1])
+@pytest.mark.parametrize('k45', [1e0, 1e1])
+@pytest.mark.parametrize('k54', [1e0, 1e1])
+@pytest.mark.parametrize('k56', [1e0, 1e1])
+@pytest.mark.parametrize('k65', [1e0, 1e1])
+@pytest.mark.parametrize('k61', [1e0, 1e1])
+@pytest.mark.parametrize('k16', [1e0, 1e1])
 def test_6(k12, k21, k23, k32, k34, k43, k45, k54, k56, k65, k61, k16, SP6):
     k6 = np.array([[  0, k12,   0,   0,   0, k16],
                    [k21,   0, k23,   0,   0,   0],
@@ -250,6 +258,39 @@ def test_6(k12, k21, k23, k32, k34, k43, k45, k54, k56, k65, k61, k16, SP6):
     p6 = np.array([1, 1, 1, 1, 1, 1])/6
     results6 = kda.solve_ODE(p6, k6, t_max=1e2, tol=1e-12, atol=1e-16, rtol=1e-13)
     SP6_ODE = results6.y.T[-1]
+    SP6_SVD = kda.SVD(k6, tol=1e-13)
+    assert_almost_equal(SP6, SP6_SVD, decimal=12)
     assert_almost_equal(SP6, SP6_KDA, decimal=15)
     assert_almost_equal(SP6, SP6_SymPy, decimal=15)
     assert_almost_equal(SP6, SP6_ODE, decimal=10)
+
+
+@pytest.mark.parametrize('k12', [1e0])
+@pytest.mark.parametrize('k21', [1e0])
+@pytest.mark.parametrize('k23', [1e0])
+@pytest.mark.parametrize('k32', [1e0])
+@pytest.mark.parametrize('k34', [1e0])
+@pytest.mark.parametrize('k43', [1e0])
+@pytest.mark.parametrize('k41', [1e0])
+@pytest.mark.parametrize('k14', [1e0])
+@pytest.mark.parametrize('k24', [1e0, 5e0, 1e1, 1.5e1])
+@pytest.mark.parametrize('k42', [1e0, 5e0, 1e1, 1.5e1])
+def test_generate_flux_diags_4WL(k12, k21, k23, k32, k34, k43, k41, k14, k24, k42):
+    k4wl = np.array([[0, k12, 0, k14],
+                    [k21, 0, k23, k24],
+                    [0, k32, 0, k34],
+                    [k41, k42, k43, 0]])
+    k4wls = np.array([[0, "k12", 0, "k14"],
+                      ["k21", 0, "k23", "k24"],
+                      [0, "k32", 0, "k34"],
+                      ["k41", "k42", "k43", 0]])
+    G4wl = nx.MultiDiGraph()
+    kda.generate_edges(G4wl, k4wl, k4wls, name_key='name', val_key='val')
+    G4wl_cycles = kda.find_all_unique_cycles(G4wl)
+    flux_diags_G4wl = []
+    for cycle in G4wl_cycles:
+        flux_diags_G4wl.append(kda.generate_flux_diagrams(G4wl, cycle))
+    assert len(G4wl_cycles) == 3
+    assert flux_diags_G4wl[0] == None
+    assert len(flux_diags_G4wl[1]) == 2
+    assert len(flux_diags_G4wl[2]) == 2
