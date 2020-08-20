@@ -2,24 +2,16 @@ language: python
 
 # Run jobs on container-based infrastructure, can be overridden per job
 
+env:
+  - PARALLELIZE=true
+
 matrix:
   include:
-    # Extra includes for OSX since python language is not available by default on OSX
-    # - os: osx
-    #   language: generic
-    #   env: PYTHON_VER=3.6
-    # - os: osx
-    #   language: generic
-    #   env: PYTHON_VER=3.7
-
-
     # Pip can use Travis build-in Python
-    - os: linux
-      python: 3.6
-    # - os: linux
-    #   dist: xenial  # Travis Trusty image does not have Python 3.7, Xenial does
-    #   python: 3.7
-
+      - python: 3.6
+      - python: 3.7
+        dist: xenial  # Travis Trusty image does not have Python 3.7, Xenial does
+      - python: 3.8
 
 before_install:
     # Additional info about the build
@@ -32,14 +24,12 @@ before_install:
   - python -V
 
 install:
-
     # Install the package locally
   - pip install -U pytest pytest-cov pytest-xdist codecov
   - pip install -e .
 
-
 script:
-  - pytest -v -n 10 --cov=kda kda/tests/
+  - pytest -v -n 4 --cov=kda kda/tests/
 
 notifications:
     email: false
