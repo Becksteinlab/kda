@@ -448,9 +448,8 @@ def find_all_unique_cycles(G):
         if not reverse_cycle in temp:
             unique_cycles.append(cycle)
     if len(unique_cycles) == 1:
-        return unique_cycles[0]
-    else:
-        return unique_cycles
+        print("Only 1 cycle found: {}".format(unique_cycles[0]))
+    return unique_cycles
 
 def get_ordered_cycle(G, cycle):
     """
@@ -717,8 +716,7 @@ def generate_all_flux_diagrams(G):
             continue
         else:
             for diag in flux_diagrams:
-                unique_cycles = find_all_unique_cycles(diag)
-                if isinstance(unique_cycles[0], int): # check if there is only 1 unique cycle
+                if len(find_all_unique_cycles(diag)) == 1: # check if there is only 1 unique cycle
                     continue
                 else:
                     raise Exception("Flux diagram has more than 1 closed loop for cycle {}.".format(cycle))
@@ -818,7 +816,7 @@ def calculate_sigma_K(G, cycle, flux_diags, key, output_strings=False):
         input cycle in string form.
     """
     if isinstance(flux_diags, list) == False:
-        print("Only 1 flux diagram detected for cycle {}. Sigma K value is 1.".format(cycle))
+        print("No flux diagrams detected for cycle {}. Sigma K value is 1.".format(cycle))
         return 1
     else:
         ordered_cycle = get_ordered_cycle(G, cycle)
