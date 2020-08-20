@@ -290,7 +290,38 @@ def test_generate_flux_diags_4WL(k12, k21, k23, k32, k34, k43, k41, k14, k24, k4
     flux_diags_G4wl = []
     for cycle in G4wl_cycles:
         flux_diags_G4wl.append(kda.generate_flux_diagrams(G4wl, cycle))
+    all_flux_diags_G4wl = kda.generate_all_flux_diagrams(G4wl)
+    diags1_G4wl = [diag for diags in all_flux_diags_G4wl for diag in diags]
+    diags2_G4wl = [diag for diags in flux_diags_G4wl[1:] for diag in diags]
     assert len(G4wl_cycles) == 3
     assert flux_diags_G4wl[0] == None
     assert len(flux_diags_G4wl[1]) == 2
     assert len(flux_diags_G4wl[2]) == 2
+    assert diags1_G4wl[0].edges == diags2_G4wl[0].edges
+    assert diags1_G4wl[1].edges == diags2_G4wl[1].edges
+    assert diags1_G4wl[2].edges == diags2_G4wl[2].edges
+    assert diags1_G4wl[3].edges == diags2_G4wl[3].edges
+
+@pytest.mark.parametrize('k21', [1e0])
+@pytest.mark.parametrize('k23', [1e0])
+@pytest.mark.parametrize('k32', [1e0])
+@pytest.mark.parametrize('k13', [1e0])
+@pytest.mark.parametrize('k31', [1e0])
+@pytest.mark.parametrize('k12', [1e0])
+def test_calc_cycle_flux_3(k12, k21, k23, k32, k13, k31, SP3):
+    k3 = np.array([[0, k12, k13],
+                  [k21, 0, k23],
+                  [k31, k32, 0]])
+    k3s = np.array([[0, "k12", "k13"],
+                    ["k21", 0, "k23"],
+                    ["k31", "k32", 0]])
+    rate_names3 = ["k12", "k21", "k23", "k32", "k13", "k31"]
+    G3 = nx.MultiDiGraph()
+    kda.generate_edges(G3, k3, k3s, name_key='name', val_key='val')
+    G3_cycles = kda.find_all_unique_cycles(G3)[0]
+    G3_cf = kda.calc_cycle_flux(G3, G3_cycles, key='val', output_strings=False)
+    pi3, sigK3, sig3 = kda.calc_cycle_flux(G3, G3_cycles, key='name', output_strings=True)
+    assert G3_cf == 0
+    assert pi3 == 'k13*k32*k21-k31*k23*k12'
+    assert sigK3 == 1
+    assert sig3 == 'k21*k31+k21*k32+k23*k31+k12*k31+k12*k32+k13*k32+k13*k21+k12*k23+k13*k23'
