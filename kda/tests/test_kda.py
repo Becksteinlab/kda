@@ -325,3 +325,60 @@ def test_calc_cycle_flux_3(k12, k21, k23, k32, k13, k31, SP3):
     assert pi3 == 'k13*k32*k21-k31*k23*k12'
     assert sigK3 == 1
     assert sig3 == 'k21*k31+k21*k32+k23*k31+k12*k31+k12*k32+k13*k32+k13*k21+k12*k23+k13*k23'
+
+
+@pytest.mark.parametrize('k12', [1e0])
+@pytest.mark.parametrize('k21', [1e0])
+@pytest.mark.parametrize('k23', [1e0])
+@pytest.mark.parametrize('k32', [3e0])
+@pytest.mark.parametrize('k34', [5e0])
+@pytest.mark.parametrize('k43', [1e0])
+@pytest.mark.parametrize('k41', [1e0])
+@pytest.mark.parametrize('k14', [1e0])
+@pytest.mark.parametrize('k24', [1e0])
+@pytest.mark.parametrize('k42', [1e0])
+def test_sigma_K_4WL(k12, k21, k23, k32, k34, k43, k41, k14, k24, k42):
+    k4wl = np.array([[0, k12, 0, k14],
+                    [k21, 0, k23, k24],
+                    [0, k32, 0, k34],
+                    [k41, k42, k43, 0]])
+    k4wls = np.array([[0, "k12", 0, "k14"],
+                      ["k21", 0, "k23", "k24"],
+                      [0, "k32", 0, "k34"],
+                      ["k41", "k42", "k43", 0]])
+    G4wl = nx.MultiDiGraph()
+    kda.generate_edges(G4wl, k4wl, k4wls, name_key='name', val_key='val')
+    cycle = [0, 1, 3]
+    flux_diags_4wl = kda.generate_flux_diagrams(G4wl, cycle)
+    sigma_K_4wl = kda.calculate_sigma_K(G4wl, cycle, flux_diags_4wl, key='val', output_strings=False)
+    sigma_K_4wls = kda.calculate_sigma_K(G4wl, cycle, flux_diags_4wl, key='name', output_strings=True)
+    assert sigma_K_4wl == k32 + k34
+    assert sigma_K_4wls == 'k32+k34'
+
+
+# @pytest.mark.parametrize('k12', [1e0])
+# @pytest.mark.parametrize('k21', [5e0])
+# @pytest.mark.parametrize('k23', [1e0])
+# @pytest.mark.parametrize('k32', [1e0])
+# @pytest.mark.parametrize('k34', [1e0])
+# @pytest.mark.parametrize('k43', [1e0])
+# @pytest.mark.parametrize('k41', [1e0])
+# @pytest.mark.parametrize('k14', [2e0])
+# @pytest.mark.parametrize('k24', [1e0])
+# @pytest.mark.parametrize('k42', [3e0])
+# def test_thermo_force(k12, k21, k23, k32, k34, k43, k41, k14, k24, k42):
+#     k4wl = np.array([[0, k12, 0, k14],
+#                     [k21, 0, k23, k24],
+#                     [0, k32, 0, k34],
+#                     [k41, k42, k43, 0]])
+#     k4wls = np.array([[0, "k12", 0, "k14"],
+#                       ["k21", 0, "k23", "k24"],
+#                       [0, "k32", 0, "k34"],
+#                       ["k41", "k42", "k43", 0]])
+#     G4wl = nx.MultiDiGraph()
+#     kda.generate_edges(G4wl, k4wl, k4wls, name_key='name', val_key='val')
+#     cycle = [0, 1, 3]
+#     thermo_force_4wl = kda.calculate_thermo_force(G4wl, cycle, key='val', output_strings=False)
+#     thermo_force_4wls = kda.calculate_thermo_force(G4wl, cycle, key='name', output_strings=True)
+#     assert thermo_force_4wl == np.log(k41*k12*k24/(k21*k42*k14))
+#     assert str(thermo_force_4wls) == 'log(k12*k24*k41/(k14*k21*k42))'
