@@ -382,3 +382,12 @@ def test_sigma_K_4WL(k12, k21, k23, k32, k34, k43, k41, k14, k24, k42):
 #     thermo_force_4wls = kda.calculate_thermo_force(G4wl, cycle, key='name', output_strings=True)
 #     assert thermo_force_4wl == np.log(k41*k12*k24/(k21*k42*k14))
 #     assert str(thermo_force_4wls) == 'log(k12*k24*k41/(k14*k21*k42))'
+#
+# def test_calculate_pi_difference():
+#     return NotImplementedError
+
+def test_find_uncommon_edges():
+    edges1 = [(0, 1, 0), (1, 0, 0), (1, 2, 0), (2, 1, 0), (2, 3, 0), (3, 4, 0)]
+    edges2 = [(0, 1, 0), (1, 0, 0), (1, 2, 0), (2, 1, 0)]
+    uu_edges = kda.find_uncommon_edges(edges1, edges2)
+    assert uu_edges == [(2, 3, 0), (3, 4, 0)]

@@ -527,8 +527,8 @@ def construct_cycle_edges(cycle):
 
 def find_uncommon_edges(edges1, edges2):
     """
-    Function for removing edges when both lists contain forward and reverse edges
-    for both diagrams.
+    Function for removing edges when both lists contain forward and reverse
+    edges. All input edges should be either 2-tuples or 3-tuples.
 
     Parameters
     ----------
@@ -556,31 +556,32 @@ def find_uncommon_edges(edges1, edges2):
             uncommon_edges.append(edge)
     return uncommon_edges
 
-def find_unique_uncommon_edges(edges1, edges2):
+def find_unique_uncommon_edges(G_edges, cycle):
     """
-    Function for removing edges when edge lists contain only
-    unique edges in diagrams. "edges1" is assumed to be the larger list.
+    Function for removing cycle edges for flux diagram generation.
 
     Parameters
     ----------
-    edges1 : list of tuples
-        List of unique edge tuples to be compared. This list should be the
-        longer list of the two.
-    edges2 : list of tuples
-        List of unique edge tuples to be compared. This list should be the
-        shorter list of the two.
+    G_edges : list of tuples
+        List of all edges in a diagram G. For general use, this list should have
+        only unique edges (not both forward and reverse).
+    cycle : list of int
+        Cycle to generate edge list from. Order of node indices does not matter.
 
     Returns
     -------
-    uncommon_unique_edges : list of tuples
-        List of uncommon edges between input list "edges1" and "edges2". Since
-        these should be unique edges (no reverse edges), these are the unique
-        uncommon edges between two diagrams (normal use case).
+    valid_non_cycle_edges : list of tuples
+        List of uncommon edges between input list "G_edges" and "cycle_edges".
+        Since these should be unique edges (no reverse edges), these are the
+        unique uncommon edges between two diagrams (normal use case).
     """
-    sorted_edges1 = [sorted(edge) for edge in edges1]
-    sorted_edges2 = [sorted(edge) for edge in edges2]
-    uncommon_unique_edges = [tuple(edge) for edge in sorted_edges1 if not edge in sorted_edges2]
-    return uncommon_unique_edges
+    cycle_edges = construct_cycle_edges(cycle)
+    sorted_G_edges = [sorted(edge) for edge in G_edges]
+    sorted_cycle_edges = [sorted(edge) for edge in cycle_edges]
+    non_cycle_edges = [tuple(edge) for edge in sorted_G_edges if not edge in sorted_cycle_edges]
+    node_edges = find_node_edges(cycle) # generate edges that only contain 2 nodes
+    valid_non_cycle_edges = [edge for edge in non_cycle_edges if not edge in node_edges] # remove node edges
+    return valid_non_cycle_edges
 
 def find_node_edges(cycle, r=2):
     """
@@ -657,11 +658,9 @@ def generate_flux_diagrams(G, cycle):
     else:
         cycle_edges = construct_cycle_edges(cycle)
         G_edges = find_unique_edges(G)
-        non_cycle_edges = find_unique_uncommon_edges(G_edges, cycle_edges) # get edges that are uncommon between cycle and G
-        node_edges = find_node_edges(cycle) # generate edges that only contain 2 nodes
-        valid_non_cycle_edges = [edge for edge in non_cycle_edges if not edge in node_edges] # remove node edges
+        non_cycle_edges = find_unique_uncommon_edges(G_edges, cycle) # get edges that are uncommon between cycle and G
         N = G.number_of_nodes() - len(cycle_edges) # number of non-cycle edges in flux diagram
-        flux_edge_lists = list(itertools.combinations(valid_non_cycle_edges, r=N)) # all combinations of valid edges
+        flux_edge_lists = list(itertools.combinations(non_cycle_edges, r=N)) # all combinations of valid edges
         # generates too many edge lists: some create cycles, some use both forward and reverse edges
         flux_diagrams = []
         for edge_list in flux_edge_lists:
