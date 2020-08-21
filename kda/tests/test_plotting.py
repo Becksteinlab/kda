@@ -68,6 +68,7 @@ def test_plot_diagram(G4wl, pos_4wl):
 
 def test_plot_cycle(G4wl, pos_4wl):
     kda.plot_cycle(G4wl, [0, 1, 3])
+    kda.plot_cycle(G4wl, [0, 3, 2, 1])
     kda.plot_cycle(G4wl, [0, 1, 3], pos=pos_4wl)
     kda.plot_cycle(G4wl, [0, 1, 3], pos=pos_4wl, cbt=True)
 
@@ -75,8 +76,8 @@ def test_plot_cycle(G4wl, pos_4wl):
 def test_plot_diagrams(G4wl, pos_4wl):
     flux_diags = kda.generate_flux_diagrams(G4wl, [0, 1, 3])
     kda.plot_diagrams(flux_diags)
-    kda.plot_diagrams(flux_diags, pos=pos_4wl)
-    kda.plot_diagrams(flux_diags, pos=pos_4wl, panel=True)
+    kda.plot_diagrams(flux_diags, pos=pos_4wl, cbt=True)
+    kda.plot_diagrams(flux_diags, pos=pos_4wl, panel=True, cbt=True)
 
 
 def test_plot_ODE_probs(results_4wl):
