@@ -80,8 +80,7 @@ def test_3(k12, k21, k23, k32, k13, k31, SP3):
     G3 = nx.MultiDiGraph()
     kda.generate_edges(G3, k3, k3s, name_key='name', val_key='val')
     SP3_KDA = kda.calc_state_probs(G3, key='val')
-    state_mults3, norm3 = kda.calc_state_probs(G3, key='name', output_strings=True)
-    sympy_funcs3 = kda.construct_sympy_prob_funcs(state_mults3, norm3)
+    sympy_funcs3 = kda.calc_state_probs(G3, key='name', output_strings=True)
     state_prob_funcs3 = kda.construct_lambdify_funcs(sympy_funcs3, rate_names3)
     SP3_SymPy = []
     for i in range(G3.number_of_nodes()):
@@ -118,8 +117,7 @@ def test_4(k12, k21, k23, k32, k34, k43, k41, k14, SP4):
     G4 = nx.MultiDiGraph()
     kda.generate_edges(G4, k4, k4s, name_key='name', val_key='val')
     SP4_KDA = kda.calc_state_probs(G4, key='val')
-    state_mults4, norm4 = kda.calc_state_probs(G4, key='name', output_strings=True)
-    sympy_funcs4 = kda.construct_sympy_prob_funcs(state_mults4, norm4)
+    sympy_funcs4 = kda.calc_state_probs(G4, key='name', output_strings=True)
     state_prob_funcs4 = kda.construct_lambdify_funcs(sympy_funcs4, rate_names4)
     SP4_SymPy = []
     for i in range(G4.number_of_nodes()):
@@ -158,8 +156,7 @@ def test_4WL(k12, k21, k23, k32, k34, k43, k41, k14, k24, k42, SP4WL):
     G4wl = nx.MultiDiGraph()
     kda.generate_edges(G4wl, k4wl, k4wls, name_key='name', val_key='val')
     SP4WL_KDA = kda.calc_state_probs(G4wl, key='val')
-    state_mults4wl, norm4wl = kda.calc_state_probs(G4wl, key='name', output_strings=True)
-    sympy_funcs4wl = kda.construct_sympy_prob_funcs(state_mults4wl, norm4wl)
+    sympy_funcs4wl = kda.calc_state_probs(G4wl, key='name', output_strings=True)
     state_prob_funcs4wl = kda.construct_lambdify_funcs(sympy_funcs4wl, rate_names4wl)
     SP4WL_SymPy = []
     for i in range(G4wl.number_of_nodes()):
@@ -202,8 +199,7 @@ def test_5WL(k12, k21, k23, k32, k13, k31, k24, k42, k35, k53, k45, k54, SP5WL):
     G5wl = nx.MultiDiGraph()
     kda.generate_edges(G5wl, k5wl, k5wls, name_key='name', val_key='val')
     SP5WL_KDA = kda.calc_state_probs(G5wl, key='val')
-    state_mults5wl, norm5wl = kda.calc_state_probs(G5wl, key='name', output_strings=True)
-    sympy_funcs5wl = kda.construct_sympy_prob_funcs(state_mults5wl, norm5wl)
+    sympy_funcs5wl = kda.calc_state_probs(G5wl, key='name', output_strings=True)
     state_prob_funcs5wl = kda.construct_lambdify_funcs(sympy_funcs5wl, rate_names5wl)
     SP5WL_SymPy = []
     for i in range(G5wl.number_of_nodes()):
@@ -248,8 +244,7 @@ def test_6(k12, k21, k23, k32, k34, k43, k45, k54, k56, k65, k61, k16, SP6):
     G6 = nx.MultiDiGraph()
     kda.generate_edges(G6, k6, k6s, name_key='name', val_key='val')
     SP6_KDA = kda.calc_state_probs(G6, key='val')
-    state_mults6, norm6 = kda.calc_state_probs(G6, key='name', output_strings=True)
-    sympy_funcs6 = kda.construct_sympy_prob_funcs(state_mults6, norm6)
+    sympy_funcs6 = kda.calc_state_probs(G6, key='name', output_strings=True)
     state_prob_funcs6 = kda.construct_lambdify_funcs(sympy_funcs6, rate_names6)
     SP6_SymPy = []
     for i in range(G6.number_of_nodes()):
@@ -302,13 +297,14 @@ def test_generate_flux_diags_4WL(k12, k21, k23, k32, k34, k43, k41, k14, k24, k4
     assert diags1_G4wl[2].edges == diags2_G4wl[2].edges
     assert diags1_G4wl[3].edges == diags2_G4wl[3].edges
 
-@pytest.mark.parametrize('k21', [1e0])
-@pytest.mark.parametrize('k23', [1e0])
-@pytest.mark.parametrize('k32', [1e0])
-@pytest.mark.parametrize('k13', [1e0])
-@pytest.mark.parametrize('k31', [1e0])
-@pytest.mark.parametrize('k12', [1e0])
-def test_calc_cycle_flux_3(k12, k21, k23, k32, k13, k31, SP3):
+
+@pytest.mark.parametrize('k12', [1e0, 2e0])
+@pytest.mark.parametrize('k21', [1e0, 2e0])
+@pytest.mark.parametrize('k23', [1e0, 2e0])
+@pytest.mark.parametrize('k32', [1e0, 2e0])
+@pytest.mark.parametrize('k13', [1e0, 2e0])
+@pytest.mark.parametrize('k31', [1e0, 2e0])
+def test_calc_cycle_flux_3(k12, k21, k23, k32, k13, k31):
     k3 = np.array([[0, k12, k13],
                   [k21, 0, k23],
                   [k31, k32, 0]])
@@ -319,19 +315,18 @@ def test_calc_cycle_flux_3(k12, k21, k23, k32, k13, k31, SP3):
     G3 = nx.MultiDiGraph()
     kda.generate_edges(G3, k3, k3s, name_key='name', val_key='val')
     G3_cycles = kda.find_all_unique_cycles(G3)[0]
-    G3_cf = kda.calc_cycle_flux(G3, G3_cycles, key='val', output_strings=False)
-    pi3, sigK3, sig3 = kda.calc_cycle_flux(G3, G3_cycles, key='name', output_strings=True)
-    assert G3_cf == 0
-    assert pi3 == 'k13*k32*k21-k31*k23*k12'
-    assert sigK3 == 1
-    assert sig3 == 'k21*k31+k21*k32+k23*k31+k12*k31+k12*k32+k13*k32+k13*k21+k12*k23+k13*k23'
+    cycle_order3 = [0, 1]
+    cf_3 = kda.calc_cycle_flux(G3, G3_cycles, cycle_order3, key='val', output_strings=False)
+    sympy_cf_3 = kda.calc_cycle_flux(G3, G3_cycles, cycle_order3, key='name', output_strings=True)
+    assert cf_3 == (k12*k23*k31 - k13*k21*k32)/(k12*k23 + k12*k31 + k12*k32 + k13*k21 + k13*k23 + k13*k32 + k21*k31 + k21*k32 + k23*k31)
+    assert str(sympy_cf_3) == '(k12*k23*k31 - k13*k21*k32)/(k12*k23 + k12*k31 + k12*k32 + k13*k21 + k13*k23 + k13*k32 + k21*k31 + k21*k32 + k23*k31)'
 
 
 @pytest.mark.parametrize('k12', [1e0])
 @pytest.mark.parametrize('k21', [1e0])
 @pytest.mark.parametrize('k23', [1e0])
-@pytest.mark.parametrize('k32', [3e0])
-@pytest.mark.parametrize('k34', [5e0])
+@pytest.mark.parametrize('k32', [1e0, 3e0])
+@pytest.mark.parametrize('k34', [1e0, 5e0])
 @pytest.mark.parametrize('k43', [1e0])
 @pytest.mark.parametrize('k41', [1e0])
 @pytest.mark.parametrize('k14', [1e0])
@@ -356,35 +351,45 @@ def test_sigma_K_4WL(k12, k21, k23, k32, k34, k43, k41, k14, k24, k42):
     assert sigma_K_4wls == 'k32+k34'
 
 
-# @pytest.mark.parametrize('k12', [1e0])
-# @pytest.mark.parametrize('k21', [5e0])
-# @pytest.mark.parametrize('k23', [1e0])
-# @pytest.mark.parametrize('k32', [1e0])
-# @pytest.mark.parametrize('k34', [1e0])
-# @pytest.mark.parametrize('k43', [1e0])
-# @pytest.mark.parametrize('k41', [1e0])
-# @pytest.mark.parametrize('k14', [2e0])
-# @pytest.mark.parametrize('k24', [1e0])
-# @pytest.mark.parametrize('k42', [3e0])
-# def test_thermo_force(k12, k21, k23, k32, k34, k43, k41, k14, k24, k42):
-#     k4wl = np.array([[0, k12, 0, k14],
-#                     [k21, 0, k23, k24],
-#                     [0, k32, 0, k34],
-#                     [k41, k42, k43, 0]])
-#     k4wls = np.array([[0, "k12", 0, "k14"],
-#                       ["k21", 0, "k23", "k24"],
-#                       [0, "k32", 0, "k34"],
-#                       ["k41", "k42", "k43", 0]])
-#     G4wl = nx.MultiDiGraph()
-#     kda.generate_edges(G4wl, k4wl, k4wls, name_key='name', val_key='val')
-#     cycle = [0, 1, 3]
-#     thermo_force_4wl = kda.calculate_thermo_force(G4wl, cycle, key='val', output_strings=False)
-#     thermo_force_4wls = kda.calculate_thermo_force(G4wl, cycle, key='name', output_strings=True)
-#     assert thermo_force_4wl == np.log(k41*k12*k24/(k21*k42*k14))
-#     assert str(thermo_force_4wls) == 'log(k12*k24*k41/(k14*k21*k42))'
-#
-# def test_calculate_pi_difference():
-#     return NotImplementedError
+@pytest.mark.parametrize('k12', [1e0])
+@pytest.mark.parametrize('k21', [5e0])
+@pytest.mark.parametrize('k23', [1e0])
+@pytest.mark.parametrize('k32', [1e0])
+@pytest.mark.parametrize('k34', [1e0])
+@pytest.mark.parametrize('k43', [1e0])
+@pytest.mark.parametrize('k41', [1e0])
+@pytest.mark.parametrize('k14', [2e0])
+@pytest.mark.parametrize('k24', [1e0])
+@pytest.mark.parametrize('k42', [3e0])
+def test_thermo_force_4WL(k12, k21, k23, k32, k34, k43, k41, k14, k24, k42):
+    k4wl = np.array([[0, k12, 0, k14],
+                    [k21, 0, k23, k24],
+                    [0, k32, 0, k34],
+                    [k41, k42, k43, 0]])
+    k4wls = np.array([[0, "k12", 0, "k14"],
+                      ["k21", 0, "k23", "k24"],
+                      [0, "k32", 0, "k34"],
+                      ["k41", "k42", "k43", 0]])
+    G4wl = nx.MultiDiGraph()
+    kda.generate_edges(G4wl, k4wl, k4wls, name_key='name', val_key='val')
+    cycles = kda.find_all_unique_cycles(G4wl)
+    cycle_0321 = cycles[0]
+    cycle_031 = cycles[1]
+    cycle_132 = cycles[2]
+    cycle_order_4wl = [[3, 0], [3, 0], [3, 1]]
+    tf_4wl_0321 = kda.calculate_thermo_force(G4wl, cycle_0321, cycle_order_4wl[0], key='val', output_strings=False)
+    tf_4wls_0321 = kda.calculate_thermo_force(G4wl, cycle_0321, cycle_order_4wl[0], key='name', output_strings=True)
+    tf_4wl_031 = kda.calculate_thermo_force(G4wl, cycle_031, cycle_order_4wl[1], key='val', output_strings=False)
+    tf_4wls_031 = kda.calculate_thermo_force(G4wl, cycle_031, cycle_order_4wl[1], key='name', output_strings=True)
+    tf_4wl_132 = kda.calculate_thermo_force(G4wl, cycle_132, cycle_order_4wl[2], key='val', output_strings=False)
+    tf_4wls_132 = kda.calculate_thermo_force(G4wl, cycle_132, cycle_order_4wl[2], key='name', output_strings=True)
+    assert tf_4wl_0321 == np.log(k12*k23*k34*k41/(k14*k21*k32*k43))
+    assert str(tf_4wls_0321) == 'log(k12*k23*k34*k41/(k14*k21*k32*k43))'
+    assert tf_4wl_031 == np.log(k12*k24*k41/(k14*k21*k42))
+    assert str(tf_4wls_031) == 'log(k12*k24*k41/(k14*k21*k42))'
+    assert tf_4wl_132 == np.log(k23*k34*k42/(k24*k32*k43))
+    assert str(tf_4wls_132) == 'log(k23*k34*k42/(k24*k32*k43))'
+
 
 def test_find_uncommon_edges():
     edges1 = [(0, 1, 0), (1, 0, 0), (1, 2, 0), (2, 1, 0), (2, 3, 0), (3, 4, 0)]
