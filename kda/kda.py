@@ -483,6 +483,52 @@ def get_ordered_cycle(G, cycle):
     else:
         return ordered_cycles[0]
 
+def is_CCW(cycle, start, end):
+    """
+    Function for determining if a cycle is CCW based on a pair of nodes in the
+    cycle. For example, for a cycle [0, 1, 2], if moving from node 0 to 1 was
+    in the CCW direction, one would input 'start=0' and 'end=1'. Function
+    returns a value of 'True' if the input cycle is in the CCW direction.
+
+    Parameters
+    ----------
+    cycle : list of int
+        List of node indices for cycle of interest, index zero. Order of node
+        indices does not matter.
+    start : int
+        Node used as initial reference point.
+    end : int
+        Node used as final reference point.
+    """
+    double = 2*cycle
+    for i in range(len(double)-1):
+        if (double[i], double[i+1]) == (start, end):
+            return True
+    return None
+
+def get_CCW_cycle(cycle, order):
+    """
+    Function used for obtaining the CCW version of an input cycle, primarily
+    used for kda.calculate_pi_difference() and kda.calculate_thermo_force().
+
+    Parameters
+    ----------
+    cycle : list of int
+        List of node indices for cycle of interest, index zero. Order of node
+        indices does not matter.
+    order : list of int
+        List of integers of length 2, where the integers must be nodes in the
+        input cycle. This pair of nodes is used to determine which direction is
+        CCW.
+    """
+    CCW = is_CCW(cycle, order[0], order[1])
+    if CCW == True:
+        return cycle
+    elif not CCW:
+        return cycle[::-1]
+    else:
+        raise Exception("Direction of cycle {} could not be determined.".format(cycle))
+
 def append_reverse_edges(edge_list):
     """
     Returns a list that contains original edges and reverse edges.
@@ -851,7 +897,7 @@ def calculate_sigma_K(G, cycle, flux_diags, key, output_strings=False):
             sigma_K_str = "+".join(rate_products)
             return sigma_K_str
 
-def calculate_pi_difference(G, cycle, key, output_strings=False):
+def calculate_pi_difference(G, cycle, order, key, output_strings=False):
     """
     Calculates the difference of the forward and reverse rate products for a
     given cycle, where forward rates are defined as counter clockwise.
@@ -863,6 +909,10 @@ def calculate_pi_difference(G, cycle, key, output_strings=False):
     cycle : list of int
         List of node indices for cycle of interest, index zero. Order of node
         indices does not matter unless your cycle contains all nodes.
+    order : list of int
+        List of integers of length 2, where the integers must be nodes in the
+        input cycle. This pair of nodes is used to determine which direction is
+        CCW.
     key : str
         Definition of key in NetworkX diagram edges, used to call edge rate
         values or names. This needs to match the key used for the rate
@@ -886,11 +936,13 @@ def calculate_pi_difference(G, cycle, key, output_strings=False):
     for cyc in find_all_unique_cycles(G):
         if sorted(cycle) == sorted(cyc):
             cycle_count += 1
-    if cycle_count > 1:
-        cycle_edges = construct_cycle_edges(cycle)
-    elif cycle_count == 1:
+    if cycle_count > 1:     # for all-node cycles
+        CCW_cycle = get_CCW_cycle(cycle, order)
+        cycle_edges = construct_cycle_edges(CCW_cycle)
+    elif cycle_count == 1:  # for all other cycles
         ordered_cycle = get_ordered_cycle(G, cycle)
-        cycle_edges = construct_cycle_edges(ordered_cycle)
+        CCW_cycle = get_CCW_cycle(ordered_cycle, order)
+        cycle_edges = construct_cycle_edges(CCW_cycle)
     else:
         raise Exception("Cycle {} could not be found in G.".format(cycle))
     if output_strings == False:
@@ -914,7 +966,7 @@ def calculate_pi_difference(G, cycle, key, output_strings=False):
         pi_difference = "-".join(["*".join(ccw_rates), "*".join(cw_rates)])
         return pi_difference
 
-def calculate_thermo_force(G, cycle, key, output_strings=False):
+def calculate_thermo_force(G, cycle, order, key, output_strings=False):
     """
     Calculates the thermodynamic driving force for a given cycle in diagram G.
     The driving force is calculated as the natural log of the ratio of the
@@ -930,6 +982,10 @@ def calculate_thermo_force(G, cycle, key, output_strings=False):
     cycle : list of int
         List of node indices for cycle of interest, index zero. Order of node
         indices does not matter unless your cycle contains all nodes.
+    order : list of int
+        List of integers of length 2, where the integers must be nodes in the
+        input cycle. This pair of nodes is used to determine which direction is
+        CCW.
     key : str
         Definition of key in NetworkX diagram edges, used to call edge rate
         values or names. This needs to match the key used for the rate
@@ -954,11 +1010,13 @@ def calculate_thermo_force(G, cycle, key, output_strings=False):
     for cyc in find_all_unique_cycles(G):
         if sorted(cycle) == sorted(cyc):
             cycle_count += 1
-    if cycle_count > 1:
-        cycle_edges = construct_cycle_edges(cycle)
-    elif cycle_count == 1:
+    if cycle_count > 1:     # for all-node cycles
+        CCW_cycle = get_CCW_cycle(cycle, order)
+        cycle_edges = construct_cycle_edges(CCW_cycle)
+    elif cycle_count == 1:  # for all other cycles
         ordered_cycle = get_ordered_cycle(G, cycle)
-        cycle_edges = construct_cycle_edges(ordered_cycle)
+        CCW_cycle = get_CCW_cycle(ordered_cycle, order)
+        cycle_edges = construct_cycle_edges(CCW_cycle)
     else:
         raise Exception("Cycle {} could not be found in G.".format(cycle))
     if output_strings == False:
@@ -1006,11 +1064,8 @@ def calc_state_probs(G, key, output_strings=False):
     -------
     state_probs : NumPy array
         Array of state probabilities for N states, [p1, p2, p3, ..., pN].
-    state_mults : list of str
-        List of analytic state multiplicity functions in string form.
-    norm : str
-        Analytic state multiplicity function normalization function in
-        string form. This is the sum of all multiplicty functions.
+    state_probs_sympy : SymPy object
+        List of analytic SymPy state probability functions.
     """
     dir_pars = generate_directional_partial_diagrams(G)
     if output_strings == False:
@@ -1018,9 +1073,10 @@ def calc_state_probs(G, key, output_strings=False):
         return state_probs
     if output_strings == True:
         state_mults, norm = calc_state_probabilities(G, dir_pars, key, output_strings=output_strings)
-        return state_mults, norm
+        state_probs_sympy = construct_sympy_prob_funcs(state_mults, norm)
+        return state_probs_sympy
 
-def calc_cycle_flux(G, cycle, key, output_strings=False):
+def calc_cycle_flux(G, cycle, order, key, output_strings=False):
     """
     Calculates cycle flux for a given cycle in diagram G.
 
@@ -1045,31 +1101,25 @@ def calc_cycle_flux(G, cycle, key, output_strings=False):
     -------
     cycle_flux : float
         Cycle flux for input cycle.
-    pi_diff_str : str
-        String of difference of product of counter clockwise cycle rates and
-        clockwise cycle rates.
-    sigma_K : str
-        Sum of rate products of directional flux diagram edges pointing to
-        input cycle in string form.
-    sigma_str : str
-        Sum of rate products of all directional partial diagrams for input
-        diagram G, in string form.
+    cycle_flux_func : SymPy object
+        Analytic cycle flux SymPy function.
     """
     dir_pars = generate_directional_partial_diagrams(G)
     flux_diags = generate_flux_diagrams(G, cycle)
     if output_strings == False:
-        pi_diff = calculate_pi_difference(G, cycle, key, output_strings=output_strings)
+        pi_diff = calculate_pi_difference(G, cycle, order, key, output_strings=output_strings)
         sigma_K = calculate_sigma_K(G, cycle, flux_diags, key, output_strings=output_strings)
         sigma = calculate_sigma(G, dir_pars, key, output_strings=output_strings)
         cycle_flux = pi_diff*sigma_K/sigma
         return cycle_flux
     if output_strings == True:
-        pi_diff_str = calculate_pi_difference(G, cycle, key, output_strings=output_strings)
+        pi_diff_str = calculate_pi_difference(G, cycle, order, key, output_strings=output_strings)
         sigma_K_str = calculate_sigma_K(G, cycle, flux_diags, key, output_strings=output_strings)
         sigma_str = calculate_sigma(G, dir_pars, key, output_strings=output_strings)
-        return pi_diff_str, sigma_K_str, sigma_str
+        sympy_cycle_flux_func = construct_sympy_cycle_flux_func(pi_diff_str, sigma_K_str, sigma_str)
+        return sympy_cycle_flux_func
 
-def construct_sympy_cycle_flux_funcs(pi_diff_str, sigma_K_str, sigma_str):
+def construct_sympy_cycle_flux_func(pi_diff_str, sigma_K_str, sigma_str):
     """
     Creates the analytic cycle flux SymPy function for a given cycle.
 
