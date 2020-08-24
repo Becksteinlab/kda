@@ -69,7 +69,7 @@ def draw_diagrams(diagrams, pos=None, panel=False, panel_scale=1, font_size=12, 
         fig.add_subplot(111)
         node_list = list(G.nodes)
         nx.draw_networkx_nodes(G, pos, node_size=500, nodelist=node_list, node_color='0.8')
-        nx.draw_networkx_edges(G, pos, node_size=500, width=4, arrow_style='->', arrowsize=15)
+        nx.draw_networkx_edges(G, pos, node_size=500, width=4, arrowstyle='->', arrowsize=15)
         labels = {}
         for i in node_list:
             labels[i] = r"${}$".format(i+1)
@@ -106,7 +106,7 @@ def draw_diagrams(diagrams, pos=None, panel=False, panel_scale=1, font_size=12, 
                 plt.sca(ax[ix])
                 ax[ix].set_axis_off()
                 nx.draw_networkx_nodes(partial, pos, ax=ax[ix], node_size=150*panel_scale, nodelist=node_list, node_color=node_colors)
-                nx.draw_networkx_edges(partial, pos, ax=ax[ix], node_size=150*panel_scale, arrow_style='->')
+                nx.draw_networkx_edges(partial, pos, ax=ax[ix], node_size=150*panel_scale, arrowstyle='->')
                 nx.draw_networkx_labels(partial, pos, labels, font_size=font_size, ax=ax[ix])
             for i in range(excess_plots):
                 ax.flat[-i-1].set_visible(False)
@@ -126,7 +126,7 @@ def draw_diagrams(diagrams, pos=None, panel=False, panel_scale=1, font_size=12, 
                 fig = plt.figure(figsize=(3, 3), tight_layout=True)
                 fig.add_subplot(111)
                 nx.draw_networkx_nodes(partial, pos, nodelist=node_list, node_color=node_colors)
-                nx.draw_networkx_edges(partial, pos, arrow_style='->')
+                nx.draw_networkx_edges(partial, pos, arrowstyle='->')
                 nx.draw_networkx_labels(partial, pos, labels, font_size=font_size)
                 plt.axis('off')
                 if not path == None:
@@ -204,7 +204,7 @@ def draw_cycles(G, cycles, pos=None, panel=False, panel_scale=1, font_size=12, c
         fig = plt.figure(figsize=(4, 4), tight_layout=True)
         fig.add_subplot(111)
         nx.draw_networkx_nodes(G, pos, nodelist=node_list, node_size=500, node_color=node_colors)
-        nx.draw_networkx_edges(G, pos, edgelist=edge_list, node_size=500, width=4, arrow_style='->', arrowsize=15)
+        nx.draw_networkx_edges(G, pos, edgelist=edge_list, node_size=500, width=4, arrowstyle='->', arrowsize=15)
         nx.draw_networkx_labels(G, pos, labels, font_size=font_size)
         plt.axis('off')
         if not path == None:
@@ -249,7 +249,7 @@ def draw_cycles(G, cycles, pos=None, panel=False, panel_scale=1, font_size=12, c
                 plt.sca(ax[ix])
                 ax[ix].set_axis_off()
                 nx.draw_networkx_nodes(G, pos, ax=ax[ix], node_size=150*panel_scale, nodelist=node_list, node_color=node_colors)
-                nx.draw_networkx_edges(G, pos, ax=ax[ix], node_size=150*panel_scale, edgelist=edge_list, arrow_style='->')
+                nx.draw_networkx_edges(G, pos, ax=ax[ix], node_size=150*panel_scale, edgelist=edge_list, arrowstyle='->')
                 nx.draw_networkx_labels(G, pos, labels, font_size=font_size, ax=ax[ix])
             for i in range(excess_plots):
                 ax.flat[-i-1].set_visible(False)
@@ -286,7 +286,7 @@ def draw_cycles(G, cycles, pos=None, panel=False, panel_scale=1, font_size=12, c
                 fig = plt.figure(figsize=(4, 4), tight_layout=True)
                 fig.add_subplot(111)
                 nx.draw_networkx_nodes(G, pos, nodelist=node_list, node_size=500, node_color=node_colors)
-                nx.draw_networkx_edges(G, pos, edgelist=edge_list, node_size=500, width=4, arrow_style='->', arrowsize=15)
+                nx.draw_networkx_edges(G, pos, edgelist=edge_list, node_size=500, width=4, arrowstyle='->', arrowsize=15)
                 nx.draw_networkx_labels(G, pos, labels, font_size=font_size)
                 plt.axis('off')
                 if not path == None:
