@@ -4,4 +4,7 @@ API Documentation
 .. autosummary::
    :toctree: autosummary
 
-   kda.canvas
+   kda
+   kda.core
+   kda.plotting
+

@@ -4,8 +4,7 @@ Python package used for the analysis of biochemical kinetic diagrams.
 """
 
 # Add imports here
-from .kda import *
-from .plotting import *
+from kda.core import *
 
 # Handle versioneer
 from ._version import get_versions

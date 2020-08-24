@@ -11,6 +11,8 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import networkx as nx
 import kda
+import kda.plotting
+
 
 @pytest.fixture(scope='module')
 def G4wl():
@@ -62,23 +64,23 @@ def results_4wl():
 
 
 def test_plot_diagram(G4wl, pos_4wl):
-    kda.plot_diagram(G4wl)
-    kda.plot_diagram(G4wl, pos=pos_4wl)
+    kda.plotting.draw_diagrams(G4wl)
+    kda.plotting.draw_diagrams(G4wl, pos=pos_4wl)
 
 
 def test_plot_cycle(G4wl, pos_4wl):
-    kda.plot_cycle(G4wl, [0, 1, 3])
-    kda.plot_cycle(G4wl, [0, 3, 2, 1])
-    kda.plot_cycle(G4wl, [0, 1, 3], pos=pos_4wl)
-    kda.plot_cycle(G4wl, [0, 1, 3], pos=pos_4wl, cbt=True)
+    kda.plotting.draw_cycles(G4wl, [0, 1, 3])
+    kda.plotting.draw_cycles(G4wl, [0, 3, 2, 1])
+    kda.plotting.draw_cycles(G4wl, [0, 1, 3], pos=pos_4wl)
+    kda.plotting.draw_cycles(G4wl, [0, 1, 3], pos=pos_4wl, cbt=True)
 
 
 def test_plot_diagrams(G4wl, pos_4wl):
     flux_diags = kda.generate_flux_diagrams(G4wl, [0, 1, 3])
-    kda.plot_diagrams(flux_diags)
-    kda.plot_diagrams(flux_diags, pos=pos_4wl, cbt=True)
-    kda.plot_diagrams(flux_diags, pos=pos_4wl, panel=True, cbt=True)
+    kda.plotting.draw_diagrams(flux_diags)
+    kda.plotting.draw_diagrams(flux_diags, pos=pos_4wl, cbt=True)
+    kda.plotting.draw_diagrams(flux_diags, pos=pos_4wl, panel=True, cbt=True)
 
 
 def test_plot_ODE_probs(results_4wl):
-    kda.plot_ODE_probs(results_4wl)
+    kda.plotting.draw_ODE_results(results_4wl)

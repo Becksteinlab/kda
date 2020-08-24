@@ -4,11 +4,40 @@
 # Author: Nikolaus C. Awtrey
 #
 """
-Kinetic Diagram Analyzer (kda)
+Kinetic Diagram Analysis (kda)
 =========================================================================
 This file contains a host of functions aimed at the analysis of biochemical
 kinetic diagrams, using the methods of Hill.
 
+.. autofunction:: generate_edges
+.. autofunction:: generate_partial_diagrams
+.. autofunction:: generate_directional_partial_diagrams
+.. autofunction:: generate_flux_diagrams
+.. autofunction:: generate_all_flux_diagrams
+.. autofunction:: calc_state_probs
+.. autofunction:: calc_cycle_flux
+.. autofunction:: calculate_sigma
+.. autofunction:: calculate_sigma_K
+.. autofunction:: calculate_pi_difference
+.. autofunction:: calculate_thermo_force
+.. autofunction:: calc_state_probabilities
+.. autofunction:: construct_cycle_edges
+.. autofunction:: construct_sympy_prob_funcs
+.. autofunction:: construct_sympy_cycle_flux_func
+.. autofunction:: construct_lambdify_funcs
+.. autofunction:: solve_ODE
+.. autofunction:: SVD
+.. autofunction:: add_node_attribute
+.. autofunction:: add_graph_attribute
+.. autofunction:: find_node_edges
+.. autofunction:: find_unique_edges
+.. autofunction:: find_uncommon_edges
+.. autofunction:: find_all_unique_cycles
+.. autofunction:: find_unique_uncommon_edges
+.. autofunction:: get_ordered_cycle
+.. autofunction:: get_CCW_cycle
+.. autofunction:: get_directional_edges
+.. autofunction:: get_directional_connections
 """
 
 import numpy as np
