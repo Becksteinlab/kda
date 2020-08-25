@@ -133,8 +133,8 @@ def test_4(k12, k21, k23, k32, k34, k43, k41, k14, SP4):
     assert_almost_equal(SP4, SP4_ODE, decimal=10)
 
 
-@pytest.mark.parametrize('k12', [1e0, 1e1])
-@pytest.mark.parametrize('k21', [1e0, 1e1])
+@pytest.mark.parametrize('k12', [1e0])
+@pytest.mark.parametrize('k21', [1e0])
 @pytest.mark.parametrize('k23', [1e0, 1e1])
 @pytest.mark.parametrize('k32', [1e0, 1e1])
 @pytest.mark.parametrize('k34', [1e0, 1e1])
