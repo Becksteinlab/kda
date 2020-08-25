@@ -73,6 +73,9 @@ def test_plot_cycle(G4wl, pos_4wl):
     kda.plotting.draw_cycles(G4wl, [0, 3, 2, 1])
     kda.plotting.draw_cycles(G4wl, [0, 1, 3], pos=pos_4wl)
     kda.plotting.draw_cycles(G4wl, [0, 1, 3], pos=pos_4wl, cbt=True)
+    kda.plotting.draw_cycles(G4wl, [[0, 1, 3], [0, 3, 2, 1]], panel=True)
+    kda.plotting.draw_cycles(G4wl, [[0, 1, 3], [0, 3, 2, 1]], panel=True, cbt=True)
+    kda.plotting.draw_cycles(G4wl, [[0, 1, 3], [0, 3, 2, 1]], cbt=True)
 
 
 def test_plot_diagrams(G4wl, pos_4wl):
