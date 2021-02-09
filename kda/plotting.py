@@ -88,7 +88,7 @@ def draw_diagrams(diagrams, pos=None, panel=False, panel_scale=1, font_size=12,
         nx.draw_networkx_labels(G, pos, labels, font_size=font_size)
         plt.axis('off')
         if not path == None:
-            fig.savefig(path + "/{}_diagram.png".format(label))
+            fig.savefig(path + "/{}_diagram.png".format(label), dpi=300)
     else:   # array of diagrams case
         if pos == None:
             pos = nx.spring_layout(diagrams[0])
@@ -135,7 +135,7 @@ def draw_diagrams(diagrams, pos=None, panel=False, panel_scale=1, font_size=12,
             for i in range(excess_plots):
                 ax.flat[-i-1].set_visible(False)
             if not path == None:
-                fig.savefig(path + "/{}_diagram_panel.png".format(label))
+                fig.savefig(path + "/{}_diagram_panel.png".format(label), dpi=300)
         else:
             for i, partial in enumerate(diagrams):
                 if cbt == True:
@@ -156,7 +156,7 @@ def draw_diagrams(diagrams, pos=None, panel=False, panel_scale=1, font_size=12,
                                         font_size=font_size)
                 plt.axis('off')
                 if not path == None:
-                    fig.savefig(path + "/{}_diagram_{}.png".format(label, i+1))
+                    fig.savefig(path + "/{}_diagram_{}.png".format(label, i+1), dpi=300)
 
 def draw_cycles(G, cycles, pos=None, panel=False, panel_scale=1, font_size=12,
                 cbt=False, path=None, label=None):
@@ -237,7 +237,7 @@ def draw_cycles(G, cycles, pos=None, panel=False, panel_scale=1, font_size=12,
         nx.draw_networkx_labels(G, pos, labels, font_size=font_size)
         plt.axis('off')
         if not path == None:
-            fig.savefig(path + "/{}_cycle.png".format(label))
+            fig.savefig(path + "/{}_cycle.png".format(label), dpi=300)
     else:   # list of cycles case
         if panel == True: # draw panel case
             N = len(cycles)
@@ -292,7 +292,7 @@ def draw_cycles(G, cycles, pos=None, panel=False, panel_scale=1, font_size=12,
             for j in range(excess_plots):
                 ax.flat[-j-1].set_visible(False)
             if not path == None:
-                fig.savefig(path + "/{}_cycle_panel.png".format(label))
+                fig.savefig(path + "/{}_cycle_panel.png".format(label), dpi=300)
         else:   # draw individual plots case
             nodes = list(G.nodes)
             for i, cycle in enumerate(cycles):
@@ -332,9 +332,10 @@ def draw_cycles(G, cycles, pos=None, panel=False, panel_scale=1, font_size=12,
                 nx.draw_networkx_labels(G, pos_new, labels, font_size=font_size)
                 plt.axis('off')
                 if not path == None:
-                    fig.savefig(path + "/{}_cycle_{}.png".format(label, i+1))
+                    fig.savefig(path + "/{}_cycle_{}.png".format(label, i+1), dpi=300)
 
-def draw_ODE_results(results, path=None, label=None):
+def draw_ODE_results(results, figsize=(5, 4), legendloc='best',
+                     bbox_coords=None, path=None, label=None):
     """
     Plots probability time series for all states.
 
@@ -343,6 +344,15 @@ def draw_ODE_results(results, path=None, label=None):
     results : bunch object
         Contains time information (results.t) and function information at time
         t (results.y), as well as various other fields.
+    figsize : tuple (optional)
+        Tuple of (x, y) coordinates passed to `plt.figure()` to modify the
+        figure size. Default is (5, 4).
+    legendloc : str (optional)
+        String passed to determine where to place the legend for the figure.
+        Default is 'best'.
+    bbox_coords : tuple (optional)
+        Tuple of (x, y) coordinates to determine where the legend goes in the
+        figure. Default is `None`, so default is `loc='best'`.
     path : str (optional)
         String of save path for figure. If path is given figure will be saved
         at the specified location. Default is None.
@@ -354,16 +364,22 @@ def draw_ODE_results(results, path=None, label=None):
     time = results.t
     p_time_series = results.y[:N]
     p_tot = p_time_series.sum(axis=0)
-    fig = plt.figure(figsize = (8, 7), tight_layout=True)
+    fig = plt.figure(figsize = figsize, tight_layout=True)
     ax = fig.add_subplot(111)
     for i in range(N):
+        state_label = r"$p_{%d, %s}$" % (i+1, "final")
+        state_val = " = {:.3f}".format(p_time_series[i][-1])
         ax.plot(time, p_time_series[i], '-', lw=2,
-                label='p{}, final = {}'.format(i+1, p_time_series[i][-1]))
+                label=state_label+state_val)
+    ptot_label = r"$p_{tot, final}$" + " = {:.2f}".format(p_tot[-1])
     ax.plot(time, p_tot, '--', lw=2, color="black",
-            label="p_tot, final = {}".format(p_tot[-1]))
+            label=ptot_label)
     ax.set_title("State Probabilities for {} State Model".format(N))
     ax.set_ylabel(r"Probability")
     ax.set_xlabel(r"Time (s)")
-    ax.legend(loc='best')
+    if bbox_coords == None:
+        ax.legend(loc=legendloc)
+    else:
+        ax.legend(loc=legendloc, bbox_to_anchor=bbox_coords)
     if not path == None:
-        fig.savefig(path + "/ODE_probs_{}.png".format(label))
+        fig.savefig(path + "/ODE_probs_{}.png".format(label), dpi=300)

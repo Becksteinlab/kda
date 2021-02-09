@@ -1213,3 +1213,28 @@ def SVD(K, tol=1e-12):
     pdot[-1] = 1                                        # set last value to 1 for probability normalization
     state_probs = Kcs_inv.dot(pdot)                     # dot Kcs and pdot matrices together
     return state_probs
+
+def construct_K_string_matrix(N_states):
+    """
+    Creates the string variant of the K-matrix based on the number of states
+    in a diagram.
+
+    Parameters
+    ==========
+    N_states : int
+        The number of states in a diagram used to create a `NxN` matrix of
+        strings.
+
+    Returns
+    =======
+    K_string : NumPy array
+        An `NxN` array of strings where `N` is the number of states in a
+        diagram and the diaganol values of the array are zeros.
+    """
+    K_string = []
+    for i in range(N_states):
+        for j in range(N_states):
+            K_string.append(f"k{i+1}{j+1}")
+    K_string = np.array(K_string).reshape((N_states, N_states))
+    np.fill_diagonal(K_string, val=0)
+    return K_string
