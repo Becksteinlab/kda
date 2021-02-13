@@ -73,12 +73,9 @@ def test_3(k12, k21, k23, k32, k13, k31, SP3):
     k3 = np.array([[0, k12, k13],
                   [k21, 0, k23],
                   [k31, k32, 0]])
-    k3s = np.array([[0, "k12", "k13"],
-                    ["k21", 0, "k23"],
-                    ["k31", "k32", 0]])
     rate_names3 = ["k12", "k21", "k23", "k32", "k13", "k31"]
     G3 = nx.MultiDiGraph()
-    kda.generate_edges(G3, k3, k3s, name_key='name', val_key='val')
+    kda.generate_edges(G3, k3)
     SP3_KDA = kda.calc_state_probs(G3, key='val')
     sympy_funcs3 = kda.calc_state_probs(G3, key='name', output_strings=True)
     state_prob_funcs3 = kda.construct_lambdify_funcs(sympy_funcs3, rate_names3)
@@ -109,13 +106,9 @@ def test_4(k12, k21, k23, k32, k34, k43, k41, k14, SP4):
                    [k21, 0, k23, 0],
                    [0, k32, 0, k34],
                    [k41, 0, k43, 0]])
-    k4s = np.array([[0, "k12", 0, "k14"],
-                    ["k21", 0, "k23", 0],
-                    [0, "k32", 0, "k34"],
-                    ["k41", 0, "k43", 0]])
     rate_names4 = ["k12", "k21", "k23", "k32", "k34", "k43", "k41", "k14"]
     G4 = nx.MultiDiGraph()
-    kda.generate_edges(G4, k4, k4s, name_key='name', val_key='val')
+    kda.generate_edges(G4, k4)
     SP4_KDA = kda.calc_state_probs(G4, key='val')
     sympy_funcs4 = kda.calc_state_probs(G4, key='name', output_strings=True)
     state_prob_funcs4 = kda.construct_lambdify_funcs(sympy_funcs4, rate_names4)
@@ -148,13 +141,9 @@ def test_4WL(k12, k21, k23, k32, k34, k43, k41, k14, k24, k42, SP4WL):
                     [k21, 0, k23, k24],
                     [0, k32, 0, k34],
                     [k41, k42, k43, 0]])
-    k4wls = np.array([[0, "k12", 0, "k14"],
-                      ["k21", 0, "k23", "k24"],
-                      [0, "k32", 0, "k34"],
-                      ["k41", "k42", "k43", 0]])
     rate_names4wl = ["k12", "k21", "k23", "k32", "k34", "k43", "k41", "k14", "k24", "k42"]
     G4wl = nx.MultiDiGraph()
-    kda.generate_edges(G4wl, k4wl, k4wls, name_key='name', val_key='val')
+    kda.generate_edges(G4wl, k4wl)
     SP4WL_KDA = kda.calc_state_probs(G4wl, key='val')
     sympy_funcs4wl = kda.calc_state_probs(G4wl, key='name', output_strings=True)
     state_prob_funcs4wl = kda.construct_lambdify_funcs(sympy_funcs4wl, rate_names4wl)
@@ -190,14 +179,9 @@ def test_5WL(k12, k21, k23, k32, k13, k31, k24, k42, k35, k53, k45, k54, SP5WL):
                      [k31, k32,   0,   0, k35],
                      [  0, k42,   0,   0, k45],
                      [  0,   0, k53, k54,   0]])
-    k5wls = np.array([[  0, "k12", "k13",   0,   0],
-                      ["k21",   0, "k23", "k24",   0],
-                      ["k31", "k32",   0,   0, "k35"],
-                      [  0, "k42",   0,   0, "k45"],
-                      [  0,   0, "k53", "k54",   0]])
     rate_names5wl = ["k12", "k21", "k23", "k32", "k13", "k31", "k24", "k42", "k35", "k53", "k45", "k54"]
     G5wl = nx.MultiDiGraph()
-    kda.generate_edges(G5wl, k5wl, k5wls, name_key='name', val_key='val')
+    kda.generate_edges(G5wl, k5wl)
     SP5WL_KDA = kda.calc_state_probs(G5wl, key='val')
     sympy_funcs5wl = kda.calc_state_probs(G5wl, key='name', output_strings=True)
     state_prob_funcs5wl = kda.construct_lambdify_funcs(sympy_funcs5wl, rate_names5wl)
@@ -234,15 +218,9 @@ def test_6(k12, k21, k23, k32, k34, k43, k45, k54, k56, k65, k61, k16, SP6):
                    [  0,   0, k43,   0, k45,   0],
                    [  0,   0,   0, k54,   0, k56],
                    [k61,   0,   0,   0, k65,   0]])
-    k6s = np.array([[  0, "k12",   0,   0,   0, "k16"],
-                    ["k21",   0, "k23",   0,   0,   0],
-                    [  0, "k32",   0, "k34",   0,   0],
-                    [  0,   0, "k43",   0, "k45",   0],
-                    [  0,   0,   0, "k54",   0, "k56"],
-                    ["k61",   0,   0,   0, "k65",   0]])
     rate_names6 = ["k12", "k21", "k23", "k32", "k34", "k43", "k45", "k54", "k56", "k65", "k61", "k16"]
     G6 = nx.MultiDiGraph()
-    kda.generate_edges(G6, k6, k6s, name_key='name', val_key='val')
+    kda.generate_edges(G6, k6)
     SP6_KDA = kda.calc_state_probs(G6, key='val')
     sympy_funcs6 = kda.calc_state_probs(G6, key='name', output_strings=True)
     state_prob_funcs6 = kda.construct_lambdify_funcs(sympy_funcs6, rate_names6)
@@ -275,12 +253,8 @@ def test_generate_flux_diags_4WL(k12, k21, k23, k32, k34, k43, k41, k14, k24, k4
                     [k21, 0, k23, k24],
                     [0, k32, 0, k34],
                     [k41, k42, k43, 0]])
-    k4wls = np.array([[0, "k12", 0, "k14"],
-                      ["k21", 0, "k23", "k24"],
-                      [0, "k32", 0, "k34"],
-                      ["k41", "k42", "k43", 0]])
     G4wl = nx.MultiDiGraph()
-    kda.generate_edges(G4wl, k4wl, k4wls, name_key='name', val_key='val')
+    kda.generate_edges(G4wl, k4wl)
     G4wl_cycles = kda.find_all_unique_cycles(G4wl)
     flux_diags_G4wl = []
     for cycle in G4wl_cycles:
@@ -308,12 +282,9 @@ def test_calc_cycle_flux_3(k12, k21, k23, k32, k13, k31):
     k3 = np.array([[0, k12, k13],
                   [k21, 0, k23],
                   [k31, k32, 0]])
-    k3s = np.array([[0, "k12", "k13"],
-                    ["k21", 0, "k23"],
-                    ["k31", "k32", 0]])
     rate_names3 = ["k12", "k21", "k23", "k32", "k13", "k31"]
     G3 = nx.MultiDiGraph()
-    kda.generate_edges(G3, k3, k3s, name_key='name', val_key='val')
+    kda.generate_edges(G3, k3)
     G3_cycles = kda.find_all_unique_cycles(G3)[0]
     cycle_order3 = [0, 1]
     cf_3 = kda.calc_cycle_flux(G3, G3_cycles, cycle_order3, key='val', output_strings=False)
@@ -337,12 +308,8 @@ def test_sigma_K_4WL(k12, k21, k23, k32, k34, k43, k41, k14, k24, k42):
                     [k21, 0, k23, k24],
                     [0, k32, 0, k34],
                     [k41, k42, k43, 0]])
-    k4wls = np.array([[0, "k12", 0, "k14"],
-                      ["k21", 0, "k23", "k24"],
-                      [0, "k32", 0, "k34"],
-                      ["k41", "k42", "k43", 0]])
     G4wl = nx.MultiDiGraph()
-    kda.generate_edges(G4wl, k4wl, k4wls, name_key='name', val_key='val')
+    kda.generate_edges(G4wl, k4wl)
     cycle = [0, 1, 3]
     flux_diags_4wl = kda.generate_flux_diagrams(G4wl, cycle)
     sigma_K_4wl = kda.calculate_sigma_K(G4wl, cycle, flux_diags_4wl, key='val', output_strings=False)
@@ -366,12 +333,8 @@ def test_thermo_force_4WL(k12, k21, k23, k32, k34, k43, k41, k14, k24, k42):
                     [k21, 0, k23, k24],
                     [0, k32, 0, k34],
                     [k41, k42, k43, 0]])
-    k4wls = np.array([[0, "k12", 0, "k14"],
-                      ["k21", 0, "k23", "k24"],
-                      [0, "k32", 0, "k34"],
-                      ["k41", "k42", "k43", 0]])
     G4wl = nx.MultiDiGraph()
-    kda.generate_edges(G4wl, k4wl, k4wls, name_key='name', val_key='val')
+    kda.generate_edges(G4wl, k4wl)
     cycles = kda.find_all_unique_cycles(G4wl)
     cycle_0321 = cycles[0]
     cycle_031 = cycles[1]

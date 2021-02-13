@@ -246,7 +246,32 @@ def construct_lambdify_funcs(sympy_funcs, rate_names):
             state_prob_funcs.append(lambdify(rate_names, func, "numpy"))    # convert into "lambdified" functions that work with NumPy arrays
         return state_prob_funcs
 
-def generate_edges(G, vals, names=[None], val_key='val', name_key='name'):
+def construct_K_string_matrix(N_states):
+    """
+    Creates the string variant of the K-matrix based on the number of states
+    in a diagram.
+
+    Parameters
+    ==========
+    N_states : int
+        The number of states in a diagram used to create a `NxN` matrix of
+        strings.
+
+    Returns
+    =======
+    K_string : NumPy array
+        An `NxN` array of strings where `N` is the number of states in a
+        diagram and the diaganol values of the array are zeros.
+    """
+    K_string = []
+    for i in range(N_states):
+        for j in range(N_states):
+            K_string.append(f"k{i+1}{j+1}")
+    K_string = np.array(K_string).reshape((N_states, N_states))
+    np.fill_diagonal(K_string, val=0)
+    return K_string
+
+def generate_edges(G, vals, names=None, val_key='val', name_key='name'):
     """
     Generate edges with attributes 'val' and 'name'.
 
@@ -268,23 +293,19 @@ def generate_edges(G, vals, names=[None], val_key='val', name_key='name'):
     name_key : str (optional)
         Key used to retrieve variable names in 'names'. Default is 'name'.
     """
+    if names is None:
+        names = construct_K_string_matrix(vals.shape[0])
     if isinstance(vals[0, 0], str):
         raise Exception("Values entered for 'vals' must be integers or floats, not strings.")
     elif not isinstance(names[0, 0], str):
         raise Exception("Labels entered for 'names' must be strings.")
     np.fill_diagonal(vals, 0) # Make sure diagonal elements are set to zero
-    if len(names) == 1:
-        for i, row in enumerate(vals):
-            for j, elem in enumerate(row):
-                if not elem == 0:
-                    attrs = {val_key : elem}
-                    G.add_edge(i, j, **attrs)
-    else:
-        for i, row in enumerate(vals):
-            for j, elem in enumerate(row):
-                if not elem == 0:
-                    attrs = {name_key : names[i, j], val_key : elem}
-                    G.add_edge(i, j, **attrs)
+
+    for i, row in enumerate(vals):
+        for j, elem in enumerate(row):
+            if not elem == 0:
+                attrs = {name_key : names[i, j], val_key : elem}
+                G.add_edge(i, j, **attrs)
 
 def add_node_attribute(G, data, label):
     """
@@ -1213,28 +1234,3 @@ def SVD(K, tol=1e-12):
     pdot[-1] = 1                                        # set last value to 1 for probability normalization
     state_probs = Kcs_inv.dot(pdot)                     # dot Kcs and pdot matrices together
     return state_probs
-
-def construct_K_string_matrix(N_states):
-    """
-    Creates the string variant of the K-matrix based on the number of states
-    in a diagram.
-
-    Parameters
-    ==========
-    N_states : int
-        The number of states in a diagram used to create a `NxN` matrix of
-        strings.
-
-    Returns
-    =======
-    K_string : NumPy array
-        An `NxN` array of strings where `N` is the number of states in a
-        diagram and the diaganol values of the array are zeros.
-    """
-    K_string = []
-    for i in range(N_states):
-        for j in range(N_states):
-            K_string.append(f"k{i+1}{j+1}")
-    K_string = np.array(K_string).reshape((N_states, N_states))
-    np.fill_diagonal(K_string, val=0)
-    return K_string
