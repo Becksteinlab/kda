@@ -48,6 +48,7 @@ from sympy import *
 from sympy.parsing.sympy_parser import parse_expr
 import functools
 import itertools
+from exceptions import CycleError
 
 
 def generate_partial_diagrams(G):
@@ -87,6 +88,7 @@ def generate_partial_diagrams(G):
             valid_partials.append(i)
     return valid_partials
 
+
 def generate_directional_partial_diagrams(G):
     """
     Generates all directional partial diagrams for input diagram G.
@@ -108,20 +110,31 @@ def generate_directional_partial_diagrams(G):
     dir_partials = []
     for target in targets:
         for i in range(len(partials)):
-            partial = partials[i].copy()               # Make a copy of directional partial diagram
-            unique_edges = find_unique_edges(partial)      # Find unique edges of that diagram
-            cons = get_directional_connections(target, unique_edges)   # Get dictionary of connections
-            dir_edges = get_directional_edges(cons)                    # Get directional edges from connections
-            partial.remove_edges_from(list(partial.edges()))                 # Remove all edges from partial diagram
+            partial = partials[i].copy()  # Make a copy of directional partial diagram
+            unique_edges = find_unique_edges(
+                partial
+            )  # Find unique edges of that diagram
+            cons = get_directional_connections(
+                target, unique_edges
+            )  # Get dictionary of connections
+            dir_edges = get_directional_edges(
+                cons
+            )  # Get directional edges from connections
+            partial.remove_edges_from(
+                list(partial.edges())
+            )  # Remove all edges from partial diagram
             for e in dir_edges:
-                partial.add_edge(e[0], e[1], e[2])                        # Add relevant edges to partial diagram
-            for t in targets:                    # Add node attrbutes to label target nodes
+                partial.add_edge(
+                    e[0], e[1], e[2]
+                )  # Add relevant edges to partial diagram
+            for t in targets:  # Add node attrbutes to label target nodes
                 if t == target:
-                    partial.nodes[t]['is_target'] = True
+                    partial.nodes[t]["is_target"] = True
                 else:
-                    partial.nodes[t]['is_target'] = False
-            dir_partials.append(partial)                                  # Append to list of partial diagrams
+                    partial.nodes[t]["is_target"] = False
+            dir_partials.append(partial)  # Append to list of partial diagrams
     return dir_partials
+
 
 def calc_state_probabilities(G, dir_partials, key, output_strings=False):
     """
@@ -156,46 +169,79 @@ def calc_state_probabilities(G, dir_partials, key, output_strings=False):
         Analytic state multiplicity function normalization function in
         string form. This is the sum of all multiplicty functions.
     """
-    N = G.number_of_nodes() # Number of nodes/states
+    N = G.number_of_nodes()  # Number of nodes/states
     partial_mults = []
     edges = list(G.edges)
     if output_strings == False:
         if isinstance(G.edges[edges[0][0], edges[0][1], edges[0][2]][key], str):
-            raise Exception("To enter variable strings set parameter output_strings=True.")
-        for i in range(len(dir_partials)):      # iterate over the directional partial diagrams
-            edge_list = list(dir_partials[i].edges)     # get a list of all edges for partial directional diagram i
-            products = 1          # assign initial value of 1
-            for e in edge_list:                                 # iterate over the edges in the given directional partial diagram i
-                products *= G.edges[e[0], e[1], e[2]][key]    # multiply the rate of each edge in edge_list
+            raise TypeError(
+                "To enter variable strings set parameter output_strings=True."
+            )
+        for i in range(
+            len(dir_partials)
+        ):  # iterate over the directional partial diagrams
+            edge_list = list(
+                dir_partials[i].edges
+            )  # get a list of all edges for partial directional diagram i
+            products = 1  # assign initial value of 1
+            for (
+                e
+            ) in (
+                edge_list
+            ):  # iterate over the edges in the given directional partial diagram i
+                products *= G.edges[e[0], e[1], e[2]][
+                    key
+                ]  # multiply the rate of each edge in edge_list
             partial_mults.append(products)
-        N_terms = np.int(len(dir_partials)/N) # calculate the number of terms to be summed for given state, s
+        N_terms = np.int(
+            len(dir_partials) / N
+        )  # calculate the number of terms to be summed for given state, s
         state_mults = []
         partial_mults = np.array(partial_mults)
-        for s in range(N):    # iterate over number of states, "s"
-            state_mults.append(partial_mults[N_terms*s:N_terms*s+N_terms].sum(axis=0))
+        for s in range(N):  # iterate over number of states, "s"
+            state_mults.append(
+                partial_mults[N_terms * s : N_terms * s + N_terms].sum(axis=0)
+            )
         state_mults = np.array(state_mults)
-        state_probs = state_mults/state_mults.sum(axis=0)
+        state_probs = state_mults / state_mults.sum(axis=0)
         if any(elem < 0 for elem in state_probs) == True:
-            raise Exception("Calculated negative state probabilities, overflow or underflow occurred.")
+            raise ValueError(
+                "Calculated negative state probabilities, overflow or underflow occurred."
+            )
         return state_probs
     elif output_strings == True:
         if not isinstance(G.edges[edges[0][0], edges[0][1], edges[0][2]][key], str):
-            raise Exception("To enter variable values set parameter output_strings=False.")
-        for i in range(len(dir_partials)):      # iterate over the directional partial diagrams
-            edge_list = list(dir_partials[i].edges)     # get a list of all edges for partial directional diagram i
+            raise TypeError(
+                "To enter variable values set parameter output_strings=False."
+            )
+        for i in range(
+            len(dir_partials)
+        ):  # iterate over the directional partial diagrams
+            edge_list = list(
+                dir_partials[i].edges
+            )  # get a list of all edges for partial directional diagram i
             products = []
             for e in edge_list:
-                products.append(G.edges[e[0], e[1], e[2]][key]) # append rate constant names from dir_par to list
+                products.append(
+                    G.edges[e[0], e[1], e[2]][key]
+                )  # append rate constant names from dir_par to list
             partial_mults.append(products)
-        N_terms = np.int(len(dir_partials)/N) # calculate the number of terms to be summed for given state, s
+        N_terms = np.int(
+            len(dir_partials) / N
+        )  # calculate the number of terms to be summed for given state, s
         state_mults = []
         term_list = []  # create empty list to put products of rate constants (terms) in
         for k in partial_mults:
-            term_list.append("*".join(k))    # join rate constants for each dir_par by delimeter "*"
-        for s in range(N):    # iterate over number of states, "s"
-            state_mults.append("+".join(term_list[N_terms*s:N_terms*s+N_terms]))    # join appropriate terms for each state by delimeter "+"
-        norm = "+".join(state_mults)    # sum all terms to get normalization factor
+            term_list.append(
+                "*".join(k)
+            )  # join rate constants for each dir_par by delimeter "*"
+        for s in range(N):  # iterate over number of states, "s"
+            state_mults.append(
+                "+".join(term_list[N_terms * s : N_terms * s + N_terms])
+            )  # join appropriate terms for each state by delimeter "+"
+        norm = "+".join(state_mults)  # sum all terms to get normalization factor
         return state_mults, norm
+
 
 def construct_sympy_prob_funcs(state_mult_funcs, norm_func):
     """
@@ -215,11 +261,14 @@ def construct_sympy_prob_funcs(state_mult_funcs, norm_func):
     sympy_funcs : list
         List of analytic state probability SymPy functions.
     """
-    sympy_funcs = []   # create empty list to fill with state probability functions
+    sympy_funcs = []  # create empty list to fill with state probability functions
     for func in state_mult_funcs:
-        prob_func = parse_expr(func)/parse_expr(norm_func) # convert strings into SymPy functions, normalize
+        prob_func = parse_expr(func) / parse_expr(
+            norm_func
+        )  # convert strings into SymPy functions, normalize
         sympy_funcs.append(prob_func)
     return sympy_funcs
+
 
 def construct_lambdify_funcs(sympy_funcs, rate_names):
     """
@@ -241,10 +290,15 @@ def construct_lambdify_funcs(sympy_funcs, rate_names):
     if isinstance(sympy_funcs, Mul) == True:
         return lambdify(rate_names, sympy_funcs, "numpy")
     elif isinstance(sympy_funcs, list) == True:
-        state_prob_funcs = []   # create empty list to fill with state probability functions
+        state_prob_funcs = (
+            []
+        )  # create empty list to fill with state probability functions
         for func in sympy_funcs:
-            state_prob_funcs.append(lambdify(rate_names, func, "numpy"))    # convert into "lambdified" functions that work with NumPy arrays
+            state_prob_funcs.append(
+                lambdify(rate_names, func, "numpy")
+            )  # convert into "lambdified" functions that work with NumPy arrays
         return state_prob_funcs
+
 
 def construct_K_string_matrix(N_states):
     """
@@ -271,7 +325,8 @@ def construct_K_string_matrix(N_states):
     np.fill_diagonal(K_string, val=0)
     return K_string
 
-def generate_edges(G, vals, names=None, val_key='val', name_key='name'):
+
+def generate_edges(G, vals, names=None, val_key="val", name_key="name"):
     """
     Generate edges with attributes 'val' and 'name'.
 
@@ -296,16 +351,19 @@ def generate_edges(G, vals, names=None, val_key='val', name_key='name'):
     if names is None:
         names = construct_K_string_matrix(vals.shape[0])
     if isinstance(vals[0, 0], str):
-        raise Exception("Values entered for 'vals' must be integers or floats, not strings.")
+        raise TypeError(
+            "Values entered for 'vals' must be integers or floats, not strings."
+        )
     elif not isinstance(names[0, 0], str):
-        raise Exception("Labels entered for 'names' must be strings.")
-    np.fill_diagonal(vals, 0) # Make sure diagonal elements are set to zero
+        raise TypeError("Labels entered for 'names' must be strings.")
+    np.fill_diagonal(vals, 0)  # Make sure diagonal elements are set to zero
 
     for i, row in enumerate(vals):
         for j, elem in enumerate(row):
             if not elem == 0:
-                attrs = {name_key : names[i, j], val_key : elem}
+                attrs = {name_key: names[i, j], val_key: elem}
                 G.add_edge(i, j, **attrs)
+
 
 def add_node_attribute(G, data, label):
     """
@@ -325,6 +383,7 @@ def add_node_attribute(G, data, label):
     for i in range(G.number_of_nodes()):
         G.nodes[i][label] = data[i]
 
+
 def add_graph_attribute(G, data, label):
     """
     Add attribute to graph G.
@@ -339,6 +398,7 @@ def add_graph_attribute(G, data, label):
         Name of new attribute to be assigned to nodes.
     """
     G.graph[label] = data
+
 
 def solve_ODE(P, K, t_max, tol=1e-16, **options):
     """
@@ -375,6 +435,7 @@ def solve_ODE(P, K, t_max, tol=1e-16, **options):
     documentation: "https://docs.scipy.org/doc/scipy/reference/generated/
     scipy.integrate.solve_ivp.html"
     """
+
     def convert_K(K):
         """
         Sets the diagonal elements of the input k matrix to zero, then takes the
@@ -404,8 +465,10 @@ def solve_ODE(P, K, t_max, tol=1e-16, **options):
     terminate.terminal = True
     k = convert_K(K)
     y0 = np.array(P, dtype=np.float64)
-    return scipy.integrate.solve_ivp(fun=KdotP, t_span=(0, t_max), y0=y0,
-                                     events=[terminate], **options)
+    return scipy.integrate.solve_ivp(
+        fun=KdotP, t_span=(0, t_max), y0=y0, events=[terminate], **options
+    )
+
 
 def find_unique_edges(G):
     """
@@ -417,10 +480,13 @@ def find_unique_edges(G):
     G : NetworkX MultiDiGraph
         Input diagram
     """
-    edges = list(G.edges)           # Get list of edges
-    sorted_edges = np.sort(edges)      # Sort list of edges
-    tuples = [(sorted_edges[i, 1], sorted_edges[i, 2]) for i in range(len(sorted_edges))]   # Make list of edge tuples
+    edges = list(G.edges)  # Get list of edges
+    sorted_edges = np.sort(edges)  # Sort list of edges
+    tuples = [
+        (sorted_edges[i, 1], sorted_edges[i, 2]) for i in range(len(sorted_edges))
+    ]  # Make list of edge tuples
     return list(set(tuples))
+
 
 def combine(x, y):
     """
@@ -430,6 +496,7 @@ def combine(x, y):
     """
     x.update(y)
     return x
+
 
 def get_directional_connections(target, unique_edges):
     """
@@ -446,12 +513,23 @@ def get_directional_connections(target, unique_edges):
         List of edges (2-tuples) that are unique to the diagram,
         [(0, 1), (1, 2), ...].
     """
-    edges = [i for i in unique_edges if target in i]    # Find edges that connect to target state
-    neighbors = [[j for j in i if not j == target][0] for i in edges] # Find states neighboring target state
+    edges = [
+        i for i in unique_edges if target in i
+    ]  # Find edges that connect to target state
+    neighbors = [
+        [j for j in i if not j == target][0] for i in edges
+    ]  # Find states neighboring target state
     if not neighbors:
         return {}
-    unique_edges = [k for k in unique_edges if not k in edges]  # Make new list of unique edges that does not contain original unique edges
-    return functools.reduce(combine, [{target: neighbors}] + [get_directional_connections(i, unique_edges) for i in neighbors])
+    unique_edges = [
+        k for k in unique_edges if not k in edges
+    ]  # Make new list of unique edges that does not contain original unique edges
+    return functools.reduce(
+        combine,
+        [{target: neighbors}]
+        + [get_directional_connections(i, unique_edges) for i in neighbors],
+    )
+
 
 def get_directional_edges(cons):
     """
@@ -476,6 +554,7 @@ def get_directional_edges(cons):
             values.append((neighb, target, 0))
     return values
 
+
 def find_all_unique_cycles(G):
     """
     Finds all unique cycles for an input diagram G.
@@ -494,12 +573,13 @@ def find_all_unique_cycles(G):
     unique_cycles = []
     for cycle in nx.simple_cycles(G):
         temp.append(cycle)
-        reverse_cycle = [cycle[0]] + cycle[len(G.nodes):0:-1]
+        reverse_cycle = [cycle[0]] + cycle[len(G.nodes) : 0 : -1]
         if not reverse_cycle in temp:
             unique_cycles.append(cycle)
     if len(unique_cycles) == 1:
         print("Only 1 cycle found: {}".format(unique_cycles[0]))
     return unique_cycles
+
 
 def get_ordered_cycle(G, cycle):
     """
@@ -533,6 +613,7 @@ def get_ordered_cycle(G, cycle):
     else:
         return ordered_cycles[0]
 
+
 def is_CCW(cycle, start, end):
     """
     Function for determining if a cycle is CCW based on a pair of nodes in the
@@ -550,11 +631,12 @@ def is_CCW(cycle, start, end):
     end : int
         Node used as final reference point.
     """
-    double = 2*cycle
-    for i in range(len(double)-1):
-        if (double[i], double[i+1]) == (start, end):
+    double = 2 * cycle
+    for i in range(len(double) - 1):
+        if (double[i], double[i + 1]) == (start, end):
             return True
     return None
+
 
 def get_CCW_cycle(cycle, order):
     """
@@ -577,7 +659,8 @@ def get_CCW_cycle(cycle, order):
     elif not CCW:
         return cycle[::-1]
     else:
-        raise Exception("Direction of cycle {} could not be determined.".format(cycle))
+        raise CycleError("Direction of cycle {} could not be determined.".format(cycle))
+
 
 def append_reverse_edges(edge_list):
     """
@@ -600,6 +683,7 @@ def append_reverse_edges(edge_list):
             new_edge_list.append((edge[1], edge[0], edge[2]))
     return new_edge_list
 
+
 def construct_cycle_edges(cycle):
     """
     Constucts edge tuples in a cycle using the node indices in the cycle. It
@@ -620,6 +704,7 @@ def construct_cycle_edges(cycle):
     reverse_list = list(zip(cycle[:-1], cycle[1:], np.zeros(len(cycle), dtype=int)))
     reverse_list.append((cycle[-1], cycle[0], 0))
     return reverse_list
+
 
 def find_uncommon_edges(edges1, edges2):
     """
@@ -652,6 +737,7 @@ def find_uncommon_edges(edges1, edges2):
             uncommon_edges.append(edge)
     return uncommon_edges
 
+
 def find_unique_uncommon_edges(G_edges, cycle):
     """
     Function for removing cycle edges for flux diagram generation.
@@ -674,10 +760,15 @@ def find_unique_uncommon_edges(G_edges, cycle):
     cycle_edges = construct_cycle_edges(cycle)
     sorted_G_edges = [sorted(edge) for edge in G_edges]
     sorted_cycle_edges = [sorted(edge) for edge in cycle_edges]
-    non_cycle_edges = [tuple(edge) for edge in sorted_G_edges if not edge in sorted_cycle_edges]
-    node_edges = find_node_edges(cycle) # generate edges that only contain 2 nodes
-    valid_non_cycle_edges = [edge for edge in non_cycle_edges if not edge in node_edges] # remove node edges
+    non_cycle_edges = [
+        tuple(edge) for edge in sorted_G_edges if not edge in sorted_cycle_edges
+    ]
+    node_edges = find_node_edges(cycle)  # generate edges that only contain 2 nodes
+    valid_non_cycle_edges = [
+        edge for edge in non_cycle_edges if not edge in node_edges
+    ]  # remove node edges
     return valid_non_cycle_edges
+
 
 def find_node_edges(cycle, r=2):
     """
@@ -697,10 +788,11 @@ def find_node_edges(cycle, r=2):
     node_edges : list of tuples
         List of all possible pairs of nodes, where node pairs are in tuple form.
     """
-    node_edges = list(itertools.combinations(cycle, r)) # generate node edges
+    node_edges = list(itertools.combinations(cycle, r))  # generate node edges
     for edge in node_edges.copy():
-        node_edges.append((edge[1], edge[0])) # append reverse edge
+        node_edges.append((edge[1], edge[0]))  # append reverse edge
     return node_edges
+
 
 def flux_edge_conditions(edge_list, N):
     """
@@ -718,15 +810,20 @@ def flux_edge_conditions(edge_list, N):
         unique cycle edges in the cycle of interest.
     """
     sorted_edges = np.sort(edge_list)
-    tuples = [(sorted_edges[i, 1], sorted_edges[i, 2]) for i in range(len(sorted_edges))]
+    tuples = [
+        (sorted_edges[i, 1], sorted_edges[i, 2]) for i in range(len(sorted_edges))
+    ]
     unique_edges = list(set(tuples))
-    if len(edge_list) == N:  # the number of edges must equal the number of edges in the list
+    if (
+        len(edge_list) == N
+    ):  # the number of edges must equal the number of edges in the list
         if len(unique_edges) == len(edge_list):
             return True
         else:
             return False
     else:
         return False
+
 
 def generate_flux_diagrams(G, cycle):
     """
@@ -749,14 +846,24 @@ def generate_flux_diagrams(G, cycle):
         labeled by attribute 'is_target'.
     """
     if sorted(cycle) == sorted(list(G.nodes)):
-        print("""Cycle {} contains all nodes in G, no flux
-        diagrams can be generated. Value of None Returned.""".format(cycle))
+        print(
+            """Cycle {} contains all nodes in G, no flux
+        diagrams can be generated. Value of None Returned.""".format(
+                cycle
+            )
+        )
     else:
         cycle_edges = construct_cycle_edges(cycle)
         G_edges = find_unique_edges(G)
-        non_cycle_edges = find_unique_uncommon_edges(G_edges, cycle) # get edges that are uncommon between cycle and G
-        N = G.number_of_nodes() - len(cycle_edges) # number of non-cycle edges in flux diagram
-        flux_edge_lists = list(itertools.combinations(non_cycle_edges, r=N)) # all combinations of valid edges
+        non_cycle_edges = find_unique_uncommon_edges(
+            G_edges, cycle
+        )  # get edges that are uncommon between cycle and G
+        N = G.number_of_nodes() - len(
+            cycle_edges
+        )  # number of non-cycle edges in flux diagram
+        flux_edge_lists = list(
+            itertools.combinations(non_cycle_edges, r=N)
+        )  # all combinations of valid edges
         # generates too many edge lists: some create cycles, some use both forward and reverse edges
         flux_diagrams = []
         for edge_list in flux_edge_lists:
@@ -778,15 +885,16 @@ def generate_flux_diagrams(G, cycle):
                 if sorted(G.nodes) == sorted(included_nodes):
                     for target in diag.nodes():
                         if target in cycle:
-                            diag.nodes[target]['is_target'] = True
+                            diag.nodes[target]["is_target"] = True
                         else:
-                            diag.nodes[target]['is_target'] = False
+                            diag.nodes[target]["is_target"] = False
                     flux_diagrams.append(diag)
                 else:
                     continue
             else:
                 continue
         return flux_diagrams
+
 
 def generate_all_flux_diagrams(G):
     """
@@ -811,12 +919,19 @@ def generate_all_flux_diagrams(G):
             continue
         else:
             for diag in flux_diagrams:
-                if len(find_all_unique_cycles(diag)) == 1: # check if there is only 1 unique cycle
+                if (
+                    len(find_all_unique_cycles(diag)) == 1
+                ):  # check if there is only 1 unique cycle
                     continue
                 else:
-                    raise Exception("Flux diagram has more than 1 closed loop for cycle {}.".format(cycle))
+                    raise CycleError(
+                        "Flux diagram has more than 1 closed loop for cycle {}.".format(
+                            cycle
+                        )
+                    )
             all_flux_diagrams.append(flux_diagrams)
     return all_flux_diagrams
+
 
 def calculate_sigma(G, dir_partials, key, output_strings=False):
     """
@@ -847,35 +962,58 @@ def calculate_sigma(G, dir_partials, key, output_strings=False):
         Sum of rate products of all directional partial diagrams for input
         diagram G, in string form.
     """
-    N = G.number_of_nodes() # Number of nodes/states
+    N = G.number_of_nodes()  # Number of nodes/states
     partial_mults = []
     edges = list(G.edges)
     if output_strings == False:
         if isinstance(G.edges[edges[0][0], edges[0][1], edges[0][2]][key], str):
-            raise Exception("To enter variable strings set parameter output_strings=True.")
-        for i in range(len(dir_partials)):      # iterate over the directional partial diagrams
-            edge_list = list(dir_partials[i].edges)     # get a list of all edges for partial directional diagram i
-            products = 1          # assign initial value of 1
-            for e in edge_list:                                 # iterate over the edges in the given directional partial diagram i
-                products *= G.edges[e[0], e[1], e[2]][key]    # multiply the rate of each edge in edge_list
+            raise TypeError(
+                "To enter variable strings set parameter output_strings=True."
+            )
+        for i in range(
+            len(dir_partials)
+        ):  # iterate over the directional partial diagrams
+            edge_list = list(
+                dir_partials[i].edges
+            )  # get a list of all edges for partial directional diagram i
+            products = 1  # assign initial value of 1
+            for (
+                e
+            ) in (
+                edge_list
+            ):  # iterate over the edges in the given directional partial diagram i
+                products *= G.edges[e[0], e[1], e[2]][
+                    key
+                ]  # multiply the rate of each edge in edge_list
             partial_mults.append(products)
         sigma = np.array(partial_mults).sum(axis=0)
         return sigma
     elif output_strings == True:
         if not isinstance(G.edges[edges[0][0], edges[0][1], edges[0][2]][key], str):
-            raise Exception("To enter variable values set parameter output_strings=False.")
-        for i in range(len(dir_partials)):      # iterate over the directional partial diagrams
-            edge_list = list(dir_partials[i].edges)     # get a list of all edges for partial directional diagram i
+            raise TypeError(
+                "To enter variable values set parameter output_strings=False."
+            )
+        for i in range(
+            len(dir_partials)
+        ):  # iterate over the directional partial diagrams
+            edge_list = list(
+                dir_partials[i].edges
+            )  # get a list of all edges for partial directional diagram i
             products = []
             for e in edge_list:
-                products.append(G.edges[e[0], e[1], e[2]][key]) # append rate constant names from dir_par to list
+                products.append(
+                    G.edges[e[0], e[1], e[2]][key]
+                )  # append rate constant names from dir_par to list
             partial_mults.append(products)
         state_mults = []
         term_list = []  # create empty list to put products of rate constants (terms) in
         for k in partial_mults:
-            term_list.append("*".join(k))    # join rate constants for each dir_par by delimeter "*"
-        sigma_str = "+".join(term_list)    # sum all terms to get normalization factor
+            term_list.append(
+                "*".join(k)
+            )  # join rate constants for each dir_par by delimeter "*"
+        sigma_str = "+".join(term_list)  # sum all terms to get normalization factor
         return sigma_str
+
 
 def calculate_sigma_K(G, cycle, flux_diags, key, output_strings=False):
     """
@@ -911,14 +1049,21 @@ def calculate_sigma_K(G, cycle, flux_diags, key, output_strings=False):
         input cycle in string form.
     """
     if isinstance(flux_diags, list) == False:
-        print("No flux diagrams detected for cycle {}. Sigma K value is 1.".format(cycle))
+        print(
+            "No flux diagrams detected for cycle {}. Sigma K value is 1.".format(cycle)
+        )
         return 1
     else:
         ordered_cycle = get_ordered_cycle(G, cycle)
         cycle_edges = construct_cycle_edges(ordered_cycle)
         if output_strings == False:
-            if isinstance(G.edges[cycle_edges[0][0], cycle_edges[0][1], cycle_edges[0][2]][key], str):
-                raise Exception("To enter variable strings set parameter output_strings=True.")
+            if isinstance(
+                G.edges[cycle_edges[0][0], cycle_edges[0][1], cycle_edges[0][2]][key],
+                str,
+            ):
+                raise TypeError(
+                    "To enter variable strings set parameter output_strings=True."
+                )
             rate_products = []
             for diagram in flux_diags:
                 diag = diagram.copy()
@@ -932,8 +1077,13 @@ def calculate_sigma_K(G, cycle, flux_diags, key, output_strings=False):
             sigma_K = np.array(rate_products).sum(axis=0)
             return sigma_K
         elif output_strings == True:
-            if not isinstance(G.edges[cycle_edges[0][0], cycle_edges[0][1], cycle_edges[0][2]][key], str):
-                raise Exception("To enter variable values set parameter output_strings=False.")
+            if not isinstance(
+                G.edges[cycle_edges[0][0], cycle_edges[0][1], cycle_edges[0][2]][key],
+                str,
+            ):
+                raise TypeError(
+                    "To enter variable values set parameter output_strings=False."
+                )
             rate_products = []
             for diagram in flux_diags:
                 diag = diagram.copy()
@@ -946,6 +1096,7 @@ def calculate_sigma_K(G, cycle, flux_diags, key, output_strings=False):
                 rate_products.append("*".join(rates))
             sigma_K_str = "+".join(rate_products)
             return sigma_K_str
+
 
 def calculate_pi_difference(G, cycle, order, key, output_strings=False):
     """
@@ -986,7 +1137,7 @@ def calculate_pi_difference(G, cycle, order, key, output_strings=False):
     for cyc in find_all_unique_cycles(G):
         if sorted(cycle) == sorted(cyc):
             cycle_count += 1
-    if cycle_count > 1:     # for all-node cycles
+    if cycle_count > 1:  # for all-node cycles
         CCW_cycle = get_CCW_cycle(cycle, order)
         cycle_edges = construct_cycle_edges(CCW_cycle)
     elif cycle_count == 1:  # for all other cycles
@@ -994,10 +1145,14 @@ def calculate_pi_difference(G, cycle, order, key, output_strings=False):
         CCW_cycle = get_CCW_cycle(ordered_cycle, order)
         cycle_edges = construct_cycle_edges(CCW_cycle)
     else:
-        raise Exception("Cycle {} could not be found in G.".format(cycle))
+        raise CycleError("Cycle {} could not be found in G.".format(cycle))
     if output_strings == False:
-        if isinstance(G.edges[cycle_edges[0][0], cycle_edges[0][1], cycle_edges[0][2]][key], str):
-            raise Exception("To enter variable strings set parameter output_strings=True.")
+        if isinstance(
+            G.edges[cycle_edges[0][0], cycle_edges[0][1], cycle_edges[0][2]][key], str
+        ):
+            raise TypeError(
+                "To enter variable strings set parameter output_strings=True."
+            )
         ccw_rates = 1
         cw_rates = 1
         for edge in cycle_edges:
@@ -1006,8 +1161,12 @@ def calculate_pi_difference(G, cycle, order, key, output_strings=False):
         pi_difference = ccw_rates - cw_rates
         return pi_difference
     elif output_strings == True:
-        if not isinstance(G.edges[cycle_edges[0][0], cycle_edges[0][1], cycle_edges[0][2]][key], str):
-            raise Exception("To enter variable values set parameter output_strings=False.")
+        if not isinstance(
+            G.edges[cycle_edges[0][0], cycle_edges[0][1], cycle_edges[0][2]][key], str
+        ):
+            raise TypeError(
+                "To enter variable values set parameter output_strings=False."
+            )
         ccw_rates = []
         cw_rates = []
         for edge in cycle_edges:
@@ -1015,6 +1174,7 @@ def calculate_pi_difference(G, cycle, order, key, output_strings=False):
             cw_rates.append(G.edges[edge[1], edge[0], edge[2]][key])
         pi_difference = "-".join(["*".join(ccw_rates), "*".join(cw_rates)])
         return pi_difference
+
 
 def calculate_thermo_force(G, cycle, order, key, output_strings=False):
     """
@@ -1060,7 +1220,7 @@ def calculate_thermo_force(G, cycle, order, key, output_strings=False):
     for cyc in find_all_unique_cycles(G):
         if sorted(cycle) == sorted(cyc):
             cycle_count += 1
-    if cycle_count > 1:     # for all-node cycles
+    if cycle_count > 1:  # for all-node cycles
         CCW_cycle = get_CCW_cycle(cycle, order)
         cycle_edges = construct_cycle_edges(CCW_cycle)
     elif cycle_count == 1:  # for all other cycles
@@ -1068,28 +1228,39 @@ def calculate_thermo_force(G, cycle, order, key, output_strings=False):
         CCW_cycle = get_CCW_cycle(ordered_cycle, order)
         cycle_edges = construct_cycle_edges(CCW_cycle)
     else:
-        raise Exception("Cycle {} could not be found in G.".format(cycle))
+        raise CycleError("Cycle {} could not be found in G.".format(cycle))
     if output_strings == False:
-        if isinstance(G.edges[cycle_edges[0][0], cycle_edges[0][1], cycle_edges[0][2]][key], str):
-            raise Exception("To enter variable strings set parameter output_strings=True.")
+        if isinstance(
+            G.edges[cycle_edges[0][0], cycle_edges[0][1], cycle_edges[0][2]][key], str
+        ):
+            raise TypeError(
+                "To enter variable strings set parameter output_strings=True."
+            )
         ccw_rates = 1
         cw_rates = 1
         for edge in cycle_edges:
             ccw_rates *= G.edges[edge[0], edge[1], edge[2]][key]
             cw_rates *= G.edges[edge[1], edge[0], edge[2]][key]
-        thermo_force = np.log(ccw_rates/cw_rates)
+        thermo_force = np.log(ccw_rates / cw_rates)
         return thermo_force
     elif output_strings == True:
-        if not isinstance(G.edges[cycle_edges[0][0], cycle_edges[0][1], cycle_edges[0][2]][key], str):
-            raise Exception("To enter variable values set parameter output_strings=False.")
+        if not isinstance(
+            G.edges[cycle_edges[0][0], cycle_edges[0][1], cycle_edges[0][2]][key], str
+        ):
+            raise TypeError(
+                "To enter variable values set parameter output_strings=False."
+            )
         ccw_rates = []
         cw_rates = []
         for edge in cycle_edges:
             ccw_rates.append(G.edges[edge[0], edge[1], edge[2]][key])
             cw_rates.append(G.edges[edge[1], edge[0], edge[2]][key])
-        thermo_force_str = 'ln(' + "*".join(ccw_rates) + ') - ln(' + "*".join(cw_rates) + ')'
+        thermo_force_str = (
+            "ln(" + "*".join(ccw_rates) + ") - ln(" + "*".join(cw_rates) + ")"
+        )
         parsed_thermo_force_str = logcombine(parse_expr(thermo_force_str), force=True)
         return parsed_thermo_force_str
+
 
 def calc_state_probs(G, key, output_strings=False):
     """
@@ -1119,12 +1290,17 @@ def calc_state_probs(G, key, output_strings=False):
     """
     dir_pars = generate_directional_partial_diagrams(G)
     if output_strings == False:
-        state_probs = calc_state_probabilities(G, dir_pars, key, output_strings=output_strings)
+        state_probs = calc_state_probabilities(
+            G, dir_pars, key, output_strings=output_strings
+        )
         return state_probs
     if output_strings == True:
-        state_mults, norm = calc_state_probabilities(G, dir_pars, key, output_strings=output_strings)
+        state_mults, norm = calc_state_probabilities(
+            G, dir_pars, key, output_strings=output_strings
+        )
         state_probs_sympy = construct_sympy_prob_funcs(state_mults, norm)
         return state_probs_sympy
+
 
 def calc_cycle_flux(G, cycle, order, key, output_strings=False):
     """
@@ -1157,17 +1333,28 @@ def calc_cycle_flux(G, cycle, order, key, output_strings=False):
     dir_pars = generate_directional_partial_diagrams(G)
     flux_diags = generate_flux_diagrams(G, cycle)
     if output_strings == False:
-        pi_diff = calculate_pi_difference(G, cycle, order, key, output_strings=output_strings)
-        sigma_K = calculate_sigma_K(G, cycle, flux_diags, key, output_strings=output_strings)
+        pi_diff = calculate_pi_difference(
+            G, cycle, order, key, output_strings=output_strings
+        )
+        sigma_K = calculate_sigma_K(
+            G, cycle, flux_diags, key, output_strings=output_strings
+        )
         sigma = calculate_sigma(G, dir_pars, key, output_strings=output_strings)
-        cycle_flux = pi_diff*sigma_K/sigma
+        cycle_flux = pi_diff * sigma_K / sigma
         return cycle_flux
     if output_strings == True:
-        pi_diff_str = calculate_pi_difference(G, cycle, order, key, output_strings=output_strings)
-        sigma_K_str = calculate_sigma_K(G, cycle, flux_diags, key, output_strings=output_strings)
+        pi_diff_str = calculate_pi_difference(
+            G, cycle, order, key, output_strings=output_strings
+        )
+        sigma_K_str = calculate_sigma_K(
+            G, cycle, flux_diags, key, output_strings=output_strings
+        )
         sigma_str = calculate_sigma(G, dir_pars, key, output_strings=output_strings)
-        sympy_cycle_flux_func = construct_sympy_cycle_flux_func(pi_diff_str, sigma_K_str, sigma_str)
+        sympy_cycle_flux_func = construct_sympy_cycle_flux_func(
+            pi_diff_str, sigma_K_str, sigma_str
+        )
         return sympy_cycle_flux_func
+
 
 def construct_sympy_cycle_flux_func(pi_diff_str, sigma_K_str, sigma_str):
     """
@@ -1191,11 +1378,14 @@ def construct_sympy_cycle_flux_func(pi_diff_str, sigma_K_str, sigma_str):
         Analytic cycle flux SymPy function
     """
     if sigma_K_str == 1:
-        cycle_flux_func = parse_expr(pi_diff_str)/parse_expr(sigma_str)
+        cycle_flux_func = parse_expr(pi_diff_str) / parse_expr(sigma_str)
         return cycle_flux_func
     else:
-        cycle_flux_func = (parse_expr(pi_diff_str)*parse_expr(sigma_K_str))/parse_expr(sigma_str)
+        cycle_flux_func = (
+            parse_expr(pi_diff_str) * parse_expr(sigma_K_str)
+        ) / parse_expr(sigma_str)
         return cycle_flux_func
+
 
 def SVD(K, tol=1e-12):
     """
@@ -1217,20 +1407,26 @@ def SVD(K, tol=1e-12):
     state_probs : NumPy array
         Array of state probabilities for N states, [p1, p2, p3, ..., pN].
     """
-    N = len(K)                  # get number of states
-    Kc = K.copy()                # Make a copy of input matrix K
-    np.fill_diagonal(Kc, 0)      # fill the diagonal elements with zeros
-    Kc = Kc.T                    # take the transpose
+    N = len(K)  # get number of states
+    Kc = K.copy()  # Make a copy of input matrix K
+    np.fill_diagonal(Kc, 0)  # fill the diagonal elements with zeros
+    Kc = Kc.T  # take the transpose
     for i in range(N):
-        Kc[i, i] = -Kc[:, i].sum(axis=0)    # set the diagonal elements equal to the negative sum of the columns
-    prob_norm = np.ones(N)                  # create array of ones
-    Kcs = np.vstack((Kc, prob_norm))        # stack ODE equations with probability equation
-    U, w, VT = np.linalg.svd(Kcs, full_matrices=False)  # use SVD to generate U, w, and V.T matrices
-    singular_vals = np.abs(w) < tol                     # find any singular values in w matrix
-    inv_w = 1/w                                         # Take the inverse of the w matrix
-    inv_w[singular_vals] = 0                            # Set any singular values to zero
-    Kcs_inv = VT.T.dot(np.diag(inv_w)).dot(U.T)         # construct the pseudo inverse of Kcs
-    pdot = np.zeros(N+1)                                # create steady state solution matrix (pdot = 0), add additional entry for probaility equation
-    pdot[-1] = 1                                        # set last value to 1 for probability normalization
-    state_probs = Kcs_inv.dot(pdot)                     # dot Kcs and pdot matrices together
+        Kc[i, i] = -Kc[:, i].sum(
+            axis=0
+        )  # set the diagonal elements equal to the negative sum of the columns
+    prob_norm = np.ones(N)  # create array of ones
+    Kcs = np.vstack((Kc, prob_norm))  # stack ODE equations with probability equation
+    U, w, VT = np.linalg.svd(
+        Kcs, full_matrices=False
+    )  # use SVD to generate U, w, and V.T matrices
+    singular_vals = np.abs(w) < tol  # find any singular values in w matrix
+    inv_w = 1 / w  # Take the inverse of the w matrix
+    inv_w[singular_vals] = 0  # Set any singular values to zero
+    Kcs_inv = VT.T.dot(np.diag(inv_w)).dot(U.T)  # construct the pseudo inverse of Kcs
+    pdot = np.zeros(
+        N + 1
+    )  # create steady state solution matrix (pdot = 0), add additional entry for probaility equation
+    pdot[-1] = 1  # set last value to 1 for probability normalization
+    state_probs = Kcs_inv.dot(pdot)  # dot Kcs and pdot matrices together
     return state_probs
