@@ -473,10 +473,10 @@ def test_calc_cycle_flux_3(k12, k21, k23, k32, k13, k31):
     kda.generate_edges(G3, k3)
     G3_cycles = kda.find_all_unique_cycles(G3)[0]
     cycle_order3 = [0, 1]
-    cf_3 = kda.calc_cycle_flux(
+    cf_3 = kda.calc_net_cycle_flux(
         G3, G3_cycles, cycle_order3, key="val", output_strings=False
     )
-    sympy_cf_3 = kda.calc_cycle_flux(
+    sympy_cf_3 = kda.calc_net_cycle_flux(
         G3, G3_cycles, cycle_order3, key="name", output_strings=True
     )
     assert cf_3 == (k12 * k23 * k31 - k13 * k21 * k32) / (

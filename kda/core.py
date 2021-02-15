@@ -15,7 +15,7 @@ kinetic diagrams, using the methods of Hill.
 .. autofunction:: generate_flux_diagrams
 .. autofunction:: generate_all_flux_diagrams
 .. autofunction:: calc_state_probs
-.. autofunction:: calc_cycle_flux
+.. autofunction:: calc_net_cycle_flux
 .. autofunction:: calculate_sigma
 .. autofunction:: calculate_sigma_K
 .. autofunction:: calculate_pi_difference
@@ -23,8 +23,9 @@ kinetic diagrams, using the methods of Hill.
 .. autofunction:: calc_state_probabilities
 .. autofunction:: construct_cycle_edges
 .. autofunction:: construct_sympy_prob_funcs
-.. autofunction:: construct_sympy_cycle_flux_func
+.. autofunction:: construct_sympy_net_cycle_flux_func
 .. autofunction:: construct_lambdify_funcs
+.. autofunction:: construct_K_string_matrix
 .. autofunction:: solve_ODE
 .. autofunction:: SVD
 .. autofunction:: add_node_attribute
@@ -48,7 +49,6 @@ from sympy import *
 from sympy.parsing.sympy_parser import parse_expr
 import functools
 import itertools
-from exceptions import CycleError
 
 
 def generate_partial_diagrams(G):
@@ -1302,9 +1302,9 @@ def calc_state_probs(G, key, output_strings=False):
         return state_probs_sympy
 
 
-def calc_cycle_flux(G, cycle, order, key, output_strings=False):
+def calc_net_cycle_flux(G, cycle, order, key, output_strings=False):
     """
-    Calculates cycle flux for a given cycle in diagram G.
+    Calculates net cycle flux for a given cycle in diagram G.
 
     Parameters
     ----------
@@ -1325,10 +1325,10 @@ def calc_cycle_flux(G, cycle, order, key, output_strings=False):
 
     Returns
     -------
-    cycle_flux : float
-        Cycle flux for input cycle.
-    cycle_flux_func : SymPy object
-        Analytic cycle flux SymPy function.
+    net_cycle_flux : float
+        Net cycle flux for input cycle.
+    net_cycle_flux_func : SymPy object
+        Analytic net cycle flux SymPy function.
     """
     dir_pars = generate_directional_partial_diagrams(G)
     flux_diags = generate_flux_diagrams(G, cycle)
@@ -1340,8 +1340,8 @@ def calc_cycle_flux(G, cycle, order, key, output_strings=False):
             G, cycle, flux_diags, key, output_strings=output_strings
         )
         sigma = calculate_sigma(G, dir_pars, key, output_strings=output_strings)
-        cycle_flux = pi_diff * sigma_K / sigma
-        return cycle_flux
+        net_cycle_flux = pi_diff * sigma_K / sigma
+        return net_cycle_flux
     if output_strings == True:
         pi_diff_str = calculate_pi_difference(
             G, cycle, order, key, output_strings=output_strings
@@ -1350,15 +1350,15 @@ def calc_cycle_flux(G, cycle, order, key, output_strings=False):
             G, cycle, flux_diags, key, output_strings=output_strings
         )
         sigma_str = calculate_sigma(G, dir_pars, key, output_strings=output_strings)
-        sympy_cycle_flux_func = construct_sympy_cycle_flux_func(
+        sympy_net_cycle_flux_func = construct_sympy_net_cycle_flux_func(
             pi_diff_str, sigma_K_str, sigma_str
         )
-        return sympy_cycle_flux_func
+        return sympy_net_cycle_flux_func
 
 
-def construct_sympy_cycle_flux_func(pi_diff_str, sigma_K_str, sigma_str):
+def construct_sympy_net_cycle_flux_func(pi_diff_str, sigma_K_str, sigma_str):
     """
-    Creates the analytic cycle flux SymPy function for a given cycle.
+    Creates the analytic net cycle flux SymPy function for a given cycle.
 
     Parameters
     ----------
@@ -1374,17 +1374,17 @@ def construct_sympy_cycle_flux_func(pi_diff_str, sigma_K_str, sigma_str):
 
     Returns
     -------
-    cycle_flux_func : SymPy object
-        Analytic cycle flux SymPy function
+    net_cycle_flux_func : SymPy object
+        Analytic net cycle flux SymPy function
     """
     if sigma_K_str == 1:
-        cycle_flux_func = parse_expr(pi_diff_str) / parse_expr(sigma_str)
-        return cycle_flux_func
+        net_cycle_flux_func = parse_expr(pi_diff_str) / parse_expr(sigma_str)
+        return net_cycle_flux_func
     else:
-        cycle_flux_func = (
+        net_cycle_flux_func = (
             parse_expr(pi_diff_str) * parse_expr(sigma_K_str)
         ) / parse_expr(sigma_str)
-        return cycle_flux_func
+        return net_cycle_flux_func
 
 
 def SVD(K, tol=1e-12):
