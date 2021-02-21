@@ -8,7 +8,7 @@ import pytest
 import numpy as np
 from numpy.testing import assert_almost_equal
 import networkx as nx
-import kda
+from kda import calculations, diagrams, graphs, expressions, ode, svd
 
 
 @pytest.fixture(scope="function")
@@ -211,18 +211,18 @@ def test_3(k12, k21, k23, k32, k13, k31, SP3):
     k3 = np.array([[0, k12, k13], [k21, 0, k23], [k31, k32, 0]])
     rate_names3 = ["k12", "k21", "k23", "k32", "k13", "k31"]
     G3 = nx.MultiDiGraph()
-    kda.generate_edges(G3, k3)
-    SP3_KDA = kda.calc_state_probs(G3, key="val")
-    sympy_funcs3 = kda.calc_state_probs(G3, key="name", output_strings=True)
-    state_prob_funcs3 = kda.construct_lambdify_funcs(sympy_funcs3, rate_names3)
+    graphs.generate_edges(G3, k3)
+    SP3_KDA = calculations.calc_state_probs(G3, key="val")
+    sympy_funcs3 = calculations.calc_state_probs(G3, key="name", output_strings=True)
+    state_prob_funcs3 = expressions.construct_lambda_funcs(sympy_funcs3, rate_names3)
     SP3_SymPy = []
     for i in range(G3.number_of_nodes()):
         SP3_SymPy.append(state_prob_funcs3[i](k12, k21, k23, k32, k13, k31))
     SP3_SymPy = np.array(SP3_SymPy)
     p3 = np.array([1, 1, 1]) / 3
-    results3 = kda.solve_ODE(p3, k3, t_max=1e2, tol=1e-12, atol=1e-16, rtol=1e-13)
+    results3 = ode.ode_solver(p3, k3, t_max=1e2, tol=1e-12, atol=1e-16, rtol=1e-13)
     SP3_ODE = results3.y.T[-1]
-    SP3_SVD = kda.SVD(k3, tol=1e-15)
+    SP3_SVD = svd.svd_solver(k3, tol=1e-15)
     assert_almost_equal(SP3, SP3_SVD, decimal=12)
     assert_almost_equal(SP3, SP3_KDA, decimal=15)
     assert_almost_equal(SP3, SP3_SymPy, decimal=15)
@@ -243,18 +243,18 @@ def test_4(k12, k21, k23, k32, k34, k43, k41, k14, SP4):
     )
     rate_names4 = ["k12", "k21", "k23", "k32", "k34", "k43", "k41", "k14"]
     G4 = nx.MultiDiGraph()
-    kda.generate_edges(G4, k4)
-    SP4_KDA = kda.calc_state_probs(G4, key="val")
-    sympy_funcs4 = kda.calc_state_probs(G4, key="name", output_strings=True)
-    state_prob_funcs4 = kda.construct_lambdify_funcs(sympy_funcs4, rate_names4)
+    graphs.generate_edges(G4, k4)
+    SP4_KDA = calculations.calc_state_probs(G4, key="val")
+    sympy_funcs4 = calculations.calc_state_probs(G4, key="name", output_strings=True)
+    state_prob_funcs4 = expressions.construct_lambda_funcs(sympy_funcs4, rate_names4)
     SP4_SymPy = []
     for i in range(G4.number_of_nodes()):
         SP4_SymPy.append(state_prob_funcs4[i](k12, k21, k23, k32, k34, k43, k41, k14))
     SP4_SymPy = np.array(SP4_SymPy)
     p4 = np.array([1, 1, 1, 1]) / 4
-    results4 = kda.solve_ODE(p4, k4, t_max=1e2, tol=1e-12, atol=1e-16, rtol=1e-13)
+    results4 = ode.ode_solver(p4, k4, t_max=1e2, tol=1e-12, atol=1e-16, rtol=1e-13)
     SP4_ODE = results4.y.T[-1]
-    SP4_SVD = kda.SVD(k4, tol=1e-15)
+    SP4_SVD = svd.svd_solver(k4, tol=1e-15)
     assert_almost_equal(SP4, SP4_SVD, decimal=12)
     assert_almost_equal(SP4, SP4_KDA, decimal=15)
     assert_almost_equal(SP4, SP4_SymPy, decimal=15)
@@ -288,10 +288,14 @@ def test_4WL(k12, k21, k23, k32, k34, k43, k41, k14, k24, k42, SP4WL):
         "k42",
     ]
     G4wl = nx.MultiDiGraph()
-    kda.generate_edges(G4wl, k4wl)
-    SP4WL_KDA = kda.calc_state_probs(G4wl, key="val")
-    sympy_funcs4wl = kda.calc_state_probs(G4wl, key="name", output_strings=True)
-    state_prob_funcs4wl = kda.construct_lambdify_funcs(sympy_funcs4wl, rate_names4wl)
+    graphs.generate_edges(G4wl, k4wl)
+    SP4WL_KDA = calculations.calc_state_probs(G4wl, key="val")
+    sympy_funcs4wl = calculations.calc_state_probs(
+        G4wl, key="name", output_strings=True
+    )
+    state_prob_funcs4wl = expressions.construct_lambda_funcs(
+        sympy_funcs4wl, rate_names4wl
+    )
     SP4WL_SymPy = []
     for i in range(G4wl.number_of_nodes()):
         SP4WL_SymPy.append(
@@ -299,9 +303,11 @@ def test_4WL(k12, k21, k23, k32, k34, k43, k41, k14, k24, k42, SP4WL):
         )
     SP4WL_SymPy = np.array(SP4WL_SymPy)
     p4wl = np.array([1, 1, 1, 1]) / 4
-    results4wl = kda.solve_ODE(p4wl, k4wl, t_max=1e2, tol=1e-12, atol=1e-16, rtol=1e-13)
+    results4wl = ode.ode_solver(
+        p4wl, k4wl, t_max=1e2, tol=1e-12, atol=1e-16, rtol=1e-13
+    )
     SP4WL_ODE = results4wl.y.T[-1]
-    SP4WL_SVD = kda.SVD(k4wl, tol=1e-15)
+    SP4WL_SVD = svd.svd_solver(k4wl, tol=1e-15)
     assert_almost_equal(SP4WL, SP4WL_SVD, decimal=12)
     assert_almost_equal(SP4WL, SP4WL_KDA, decimal=15)
     assert_almost_equal(SP4WL, SP4WL_SymPy, decimal=15)
@@ -345,10 +351,14 @@ def test_5WL(k12, k21, k23, k32, k13, k31, k24, k42, k35, k53, k45, k54, SP5WL):
         "k54",
     ]
     G5wl = nx.MultiDiGraph()
-    kda.generate_edges(G5wl, k5wl)
-    SP5WL_KDA = kda.calc_state_probs(G5wl, key="val")
-    sympy_funcs5wl = kda.calc_state_probs(G5wl, key="name", output_strings=True)
-    state_prob_funcs5wl = kda.construct_lambdify_funcs(sympy_funcs5wl, rate_names5wl)
+    graphs.generate_edges(G5wl, k5wl)
+    SP5WL_KDA = calculations.calc_state_probs(G5wl, key="val")
+    sympy_funcs5wl = calculations.calc_state_probs(
+        G5wl, key="name", output_strings=True
+    )
+    state_prob_funcs5wl = expressions.construct_lambda_funcs(
+        sympy_funcs5wl, rate_names5wl
+    )
     SP5WL_SymPy = []
     for i in range(G5wl.number_of_nodes()):
         SP5WL_SymPy.append(
@@ -358,9 +368,11 @@ def test_5WL(k12, k21, k23, k32, k13, k31, k24, k42, k35, k53, k45, k54, SP5WL):
         )
     SP5WL_SymPy = np.array(SP5WL_SymPy)
     p5wl = np.array([1, 1, 1, 1, 1]) / 5
-    results5wl = kda.solve_ODE(p5wl, k5wl, t_max=1e2, tol=1e-12, atol=1e-16, rtol=1e-13)
+    results5wl = ode.ode_solver(
+        p5wl, k5wl, t_max=1e2, tol=1e-12, atol=1e-16, rtol=1e-13
+    )
     SP5WL_ODE = results5wl.y.T[-1]
-    SP5WL_SVD = kda.SVD(k5wl, tol=1e-15)
+    SP5WL_SVD = svd.svd_solver(k5wl, tol=1e-15)
     assert_almost_equal(SP5WL, SP5WL_SVD, decimal=12)
     assert_almost_equal(SP5WL, SP5WL_KDA, decimal=15)
     assert_almost_equal(SP5WL, SP5WL_SymPy, decimal=15)
@@ -405,10 +417,10 @@ def test_6(k12, k21, k23, k32, k34, k43, k45, k54, k56, k65, k61, k16, SP6):
         "k16",
     ]
     G6 = nx.MultiDiGraph()
-    kda.generate_edges(G6, k6)
-    SP6_KDA = kda.calc_state_probs(G6, key="val")
-    sympy_funcs6 = kda.calc_state_probs(G6, key="name", output_strings=True)
-    state_prob_funcs6 = kda.construct_lambdify_funcs(sympy_funcs6, rate_names6)
+    graphs.generate_edges(G6, k6)
+    SP6_KDA = calculations.calc_state_probs(G6, key="val")
+    sympy_funcs6 = calculations.calc_state_probs(G6, key="name", output_strings=True)
+    state_prob_funcs6 = expressions.construct_lambda_funcs(sympy_funcs6, rate_names6)
     SP6_SymPy = []
     for i in range(G6.number_of_nodes()):
         SP6_SymPy.append(
@@ -418,9 +430,9 @@ def test_6(k12, k21, k23, k32, k34, k43, k45, k54, k56, k65, k61, k16, SP6):
         )
     SP6_SymPy = np.array(SP6_SymPy)
     p6 = np.array([1, 1, 1, 1, 1, 1]) / 6
-    results6 = kda.solve_ODE(p6, k6, t_max=1e2, tol=1e-12, atol=1e-16, rtol=1e-13)
+    results6 = ode.ode_solver(p6, k6, t_max=1e2, tol=1e-12, atol=1e-16, rtol=1e-13)
     SP6_ODE = results6.y.T[-1]
-    SP6_SVD = kda.SVD(k6, tol=1e-13)
+    SP6_SVD = svd.svd_solver(k6, tol=1e-13)
     assert_almost_equal(SP6, SP6_SVD, decimal=12)
     assert_almost_equal(SP6, SP6_KDA, decimal=15)
     assert_almost_equal(SP6, SP6_SymPy, decimal=15)
@@ -442,12 +454,12 @@ def test_generate_flux_diags_4WL(k12, k21, k23, k32, k34, k43, k41, k14, k24, k4
         [[0, k12, 0, k14], [k21, 0, k23, k24], [0, k32, 0, k34], [k41, k42, k43, 0]]
     )
     G4wl = nx.MultiDiGraph()
-    kda.generate_edges(G4wl, k4wl)
-    G4wl_cycles = kda.find_all_unique_cycles(G4wl)
+    graphs.generate_edges(G4wl, k4wl)
+    G4wl_cycles = graphs.find_all_unique_cycles(G4wl)
     flux_diags_G4wl = []
     for cycle in G4wl_cycles:
-        flux_diags_G4wl.append(kda.generate_flux_diagrams(G4wl, cycle))
-    all_flux_diags_G4wl = kda.generate_all_flux_diagrams(G4wl)
+        flux_diags_G4wl.append(diagrams.generate_flux_diagrams(G4wl, cycle))
+    all_flux_diags_G4wl = diagrams.generate_all_flux_diagrams(G4wl)
     diags1_G4wl = [diag for diags in all_flux_diags_G4wl for diag in diags]
     diags2_G4wl = [diag for diags in flux_diags_G4wl[1:] for diag in diags]
     assert len(G4wl_cycles) == 3
@@ -470,13 +482,13 @@ def test_calc_cycle_flux_3(k12, k21, k23, k32, k13, k31):
     k3 = np.array([[0, k12, k13], [k21, 0, k23], [k31, k32, 0]])
     rate_names3 = ["k12", "k21", "k23", "k32", "k13", "k31"]
     G3 = nx.MultiDiGraph()
-    kda.generate_edges(G3, k3)
-    G3_cycles = kda.find_all_unique_cycles(G3)[0]
+    graphs.generate_edges(G3, k3)
+    G3_cycles = graphs.find_all_unique_cycles(G3)[0]
     cycle_order3 = [0, 1]
-    cf_3 = kda.calc_net_cycle_flux(
+    cf_3 = calculations.calc_net_cycle_flux(
         G3, G3_cycles, cycle_order3, key="val", output_strings=False
     )
-    sympy_cf_3 = kda.calc_net_cycle_flux(
+    sympy_cf_3 = calculations.calc_net_cycle_flux(
         G3, G3_cycles, cycle_order3, key="name", output_strings=True
     )
     assert cf_3 == (k12 * k23 * k31 - k13 * k21 * k32) / (
@@ -511,13 +523,13 @@ def test_sigma_K_4WL(k12, k21, k23, k32, k34, k43, k41, k14, k24, k42):
         [[0, k12, 0, k14], [k21, 0, k23, k24], [0, k32, 0, k34], [k41, k42, k43, 0]]
     )
     G4wl = nx.MultiDiGraph()
-    kda.generate_edges(G4wl, k4wl)
+    graphs.generate_edges(G4wl, k4wl)
     cycle = [0, 1, 3]
-    flux_diags_4wl = kda.generate_flux_diagrams(G4wl, cycle)
-    sigma_K_4wl = kda.calculate_sigma_K(
+    flux_diags_4wl = diagrams.generate_flux_diagrams(G4wl, cycle)
+    sigma_K_4wl = calculations.calc_sigma_K(
         G4wl, cycle, flux_diags_4wl, key="val", output_strings=False
     )
-    sigma_K_4wls = kda.calculate_sigma_K(
+    sigma_K_4wls = calculations.calc_sigma_K(
         G4wl, cycle, flux_diags_4wl, key="name", output_strings=True
     )
     assert sigma_K_4wl == k32 + k34
@@ -539,28 +551,28 @@ def test_thermo_force_4WL(k12, k21, k23, k32, k34, k43, k41, k14, k24, k42):
         [[0, k12, 0, k14], [k21, 0, k23, k24], [0, k32, 0, k34], [k41, k42, k43, 0]]
     )
     G4wl = nx.MultiDiGraph()
-    kda.generate_edges(G4wl, k4wl)
-    cycles = kda.find_all_unique_cycles(G4wl)
+    graphs.generate_edges(G4wl, k4wl)
+    cycles = graphs.find_all_unique_cycles(G4wl)
     cycle_0321 = cycles[0]
     cycle_031 = cycles[1]
     cycle_132 = cycles[2]
     cycle_order_4wl = [[3, 0], [3, 0], [3, 1]]
-    tf_4wl_0321 = kda.calculate_thermo_force(
+    tf_4wl_0321 = calculations.calc_thermo_force(
         G4wl, cycle_0321, cycle_order_4wl[0], key="val", output_strings=False
     )
-    tf_4wls_0321 = kda.calculate_thermo_force(
+    tf_4wls_0321 = calculations.calc_thermo_force(
         G4wl, cycle_0321, cycle_order_4wl[0], key="name", output_strings=True
     )
-    tf_4wl_031 = kda.calculate_thermo_force(
+    tf_4wl_031 = calculations.calc_thermo_force(
         G4wl, cycle_031, cycle_order_4wl[1], key="val", output_strings=False
     )
-    tf_4wls_031 = kda.calculate_thermo_force(
+    tf_4wls_031 = calculations.calc_thermo_force(
         G4wl, cycle_031, cycle_order_4wl[1], key="name", output_strings=True
     )
-    tf_4wl_132 = kda.calculate_thermo_force(
+    tf_4wl_132 = calculations.calc_thermo_force(
         G4wl, cycle_132, cycle_order_4wl[2], key="val", output_strings=False
     )
-    tf_4wls_132 = kda.calculate_thermo_force(
+    tf_4wls_132 = calculations.calc_thermo_force(
         G4wl, cycle_132, cycle_order_4wl[2], key="name", output_strings=True
     )
     assert tf_4wl_0321 == np.log(k12 * k23 * k34 * k41 / (k14 * k21 * k32 * k43))
@@ -569,10 +581,3 @@ def test_thermo_force_4WL(k12, k21, k23, k32, k34, k43, k41, k14, k24, k42):
     assert str(tf_4wls_031) == "log(k12*k24*k41/(k14*k21*k42))"
     assert tf_4wl_132 == np.log(k23 * k34 * k42 / (k24 * k32 * k43))
     assert str(tf_4wls_132) == "log(k23*k34*k42/(k24*k32*k43))"
-
-
-def test_find_uncommon_edges():
-    edges1 = [(0, 1, 0), (1, 0, 0), (1, 2, 0), (2, 1, 0), (2, 3, 0), (3, 4, 0)]
-    edges2 = [(0, 1, 0), (1, 0, 0), (1, 2, 0), (2, 1, 0)]
-    uu_edges = kda.find_uncommon_edges(edges1, edges2)
-    assert uu_edges == [(2, 3, 0), (3, 4, 0)]
