@@ -4,7 +4,7 @@
 # Author: Nikolaus C. Awtrey
 #
 """
-Plotting Diagrams
+Kinetic Diagram Analysis: Diagram Plotting
 =========================================================================
 This file contains a host of functions used for plotting various diagrams, such
 as input, partial, flux, and cycle diagrams. Also contains a function to plot
@@ -21,7 +21,7 @@ import networkx as nx
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
-from .core import construct_cycle_edges, append_reverse_edges
+from kda.diagrams import _construct_cycle_edges, _append_reverse_edges
 
 
 def draw_diagrams(
@@ -259,8 +259,8 @@ def draw_cycles(
                 if n in cycle:
                     pos[n] = position
             node_list = cycle
-        cycle_edges = construct_cycle_edges(cycle)
-        edge_list = append_reverse_edges(cycle_edges)
+        cycle_edges = _construct_cycle_edges(cycle)
+        edge_list = _append_reverse_edges(cycle_edges)
         fig = plt.figure(figsize=(4, 4), tight_layout=True)
         fig.add_subplot(111)
         nx.draw_networkx_nodes(
@@ -314,8 +314,8 @@ def draw_cycles(
                         if n in cycle:
                             pos_new[n] = position
                     node_list = cycle
-                cycle_edges = construct_cycle_edges(cycle)
-                edge_list = append_reverse_edges(cycle_edges)
+                cycle_edges = _construct_cycle_edges(cycle)
+                edge_list = _append_reverse_edges(cycle_edges)
                 ix = np.unravel_index(i, ax.shape)
                 plt.sca(ax[ix])
                 ax[ix].set_axis_off()
@@ -369,8 +369,8 @@ def draw_cycles(
                         if n in cycle:
                             pos_new[n] = position
                     node_list = cycle
-                cycle_edges = construct_cycle_edges(cycle)
-                edge_list = append_reverse_edges(cycle_edges)
+                cycle_edges = _construct_cycle_edges(cycle)
+                edge_list = _append_reverse_edges(cycle_edges)
                 fig = plt.figure(figsize=(4, 4), tight_layout=True)
                 fig.add_subplot(111)
                 nx.draw_networkx_nodes(

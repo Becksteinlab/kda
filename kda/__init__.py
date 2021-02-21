@@ -1,10 +1,15 @@
+# -*- Mode: python; tab-width: 4; indent-tabs-mode:nil; coding:utf-8 -*-
+# vim: tabstop=4 expandtab shiftwidth=4 softtabstop=4
+#
+# Author: Nikolaus C. Awtrey
+#
 """
-Kinetic Diagram Analysis
+Kinetic Diagram Analysis (kda)
+=========================================================================
 Python package used for the analysis of biochemical kinetic diagrams.
 """
 
 # Add imports here
-from kda.core import *
 
 # Handle versioneer
 from ._version import get_versions
