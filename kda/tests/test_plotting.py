@@ -11,7 +11,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import networkx as nx
 
-from kda import plotting, graphs, diagrams, ode
+from kda import plotting, graph_utils, diagrams, ode
 
 
 @pytest.fixture(scope="module")
@@ -21,7 +21,7 @@ def G4wl():
         [[0, k12, 0, k14], [k21, 0, k23, k24], [0, k32, 0, k34], [k41, k42, k43, 0]]
     )
     G4wl = nx.MultiDiGraph()
-    graphs.generate_edges(G4wl, k4wl)
+    graph_utils.generate_edges(G4wl, k4wl)
     return G4wl
 
 
@@ -60,7 +60,7 @@ def results_4wl():
         "k42",
     ]
     G4wl = nx.MultiDiGraph()
-    graphs.generate_edges(G4wl, k4wl)
+    graph_utils.generate_edges(G4wl, k4wl)
     p4wl = np.array([1, 1, 1, 1]) / 4
     results4wl = ode.ode_solver(
         p4wl, k4wl, t_max=1e2, tol=1e-12, atol=1e-16, rtol=1e-13

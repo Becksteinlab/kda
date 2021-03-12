@@ -1,7 +1,7 @@
-﻿kda.graphs
-==========
+﻿kda.graph\_utils
+================
 
-.. automodule:: kda.graphs
+.. automodule:: kda.graph_utils
 
    
    

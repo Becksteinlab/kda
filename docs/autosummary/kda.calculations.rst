@@ -14,6 +14,7 @@
    .. autosummary::
    
       calc_net_cycle_flux
+      calc_net_cycle_flux_from_diags
       calc_pi_difference
       calc_sigma
       calc_sigma_K

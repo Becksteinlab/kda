@@ -10,22 +10,24 @@ This file contains a host of functions aimed at calculating quantities of
 interest from biochemical kinetic diagrams, using the methods of T.L. Hill.
 
 .. autofunction:: calc_state_probs
-.. autofunction:: calc_net_cycle_flux
+.. autofunction:: calc_state_probs_from_diags
 .. autofunction:: calc_sigma
 .. autofunction:: calc_sigma_K
 .. autofunction:: calc_pi_difference
+.. autofunction:: calc_net_cycle_flux
+.. autofunction:: calc_net_cycle_flux_from_diags
 .. autofunction:: calc_thermo_force
-.. autofunction:: calc_state_probs_from_diags
 """
 
 import numpy as np
 import networkx as nx
 from sympy import parse_expr, logcombine
 
-from kda import graphs, diagrams, expressions
+from kda import graph_utils, diagrams, expressions
+from kda.exceptions import CycleError
 
 
-def _get_ordered_cycle(G, cycle):
+def _get_ordered_cycle(G, input_cycle):
     """
     Takes in arbitrary list of nodes and returns list of nodes in correct order.
     Can be used in conjunction with `diagrams._construct_cycle_edges` to
@@ -36,135 +38,55 @@ def _get_ordered_cycle(G, cycle):
     ----------
     G : NetworkX MultiDiGraph Object
         Input diagram
-    cycle : list of int
+    input_cycle : list of int
         List of node indices for cycle of interest, index zero. Order of node
         indices does not matter.
 
     Returns
     -------
-    ordered_cycles : list of int, list of lists of int
-        Ordered list of nodes for the input cycle, or if several cycles are
-        found, a list of lists of nodes for the input cycle.
+    ordered_cycles : list of int
+        Ordered list of nodes for the input cycle
     """
+    # get the unique cycles
+    unique_cycles = graph_utils.find_all_unique_cycles(G)
+    # filter out any cycles that don't contain the correct number of nodes
+    filtered_cycles = [c for c in unique_cycles if len(c) == len(input_cycle)]
+
+    if isinstance(filtered_cycles[0], int):
+        # if only 1 cycle is left after filtering, this is the ordered cycle
+        return filtered_cycles
+
     ordered_cycles = []
-    for cyc in graphs.find_all_unique_cycles(G):
-        if sorted(cyc) == sorted(cycle):
-            ordered_cycles.append(cyc)
+    for cycle in filtered_cycles:
+        if sorted(input_cycle) == sorted(cycle):
+            ordered_cycles.append(cycle)
+
     if ordered_cycles == []:
-        print("No cycles found for nodes {}.".format(cycle))
-    elif len(ordered_cycles) > 1:
-        return ordered_cycles
-    else:
+        raise CycleError(f"No cycles found for cycle: {cycle}")
+
+    if len(ordered_cycles) == 1:
         return ordered_cycles[0]
 
-
-def calc_state_probs_from_diags(G, dir_partials, key, output_strings=False):
-    """
-    Calculates state probabilities and generates analytic function strings from
-    input diagram and directional partial diagrams. If directional partial
-    diagrams are already generated, this offers faster calculation than
-    `calc_state_probs`.
-
-    Parameters
-    ----------
-    G : NetworkX MultiDiGraph
-        Input diagram
-    dir_partials : list
-        List of all directional partial diagrams for a given set of partial
-        diagrams.
-    key : str
-        Definition of key in NetworkX diagram edges, used to call edge rate
-        values or names. This needs to match the key used for the rate
-        constants names or values in the input diagram G.
-    output_strings : bool (optional)
-        Used to denote whether values or strings will be combined. Default
-        is False, which tells the function to calculate the state
-        probabilities using numbers. If True, this will assume the input
-        'key' will return strings of variable names to join into the
-        analytic state multplicity and normalization functions.
-
-    Returns
-    -------
-    state_probabilities : NumPy array
-        Array of state probabilities for N states, [p1, p2, p3, ..., pN].
-    state_mults : list
-        List of analytic state multiplicity functions in string form.
-    norm : str
-        Analytic state multiplicity function normalization function in
-        string form. This is the sum of all multiplicty functions.
-    """
-    N = G.number_of_nodes()  # Number of nodes/states
-    partial_mults = []
-    edges = list(G.edges)
-    if output_strings == False:
-        if isinstance(G.edges[edges[0][0], edges[0][1], edges[0][2]][key], str):
-            raise TypeError(
-                "To enter variable strings set parameter output_strings=True."
+    elif len(ordered_cycles) > 1:
+        # if multiple cycles are found, we must have multiple cycles that
+        # contain the nodes in the input cycle
+        # for this case, we just need to check that the input cycle is
+        # identical to one of the ordered cycles found
+        if input_cycle in ordered_cycles:
+            # if the input cycle matches one of the ordered cycles
+            # then we can simply return the input cycle since it is
+            # already ordered
+            return input_cycle
+        else:
+            # if the input cycle doesn't match any of the ordered cycles,
+            # raise an error
+            raise CycleError(
+                f"Distinct ordered cycle could not be determined. Input diagram"
+                f" has multiple unique cycles that contain all nodes in the"
+                f" input cycle ({cycle}). To fix ambiguity, please input a"
+                f" cycle with the nodes in the correct orientation. Select"
+                f" one of the following possibilities: {ordered_cycles}"
             )
-        for i in range(
-            len(dir_partials)
-        ):  # iterate over the directional partial diagrams
-            edge_list = list(
-                dir_partials[i].edges
-            )  # get a list of all edges for partial directional diagram i
-            products = 1  # assign initial value of 1
-            for (
-                e
-            ) in (
-                edge_list
-            ):  # iterate over the edges in the given directional partial diagram i
-                products *= G.edges[e[0], e[1], e[2]][
-                    key
-                ]  # multiply the rate of each edge in edge_list
-            partial_mults.append(products)
-        N_terms = np.int(
-            len(dir_partials) / N
-        )  # calculate the number of terms to be summed for given state, s
-        state_mults = []
-        partial_mults = np.array(partial_mults)
-        for s in range(N):  # iterate over number of states, "s"
-            state_mults.append(
-                partial_mults[N_terms * s : N_terms * s + N_terms].sum(axis=0)
-            )
-        state_mults = np.array(state_mults)
-        state_probs = state_mults / state_mults.sum(axis=0)
-        if any(elem < 0 for elem in state_probs) == True:
-            raise ValueError(
-                "Calculated negative state probabilities, overflow or underflow occurred."
-            )
-        return state_probs
-    elif output_strings == True:
-        if not isinstance(G.edges[edges[0][0], edges[0][1], edges[0][2]][key], str):
-            raise TypeError(
-                "To enter variable values set parameter output_strings=False."
-            )
-        for i in range(
-            len(dir_partials)
-        ):  # iterate over the directional partial diagrams
-            edge_list = list(
-                dir_partials[i].edges
-            )  # get a list of all edges for partial directional diagram i
-            products = []
-            for e in edge_list:
-                products.append(
-                    G.edges[e[0], e[1], e[2]][key]
-                )  # append rate constant names from dir_par to list
-            partial_mults.append(products)
-        N_terms = np.int(
-            len(dir_partials) / N
-        )  # calculate the number of terms to be summed for given state, s
-        state_mults = []
-        term_list = []  # create empty list to put products of rate constants (terms) in
-        for k in partial_mults:
-            term_list.append(
-                "*".join(k)
-            )  # join rate constants for each dir_par by delimeter "*"
-        for s in range(N):  # iterate over number of states, "s"
-            state_mults.append(
-                "+".join(term_list[N_terms * s : N_terms * s + N_terms])
-            )  # join appropriate terms for each state by delimeter "+"
-        norm = "+".join(state_mults)  # sum all terms to get normalization factor
-        return state_mults, norm
 
 
 def calc_sigma(G, dir_partials, key, output_strings=False):
@@ -204,21 +126,16 @@ def calc_sigma(G, dir_partials, key, output_strings=False):
             raise TypeError(
                 "To enter variable strings set parameter output_strings=True."
             )
-        for i in range(
-            len(dir_partials)
-        ):  # iterate over the directional partial diagrams
-            edge_list = list(
-                dir_partials[i].edges
-            )  # get a list of all edges for partial directional diagram i
-            products = 1  # assign initial value of 1
-            for (
-                e
-            ) in (
-                edge_list
-            ):  # iterate over the edges in the given directional partial diagram i
-                products *= G.edges[e[0], e[1], e[2]][
-                    key
-                ]  # multiply the rate of each edge in edge_list
+        # iterate over the directional partial diagrams
+        for i in range(len(dir_partials)):
+            # get a list of all edges for partial directional diagram i
+            edge_list = list(dir_partials[i].edges)
+            # assign initial value of 1
+            products = 1
+            # iterate over the edges in the given directional partial diagram i
+            for e in edge_list:
+                # multiply the rate of each edge in edge_list
+                products *= G.edges[e[0], e[1], e[2]][key]
             partial_mults.append(products)
         sigma = np.array(partial_mults).sum(axis=0)
         return sigma
@@ -227,25 +144,23 @@ def calc_sigma(G, dir_partials, key, output_strings=False):
             raise TypeError(
                 "To enter variable values set parameter output_strings=False."
             )
-        for i in range(
-            len(dir_partials)
-        ):  # iterate over the directional partial diagrams
-            edge_list = list(
-                dir_partials[i].edges
-            )  # get a list of all edges for partial directional diagram i
+        # iterate over the directional partial diagrams
+        for i in range(len(dir_partials)):
+            # get a list of all edges for partial directional diagram i
+            edge_list = list(dir_partials[i].edges)
             products = []
             for e in edge_list:
-                products.append(
-                    G.edges[e[0], e[1], e[2]][key]
-                )  # append rate constant names from dir_par to list
+                # append rate constant names from dir_par to list
+                products.append(G.edges[e[0], e[1], e[2]][key])
             partial_mults.append(products)
+        # create empty list to put products of rate constants (terms) in
         state_mults = []
-        term_list = []  # create empty list to put products of rate constants (terms) in
+        term_list = []
+        # join rate constants for each dir_par by delimeter "*"
         for k in partial_mults:
-            term_list.append(
-                "*".join(k)
-            )  # join rate constants for each dir_par by delimeter "*"
-        sigma_str = "+".join(term_list)  # sum all terms to get normalization factor
+            term_list.append("*".join(k))
+        # sum all terms to get normalization factor
+        sigma_str = "+".join(term_list)
         return sigma_str
 
 
@@ -288,6 +203,7 @@ def calc_sigma_K(G, cycle, flux_diags, key, output_strings=False):
         )
         return 1
     else:
+        # check that the input cycle is in the correct order
         ordered_cycle = _get_ordered_cycle(G, cycle)
         cycle_edges = diagrams._construct_cycle_edges(ordered_cycle)
         if output_strings == False:
@@ -367,19 +283,10 @@ def calc_pi_difference(G, cycle, order, key, output_strings=False):
         String of difference of product of counter clockwise cycle rates and
         clockwise cycle rates.
     """
-    cycle_count = 0
-    for cyc in graphs.find_all_unique_cycles(G):
-        if sorted(cycle) == sorted(cyc):
-            cycle_count += 1
-    if cycle_count > 1:  # for all-node cycles
-        CCW_cycle = graphs.get_ccw_cycle(cycle, order)
-        cycle_edges = diagrams._construct_cycle_edges(CCW_cycle)
-    elif cycle_count == 1:  # for all other cycles
-        ordered_cycle = _get_ordered_cycle(G, cycle)
-        CCW_cycle = graphs.get_ccw_cycle(ordered_cycle, order)
-        cycle_edges = diagrams._construct_cycle_edges(CCW_cycle)
-    else:
-        raise CycleError("Cycle {} could not be found in G.".format(cycle))
+    # check that the input cycle is in the correct order
+    ordered_cycle = _get_ordered_cycle(G, cycle)
+    CCW_cycle = graph_utils.get_ccw_cycle(ordered_cycle, order)
+    cycle_edges = diagrams._construct_cycle_edges(CCW_cycle)
     if output_strings == False:
         if isinstance(
             G.edges[cycle_edges[0][0], cycle_edges[0][1], cycle_edges[0][2]][key], str
@@ -450,19 +357,10 @@ def calc_thermo_force(G, cycle, order, key, output_strings=False):
         The thermodynamic force equation in SymPy function form. Should be
         multiplied by 'kT' to get actual thermodynamic force.
     """
-    cycle_count = 0
-    for cyc in graphs.find_all_unique_cycles(G):
-        if sorted(cycle) == sorted(cyc):
-            cycle_count += 1
-    if cycle_count > 1:  # for all-node cycles
-        CCW_cycle = graphs.get_ccw_cycle(cycle, order)
-        cycle_edges = diagrams._construct_cycle_edges(CCW_cycle)
-    elif cycle_count == 1:  # for all other cycles
-        ordered_cycle = _get_ordered_cycle(G, cycle)
-        CCW_cycle = graphs.get_ccw_cycle(ordered_cycle, order)
-        cycle_edges = diagrams._construct_cycle_edges(CCW_cycle)
-    else:
-        raise CycleError("Cycle {} could not be found in G.".format(cycle))
+    # check that the input cycle is in the correct order
+    ordered_cycle = _get_ordered_cycle(G, cycle)
+    CCW_cycle = graph_utils.get_ccw_cycle(ordered_cycle, order)
+    cycle_edges = diagrams._construct_cycle_edges(CCW_cycle)
     if output_strings == False:
         if isinstance(
             G.edges[cycle_edges[0][0], cycle_edges[0][1], cycle_edges[0][2]][key], str
@@ -582,6 +480,164 @@ def calc_net_cycle_flux(G, cycle, order, key, output_strings=False):
             G, cycle, flux_diags, key, output_strings=output_strings
         )
         sigma_str = calc_sigma(G, dir_pars, key, output_strings=output_strings)
+        sympy_net_cycle_flux_func = expressions.construct_sympy_net_cycle_flux_func(
+            pi_diff_str, sigma_K_str, sigma_str
+        )
+        return sympy_net_cycle_flux_func
+
+
+def calc_state_probs_from_diags(G, dirpars, key, output_strings=False):
+    """
+    Calculates state probabilities and generates analytic function strings from
+    input diagram and directional partial diagrams. If directional partial
+    diagrams are already generated, this offers faster calculation than
+    `calc_state_probs`.
+
+    Parameters
+    ----------
+    G : NetworkX MultiDiGraph
+        Input diagram
+    dirpars : list
+        List of all directional partial diagrams for a given set of partial
+        diagrams.
+    key : str
+        Definition of key in NetworkX diagram edges, used to call edge rate
+        values or names. This needs to match the key used for the rate
+        constants names or values in the input diagram G.
+    output_strings : bool (optional)
+        Used to denote whether values or strings will be combined. Default
+        is False, which tells the function to calculate the state
+        probabilities using numbers. If True, this will assume the input
+        'key' will return strings of variable names to join into the
+        analytic state multplicity and normalization functions.
+
+    Returns
+    -------
+    state_probabilities : NumPy array
+        Array of state probabilities for N states, [p1, p2, p3, ..., pN].
+    state_mults : list
+        List of analytic state multiplicity functions in string form.
+    norm : str
+        Analytic state multiplicity function normalization function in
+        string form. This is the sum of all multiplicty functions.
+    """
+    N = G.number_of_nodes()  # Number of nodes/states
+    partial_mults = []
+    edges = list(G.edges)
+    if output_strings == False:
+        if isinstance(G.edges[edges[0][0], edges[0][1], edges[0][2]][key], str):
+            raise TypeError(
+                "To enter variable strings set parameter output_strings=True."
+            )
+        # iterate over the directional partial diagrams
+        for i in range(len(dirpars)):
+            # get a list of all edges for partial directional diagram i
+            edge_list = list(dirpars[i].edges)
+            # assign initial value of 1
+            products = 1
+            # iterate over the edges in the given directional partial diagram i
+            for e in edge_list:
+                # multiply the rate of each edge in edge_list
+                products *= G.edges[e[0], e[1], e[2]][key]
+            partial_mults.append(products)
+        # calculate the number of terms to be summed for given state, s
+        N_terms = np.int(len(dirpars) / N)
+        state_mults = []
+        partial_mults = np.array(partial_mults)
+        # iterate over number of states, "s"
+        for s in range(N):
+            state_mults.append(
+                partial_mults[N_terms * s : N_terms * s + N_terms].sum(axis=0)
+            )
+        state_mults = np.array(state_mults)
+        state_probs = state_mults / state_mults.sum(axis=0)
+        if any(elem < 0 for elem in state_probs) == True:
+            raise ValueError(
+                "Calculated negative state probabilities, overflow or underflow occurred."
+            )
+        return state_probs
+    elif output_strings == True:
+        if not isinstance(G.edges[edges[0][0], edges[0][1], edges[0][2]][key], str):
+            raise TypeError(
+                "To enter variable values set parameter output_strings=False."
+            )
+        # iterate over the directional partial diagrams
+        for i in range(len(dirpars)):
+            # get a list of all edges for partial directional diagram i
+            edge_list = list(dirpars[i].edges)
+            products = []
+            for e in edge_list:
+                # append rate constant names from dir_par to list
+                products.append(G.edges[e[0], e[1], e[2]][key])
+            partial_mults.append(products)
+        # calculate the number of terms to be summed for given state, s
+        N_terms = np.int(len(dirpars) / N)
+        # create empty list to put products of rate constants (terms) in
+        state_mults = []
+        term_list = []
+        for k in partial_mults:
+            # join rate constants for each dir_par by delimeter "*"
+            term_list.append("*".join(k))
+        # iterate over number of states, "s"
+        for s in range(N):
+            # join appropriate terms for each state by delimeter "+"
+            state_mults.append("+".join(term_list[N_terms * s : N_terms * s + N_terms]))
+        # sum all terms to get normalization factor
+        norm = "+".join(state_mults)
+        return state_mults, norm
+
+
+def calc_net_cycle_flux_from_diags(G, dirpars, cycle, order, key, output_strings=False):
+    """
+    Calculates net cycle flux and generates analytic function strings from
+    input diagram and directional partial diagrams. If directional partial
+    diagrams are already generated, this offers faster calculation than
+    `calc_net_cycle_flux`.
+
+    Parameters
+    ----------
+    G : NetworkX MultiDiGraph Object
+        Input diagram.
+    dirpars : list
+        List of all directional partial diagrams for a given set of partial
+        diagrams.
+    cycle : list of int
+        List of node indices for cycle of interest, index zero. Order of node
+        indices does not matter.
+    key : str
+        Definition of key in NetworkX diagram edges, used to call edge rate
+        values or names. This needs to match the key used for the rate
+        constants names or values in the input diagram G.
+    output_strings : bool (optional)
+        Used to denote whether values or strings will be combined. Default
+        is False, which tells the function to calculate the cycle flux using
+        numbers. If True, this will assume the input 'key' will return strings
+        of variable names to join into the analytic cycle flux function.
+
+    Returns
+    -------
+    net_cycle_flux : float
+        Net cycle flux for input cycle.
+    net_cycle_flux_func : SymPy object
+        Analytic net cycle flux SymPy function.
+    """
+    flux_diags = diagrams.generate_flux_diagrams(G, cycle)
+    if output_strings == False:
+        pi_diff = calc_pi_difference(
+            G, cycle, order, key, output_strings=output_strings
+        )
+        sigma_K = calc_sigma_K(G, cycle, flux_diags, key, output_strings=output_strings)
+        sigma = calc_sigma(G, dirpars, key, output_strings=output_strings)
+        net_cycle_flux = pi_diff * sigma_K / sigma
+        return net_cycle_flux
+    if output_strings == True:
+        pi_diff_str = calc_pi_difference(
+            G, cycle, order, key, output_strings=output_strings
+        )
+        sigma_K_str = calc_sigma_K(
+            G, cycle, flux_diags, key, output_strings=output_strings
+        )
+        sigma_str = calc_sigma(G, dirpars, key, output_strings=output_strings)
         sympy_net_cycle_flux_func = expressions.construct_sympy_net_cycle_flux_func(
             pi_diff_str, sigma_K_str, sigma_str
         )

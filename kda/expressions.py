@@ -39,9 +39,8 @@ def construct_sympy_prob_funcs(state_mult_funcs, norm_func):
     """
     sympy_funcs = []  # create empty list to fill with state probability functions
     for func in state_mult_funcs:
-        prob_func = parse_expr(func) / parse_expr(
-            norm_func
-        )  # convert strings into SymPy functions, normalize
+        # convert strings into SymPy functions, normalize
+        prob_func = parse_expr(func) / parse_expr(norm_func)
         sympy_funcs.append(prob_func)
     return sympy_funcs
 

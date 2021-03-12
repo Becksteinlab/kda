@@ -20,7 +20,7 @@ import itertools
 import numpy as np
 import networkx as nx
 
-from kda import graphs
+from kda import graph_utils
 
 
 def _find_unique_edges(G):
@@ -206,9 +206,8 @@ def _flux_edge_conditions(edge_list, N):
         (sorted_edges[i, 1], sorted_edges[i, 2]) for i in range(len(sorted_edges))
     ]
     unique_edges = list(set(tuples))
-    if (
-        len(edge_list) == N
-    ):  # the number of edges must equal the number of edges in the list
+    # the number of edges must equal the number of edges in the list
+    if len(edge_list) == N:
         if len(unique_edges) == len(edge_list):
             return True
         else:
@@ -344,24 +343,19 @@ def generate_flux_diagrams(G, cycle):
     """
     if sorted(cycle) == sorted(list(G.nodes)):
         print(
-            """Cycle {} contains all nodes in G, no flux
-        diagrams can be generated. Value of None Returned.""".format(
-                cycle
-            )
+            f"Cycle {cycle} contains all nodes in G, no flux diagrams can be"
+            f" generated. Value of None Returned."
         )
     else:
         cycle_edges = _construct_cycle_edges(cycle)
         G_edges = _find_unique_edges(G)
-        non_cycle_edges = _find_unique_uncommon_edges(
-            G_edges, cycle
-        )  # get edges that are uncommon between cycle and G
-        N = G.number_of_nodes() - len(
-            cycle_edges
-        )  # number of non-cycle edges in flux diagram
-        flux_edge_lists = list(
-            itertools.combinations(non_cycle_edges, r=N)
-        )  # all combinations of valid edges
+        # get edges that are uncommon between cycle and G
+        non_cycle_edges = _find_unique_uncommon_edges(G_edges, cycle)
+        # number of non-cycle edges in flux diagram
+        N = G.number_of_nodes() - len(cycle_edges)
+        # all combinations of valid edges
         # generates too many edge lists: some create cycles, some use both forward and reverse edges
+        flux_edge_lists = list(itertools.combinations(non_cycle_edges, r=N))
         flux_diagrams = []
         for edge_list in flux_edge_lists:
             dir_edges = []
@@ -408,7 +402,7 @@ def generate_all_flux_diagrams(G):
         List of lists of flux diagrams, where each list is for a different cycle
         in G.
     """
-    all_cycles = graphs.find_all_unique_cycles(G)
+    all_cycles = graph_utils.find_all_unique_cycles(G)
     all_flux_diagrams = []
     for cycle in all_cycles:
         flux_diagrams = generate_flux_diagrams(G, cycle)
@@ -417,7 +411,7 @@ def generate_all_flux_diagrams(G):
         else:
             for diag in flux_diagrams:
                 if (
-                    len(graphs.find_all_unique_cycles(diag)) == 1
+                    len(graph_utils.find_all_unique_cycles(diag)) == 1
                 ):  # check if there is only 1 unique cycle
                     continue
                 else:

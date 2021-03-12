@@ -4,7 +4,7 @@
 # Author: Nikolaus C. Awtrey
 #
 """
-Kinetic Diagram Analysis: Graph Utilities 
+Kinetic Diagram Analysis: Graph Utilities
 =========================================================================
 This file contains a host of utility functions for NetworkX graphs.
 
