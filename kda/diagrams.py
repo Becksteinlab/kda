@@ -43,7 +43,7 @@ def _find_unique_edges(G):
     return list(set(tuples))
 
 
-def combine(x, y):
+def _combine(x, y):
     """
     Used to reduce list of dictionaries into single dictionary where the keys
     are the indices of states, and the values are lists of neighbors for each
@@ -80,7 +80,7 @@ def _get_directional_connections(target, unique_edges):
         k for k in unique_edges if not k in edges
     ]  # Make new list of unique edges that does not contain original unique edges
     return functools.reduce(
-        combine,
+        _combine,
         [{target: neighbors}]
         + [_get_directional_connections(i, unique_edges) for i in neighbors],
     )
