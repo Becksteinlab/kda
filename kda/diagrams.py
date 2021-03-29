@@ -9,6 +9,7 @@ Kinetic Diagram Analysis: Diagram Generation
 This file contains a host of functions aimed at the analysis of biochemical
 kinetic diagrams, using the methods of Hill.
 
+.. autofunction:: enumerate_partial_diagrams
 .. autofunction:: generate_partial_diagrams
 .. autofunction:: generate_directional_partial_diagrams
 .. autofunction:: generate_flux_diagrams
@@ -17,6 +18,7 @@ kinetic diagrams, using the methods of Hill.
 
 import functools
 import itertools
+import copy
 import numpy as np
 import networkx as nx
 
@@ -234,6 +236,75 @@ def _append_reverse_edges(edge_list):
             new_edge_list.append(edge)
             new_edge_list.append((edge[1], edge[0], edge[2]))
     return new_edge_list
+
+
+def _get_cofactor_matrix(K_laplace):
+    """
+    Helper function for `enumerate_partial_diagrams()`. Uses singular value
+    decomposition to get the cofactor matrix for the input Laplacian matrix.
+
+    Parameters
+    ==========
+    K_laplace : array
+        `NxN` Laplacian matrix, where 'N' is the number of nodes.
+
+    Returns
+    =======
+    K_cof : array
+        Cofactor matrix for the input Laplacian matrix.
+    """
+    U, w, Vt = np.linalg.svd(K_laplace)
+    N = len(w)
+    g = np.tile(w, N)
+    g[:: (N + 1)] = 1
+    G = np.diag(-((-1) ** N) * np.product(np.reshape(g, (N, N)), 1))
+    K_cof = U @ G @ Vt
+    K_cof = np.asarray(np.round(K_cof, decimals=0), dtype=int)
+    return K_cof
+
+
+def enumerate_partial_diagrams(K0):
+    """
+    Quantifies the number of partial diagrams/spanning trees that can be
+    generated from an input graph, represented by a rate matrix. This implements
+    Kirchhoff's theroem by generating the adjacency matrix from the input
+    matrix, generating the Laplacian matrix from the adjacency matrix, then
+    getting the cofactor matrix of the Laplacian matrix.
+
+    Parameters
+    ==========
+    K0 : array
+        'NxN' matrix, where N is the number of states. Element i, j represents
+        the rate constant from state i to state j. Diagonal elements should be
+        zero, but does not have to be in input K matrix.
+
+    Returns
+    =======
+    n_partials : int
+        The number of unique partial diagrams (spanning trees) that can be
+        generated from a graph represented by the input rate matrix.
+    """
+    # make a copy of the input rate matrix to operate on
+    K = copy.deepcopy(K0)
+    # get the adjacency matrix for K
+    K_adj = np.asarray(K != 0, dtype=int)
+    # use the adjacency matrix to generate the Laplacian matrix
+    # multiply through by -1
+    K_laplace = -1 * K_adj
+    # now assign the degree of the ith node to the ith diagonal value
+    # NOTE: the degree of each node should be the sum of each row or column
+    # in the adjacency matrix
+    for i in range(len(K_adj)):
+        K_laplace[i, i] = np.sum(K_adj[i])
+    # get the cofactor matrix
+    K_cof = _get_cofactor_matrix(K_laplace=K_laplace)
+    # check that all values in the cofactor matrix are the same by
+    # checking if minimum and maximum values are equal
+    assert K_cof.min() == K_cof.max()
+    # just take the first value from the cofactor matrix since they are all
+    # the same value
+    n_partials = np.abs(K_cof[0][0])
+    return n_partials
 
 
 def generate_partial_diagrams(G):

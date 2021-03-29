@@ -212,6 +212,12 @@ def test_3(k12, k21, k23, k32, k13, k31, SP3):
     rate_names3 = ["k12", "k21", "k23", "k32", "k13", "k31"]
     G3 = nx.MultiDiGraph()
     graph_utils.generate_edges(G3, k3)
+    partials = diagrams.generate_partial_diagrams(G3)
+    n_partials = diagrams.enumerate_partial_diagrams(k3)
+    # verify that partial diagram count agrees with enumeration algorithm
+    assert len(partials) == n_partials
+    # also make a hard assertion since we know the correct answer for ths case
+    assert n_partials == 3
     SP3_KDA = calculations.calc_state_probs(G3, key="val")
     sympy_funcs3 = calculations.calc_state_probs(G3, key="name", output_strings=True)
     state_prob_funcs3 = expressions.construct_lambda_funcs(sympy_funcs3, rate_names3)
@@ -244,6 +250,12 @@ def test_4(k12, k21, k23, k32, k34, k43, k41, k14, SP4):
     rate_names4 = ["k12", "k21", "k23", "k32", "k34", "k43", "k41", "k14"]
     G4 = nx.MultiDiGraph()
     graph_utils.generate_edges(G4, k4)
+    partials = diagrams.generate_partial_diagrams(G4)
+    n_partials = diagrams.enumerate_partial_diagrams(k4)
+    # verify that partial diagram count agrees with enumeration algorithm
+    assert len(partials) == n_partials
+    # also make a hard assertion since we know the correct answer for ths case
+    assert n_partials == 4
     SP4_KDA = calculations.calc_state_probs(G4, key="val")
     sympy_funcs4 = calculations.calc_state_probs(G4, key="name", output_strings=True)
     state_prob_funcs4 = expressions.construct_lambda_funcs(sympy_funcs4, rate_names4)
@@ -289,6 +301,12 @@ def test_4WL(k12, k21, k23, k32, k34, k43, k41, k14, k24, k42, SP4WL):
     ]
     G4wl = nx.MultiDiGraph()
     graph_utils.generate_edges(G4wl, k4wl)
+    partials = diagrams.generate_partial_diagrams(G4wl)
+    n_partials = diagrams.enumerate_partial_diagrams(k4wl)
+    # verify that partial diagram count agrees with enumeration algorithm
+    assert len(partials) == n_partials
+    # also make a hard assertion since we know the correct answer for ths case
+    assert n_partials == 8
     SP4WL_KDA = calculations.calc_state_probs(G4wl, key="val")
     sympy_funcs4wl = calculations.calc_state_probs(
         G4wl, key="name", output_strings=True
@@ -352,6 +370,12 @@ def test_5WL(k12, k21, k23, k32, k13, k31, k24, k42, k35, k53, k45, k54, SP5WL):
     ]
     G5wl = nx.MultiDiGraph()
     graph_utils.generate_edges(G5wl, k5wl)
+    partials = diagrams.generate_partial_diagrams(G5wl)
+    n_partials = diagrams.enumerate_partial_diagrams(k5wl)
+    # verify that partial diagram count agrees with enumeration algorithm
+    assert len(partials) == n_partials
+    # also make a hard assertion since we know the correct answer for ths case
+    assert n_partials == 11
     SP5WL_KDA = calculations.calc_state_probs(G5wl, key="val")
     sympy_funcs5wl = calculations.calc_state_probs(
         G5wl, key="name", output_strings=True
@@ -418,6 +442,12 @@ def test_6(k12, k21, k23, k32, k34, k43, k45, k54, k56, k65, k61, k16, SP6):
     ]
     G6 = nx.MultiDiGraph()
     graph_utils.generate_edges(G6, k6)
+    partials = diagrams.generate_partial_diagrams(G6)
+    n_partials = diagrams.enumerate_partial_diagrams(k6)
+    # verify that partial diagram count agrees with enumeration algorithm
+    assert len(partials) == n_partials
+    # also make a hard assertion since we know the correct answer for ths case
+    assert n_partials == 6
     SP6_KDA = calculations.calc_state_probs(G6, key="val")
     sympy_funcs6 = calculations.calc_state_probs(G6, key="name", output_strings=True)
     state_prob_funcs6 = expressions.construct_lambda_funcs(sympy_funcs6, rate_names6)
