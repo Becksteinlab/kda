@@ -74,14 +74,16 @@ To run `run_verification.py`, do the following:
 
 ```bash
 1 cd ~/path/to/kda/scripts
-2 python run_verification.py SAVE_PATH 100 5
+2 python run_verification.py 100 5 SAVE_PATH
 ```
 
 The above example will run each batch of processes for a maximum of 5 hours, or
 until all 100 datasets have been generated, whichever comes first. There are 5
 batches in total, so the maximum run time of `run_verification.py` is 25 hours
 for this case, although the first couple of batches would likely finish ahead of
-time. The data will be stored at location `SAVE_PATH`. The two command line
+time.
+
+The data will be stored at location `SAVE_PATH`. The two command line
 arguments, `n_runs` and `max_run_time`, allow the user to either data-limit or
 time-limit their runs, while the number of states and maximum number of rates
 are hard-coded in.

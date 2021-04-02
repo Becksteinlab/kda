@@ -19,17 +19,17 @@ from verification import run_verification
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "save_path", type=str, nargs="?", help="Path to store output files."
-    )
     parser.add_argument("n_runs", type=int, help="Number of iterations to run.")
     parser.add_argument(
         "max_run_time", type=int, nargs="?", help="Maximum run time (hours)."
     )
+    parser.add_argument(
+        "save_path", type=str, nargs="?", help="Path to store output files."
+    )
     args = parser.parse_args()
-    save_path = args.save_path
     n_runs = args.n_runs
     max_run_time = args.max_run_time
+    save_path = args.save_path
 
     # here we create a dictionary for storing the parameters we want to use for
     # each run. We want to limit the number of cases running simultaneously
