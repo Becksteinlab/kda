@@ -10,8 +10,8 @@ get thermodynamically consistent sets of rates (at equilibrium). To install
 
 ```bash
 1  cd ~/path/to/clone/multibind
-2  git clone git@github.com:Becksteinlab/multibind.git
-3  cd /multibind
+2  git clone https://github.com/Becksteinlab/multibind.git
+3  cd ./multibind
 4  python setup.py install
 ```
 

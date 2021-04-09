@@ -26,11 +26,25 @@ if __name__ == "__main__":
     parser.add_argument(
         "save_path", type=str, nargs="?", help="Path to store output files."
     )
+    parser.add_argument(
+        "batch_index",
+        type=str,
+        nargs="?",
+        help="Batch index to run. A value of -1 will run all batches sequentially.",
+    )
     args = parser.parse_args()
     n_runs = args.n_runs
     max_run_time = args.max_run_time
     save_path = args.save_path
+    batch_idx = int(args.batch_index)
 
+    # determine which batches to run
+    if batch_idx == -1:
+        print("All batches selected.")
+        batch_keys = [1, 2, 3, 4, 5]
+    else:
+        print(f"Selected batch {batch_idx}")
+        batch_keys = [batch_idx]
     # here we create a dictionary for storing the parameters we want to use for
     # each run. We want to limit the number of cases running simultaneously
     # because they share memory, and some cases can use as much as 16 GB of memory
@@ -61,7 +75,7 @@ if __name__ == "__main__":
     # convert the input to seconds
     timeout = int(max_run_time * 3600)
 
-    for key in run_dict:
+    for key in batch_keys:
         # retrieve relevant data from dictionary
         states_list = run_dict[key]["states"]
         max_rates_list = run_dict[key]["max_rates"]
@@ -113,3 +127,9 @@ if __name__ == "__main__":
             for p in processes:
                 p.terminate()
                 p.join()
+        print("=" * 40)
+        print(f"Runs for states {states_list} complete.")
+        print("=" * 40)
+
+    print(f"Batch(es) {batch_keys} complete!")
+    print("=" * 40)
