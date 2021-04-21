@@ -276,7 +276,7 @@ def check_net_cycle_fluxes(G, dirpars, unique_cycles):
     return len(unique_cycles)
 
 
-def check_transition_fluxes(G, kda_probs):
+def check_transition_fluxes(G, prob_arr):
     """
     To the same end as `check_net_cycle_fluxes()`, this verifies the net
     transition fluxes for each pair of states is very close to zero.
@@ -294,12 +294,12 @@ def check_transition_fluxes(G, kda_probs):
         kij = G[i][j][0]["val"]
         kji = G[j][i][0]["val"]
         # get the state probabilities for nodes i and j
-        pi = kda_probs[i]
-        pj = kda_probs[j]
+        pi = prob_arr[i]
+        pj = prob_arr[j]
         # calculate the transition fluxes in both directions
         J_ij = pi * kij
         J_ji = pj * kji
-        if not np.isclose(J_ij, J_ji):
+        if not np.isclose(J_ij, J_ji, rtol=1e-7, atol=1e-10):
             raise ValueError(
                 f"Calculated transition fluxes do not match."
                 f"J_({i}, {j}) = {J_ij}, J_({j}, {i}) = {J_ji}"
@@ -429,12 +429,20 @@ def run_verification(
         # perform various checks and acquire remaining data for G
         check_cycles(G=G, unique_cycles=unique_cycles)
         par_diag_count, dir_par_diag_count = check_diagram_counts(
-            G=G, K=K, dirpars=dirpars, n_states=n_states,
+            G=G,
+            K=K,
+            dirpars=dirpars,
+            n_states=n_states,
         )
         n_cycles = check_net_cycle_fluxes(
             G=G, dirpars=dirpars, unique_cycles=unique_cycles
         )
-        check_transition_fluxes(G=G, kda_probs=kda_probs)
+        # verify that the state probabilities are normalized to 1
+        assert np.isclose(np.sum(kda_probs), 1.0, rtol=1e-5, atol=1e-8)
+        assert np.isclose(np.sum(svd_probs), 1.0, rtol=1e-5, atol=1e-8)
+        # check the transition fluxes for both KDA and SVD
+        check_transition_fluxes(G=G, prob_arr=kda_probs)
+        check_transition_fluxes(G=G, prob_arr=svd_probs)
 
         # pickle and save the graph
         graph_save_string = f"graph_{n_states}_{i+1}.pk"
@@ -463,12 +471,12 @@ def run_verification(
         "n_pars",
         "n_dirpars",
     ]
-    svd_prob_cols = [f"svd p_{i+1}" for i in range(n_states)]
-    kda_prob_cols = [f"kda p_{i+1}" for i in range(n_states)]
     time_cols = ["svd time (s)", "kda time (s)"]
-    cols.extend(svd_prob_cols)
-    cols.extend(kda_prob_cols)
     cols.extend(time_cols)
+    svd_prob_cols = [f"svd p_{i+1}" for i in range(n_states)]
+    cols.extend(svd_prob_cols)
+    kda_prob_cols = [f"kda p_{i+1}" for i in range(n_states)]
+    cols.extend(kda_prob_cols)
 
     # collect data for dataframe
     data = [
@@ -479,11 +487,11 @@ def run_verification(
         par_count,
         dirpar_count,
     ]
-    svd_probs = [svd_data[:, i] for i in range(n_states)]
-    kda_probs = [kda_data[:, i] for i in range(n_states)]
-    data.extend(svd_probs)
-    data.extend(kda_probs)
     data.extend([svd_time, kda_time])
+    svd_probs = [svd_data[:, i] for i in range(n_states)]
+    data.extend(svd_probs)
+    kda_probs = [kda_data[:, i] for i in range(n_states)]
+    data.extend(kda_probs)
     data = np.array(data).T
 
     # create and save dataframe as .csv

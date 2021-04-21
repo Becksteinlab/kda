@@ -19,6 +19,7 @@ interest from biochemical kinetic diagrams, using the methods of T.L. Hill.
 .. autofunction:: calc_thermo_force
 """
 
+import math
 import numpy as np
 import networkx as nx
 from sympy import parse_expr, logcombine
@@ -137,7 +138,7 @@ def calc_sigma(G, dir_partials, key, output_strings=False):
                 # multiply the rate of each edge in edge_list
                 products *= G.edges[e[0], e[1], e[2]][key]
             partial_mults.append(products)
-        sigma = np.array(partial_mults).sum(axis=0)
+        sigma = math.fsum(partial_mults)
         return sigma
     elif output_strings == True:
         if not isinstance(G.edges[edges[0][0], edges[0][1], edges[0][2]][key], str):
@@ -224,7 +225,7 @@ def calc_sigma_K(G, cycle, flux_diags, key, output_strings=False):
                 for edge in diag.edges:
                     vals *= G.edges[edge[0], edge[1], edge[2]][key]
                 rate_products.append(vals)
-            sigma_K = np.array(rate_products).sum(axis=0)
+            sigma_K = math.fsum(rate_products)
             return sigma_K
         elif output_strings == True:
             if not isinstance(
@@ -547,10 +548,10 @@ def calc_state_probs_from_diags(G, dirpars, key, output_strings=False):
         # iterate over number of states, "s"
         for s in range(N):
             state_mults.append(
-                partial_mults[N_terms * s : N_terms * s + N_terms].sum(axis=0)
+                math.fsum(partial_mults[N_terms * s : N_terms * s + N_terms])
             )
         state_mults = np.array(state_mults)
-        state_probs = state_mults / state_mults.sum(axis=0)
+        state_probs = state_mults / math.fsum(state_mults)
         if any(elem < 0 for elem in state_probs) == True:
             raise ValueError(
                 "Calculated negative state probabilities, overflow or underflow occurred."
