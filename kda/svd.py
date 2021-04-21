@@ -52,9 +52,10 @@ def svd_solver(K, tol=1e-12):
     inv_w = 1 / w  # Take the inverse of the w matrix
     inv_w[singular_vals] = 0  # Set any singular values to zero
     Kcs_inv = VT.T.dot(np.diag(inv_w)).dot(U.T)  # construct the pseudo inverse of Kcs
-    pdot = np.zeros(
-        N + 1
-    )  # create steady state solution matrix (pdot = 0), add additional entry for probaility equation
-    pdot[-1] = 1  # set last value to 1 for probability normalization
-    state_probs = Kcs_inv.dot(pdot)  # dot Kcs and pdot matrices together
+    # create steady state solution matrix (pdot = 0), add additional entry for probability equation
+    pdot = np.zeros(N + 1)
+    # set last value to 1 for probability normalization
+    pdot[-1] = 1
+    # dot Kcs and pdot matrices together
+    state_probs = Kcs_inv.dot(pdot)
     return state_probs

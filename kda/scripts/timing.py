@@ -110,12 +110,6 @@ def get_dirpar_data(svd_time, kda_time, dirpars):
     return (unique_dirpars, svd_data, kda_data)
 
 
-def save_to_csv(data, cols, datapath, filename):
-    df = pd.DataFrame(data=data, columns=cols)
-    csv_save_string = join(datapath, filename)
-    df.to_csv(path_or_buf=csv_save_string, sep=",", columns=cols, index=False)
-
-
 def fit_powerlaw(diagrams, kda_data):
     time = kda_data[:, 0]
 
@@ -134,6 +128,10 @@ def fit_powerlaw(diagrams, kda_data):
     return fit_func, a, k
 
 
+def get_fit_string(a, k):
+    return r"$T = %1.1g D ^ {%1.3g} $" % (a, k)
+
+
 def plot_t_over_avg_degree(svd_time, kda_time, nodes, edges, datapath):
     unique_degrees, svd_data, kda_data = get_avg_degree_data(
         svd_time=svd_time,
@@ -141,24 +139,6 @@ def plot_t_over_avg_degree(svd_time, kda_time, nodes, edges, datapath):
         nodes=nodes,
         edges=edges,
     )
-
-    data = [
-        unique_degrees,
-        svd_data[:, 0],
-        svd_data[:, 1],
-        kda_data[:, 0],
-        kda_data[:, 1],
-    ]
-    data = np.asarray(data, dtype=np.float64).T
-    cols = [
-        "Avg. Degree",
-        "SVD Avg. (s)",
-        "SVD Std. (s)",
-        "KDA Avg. (s)",
-        "KDA Std. (s)",
-    ]
-    filename = f"timing_avg_degree.csv"
-    save_to_csv(data=data, cols=cols, datapath=datapath, filename=filename)
 
     fig = plt.figure(tight_layout=True)
     ax = fig.add_subplot(111)
@@ -204,24 +184,6 @@ def plot_t_over_nodes(svd_time, kda_time, nodes, datapath):
         nodes=nodes,
     )
 
-    data = [
-        unique_nodes,
-        svd_data[:, 0],
-        svd_data[:, 1],
-        kda_data[:, 0],
-        kda_data[:, 1],
-    ]
-    data = np.asarray(data, dtype=np.float64).T
-    cols = [
-        "Nodes",
-        "SVD Avg. (s)",
-        "SVD Std. (s)",
-        "KDA Avg. (s)",
-        "KDA Std. (s)",
-    ]
-    filename = f"timing_n_nodes.csv"
-    save_to_csv(data=data, cols=cols, datapath=datapath, filename=filename)
-
     fig = plt.figure(tight_layout=True)
     ax = fig.add_subplot(111)
     ax.errorbar(
@@ -265,24 +227,6 @@ def plot_t_over_edges(svd_time, kda_time, edges, datapath):
         kda_time=kda_time,
         edges=edges,
     )
-
-    data = [
-        unique_edges,
-        svd_data[:, 0],
-        svd_data[:, 1],
-        kda_data[:, 0],
-        kda_data[:, 1],
-    ]
-    data = np.asarray(data, dtype=np.float64).T
-    cols = [
-        "Edges",
-        "SVD Avg. (s)",
-        "SVD Std. (s)",
-        "KDA Avg. (s)",
-        "KDA Std. (s)",
-    ]
-    filename = f"timing_n_edges.csv"
-    save_to_csv(data=data, cols=cols, datapath=datapath, filename=filename)
 
     fig = plt.figure(tight_layout=True)
     ax = fig.add_subplot(111)
@@ -328,27 +272,9 @@ def plot_t_over_dirpars(svd_time, kda_time, dirpars, datapath, loglog=True):
         dirpars=dirpars,
     )
 
-    data = [
-        unique_dirpars,
-        svd_data[:, 0],
-        svd_data[:, 1],
-        kda_data[:, 0],
-        kda_data[:, 1],
-    ]
-    data = np.asarray(data, dtype=np.float64).T
-    cols = [
-        "Directional Partial Diagrams",
-        "SVD Avg. (s)",
-        "SVD Std. (s)",
-        "KDA Avg. (s)",
-        "KDA Std. (s)",
-    ]
-    filename = f"timing_n_dirpars.csv"
-    save_to_csv(data=data, cols=cols, datapath=datapath, filename=filename)
-
     # get fit for log-log plot
     fit_func, a, k = fit_powerlaw(diagrams=unique_dirpars, kda_data=kda_data)
-    fit_func_str = r"$t = %1.1g N ^ {%1.3g} $" % (a, k)
+    fit_func_str = get_fit_string(a, k)
 
     fig = plt.figure(tight_layout=True)
     ax = fig.add_subplot(111)
@@ -393,7 +319,7 @@ def plot_t_over_dirpars(svd_time, kda_time, dirpars, datapath, loglog=True):
         fig_savepath = join(datapath, f"timing_n_dirpars_loglog.pdf")
     else:
         fig_savepath = join(datapath, f"timing_n_dirpars.pdf")
-    print(f"Saving edges plot at location: {fig_savepath}")
+    print(f"Saving directional partial diagrams plot at location: {fig_savepath}")
     fig.savefig(fig_savepath, dpi=500)
 
 
@@ -404,27 +330,9 @@ def plot_t_over_pars(svd_time, kda_time, pars, datapath, loglog=True):
         pars=pars,
     )
 
-    data = [
-        unique_pars,
-        svd_data[:, 0],
-        svd_data[:, 1],
-        kda_data[:, 0],
-        kda_data[:, 1],
-    ]
-    data = np.asarray(data, dtype=np.float64).T
-    cols = [
-        "Partial Diagrams",
-        "SVD Avg. (s)",
-        "SVD Std. (s)",
-        "KDA Avg. (s)",
-        "KDA Std. (s)",
-    ]
-    filename = f"timing_n_pars.csv"
-    save_to_csv(data=data, cols=cols, datapath=datapath, filename=filename)
-
     # get fit for log-log plot
     fit_func, a, k = fit_powerlaw(diagrams=unique_pars, kda_data=kda_data)
-    fit_func_str = r"$t = %1.1g N ^ {%1.3g} $" % (a, k)
+    fit_func_str = get_fit_string(a, k)
 
     fig = plt.figure(tight_layout=True)
     ax = fig.add_subplot(111)
@@ -469,97 +377,40 @@ def plot_t_over_pars(svd_time, kda_time, pars, datapath, loglog=True):
         fig_savepath = join(datapath, f"timing_n_pars_loglog.pdf")
     else:
         fig_savepath = join(datapath, f"timing_n_pars.pdf")
-    print(f"Saving edges plot at location: {fig_savepath}")
+    print(f"Saving partial diagrams plot at location: {fig_savepath}")
     fig.savefig(fig_savepath, dpi=500)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("datapath", type=str, help="Path to .csv file(s) to analyze.")
+    parser.add_argument("all_data_path", type=str, help="Path to all_data.csv.")
     args = parser.parse_args()
-    datapath = args.datapath
+    all_data_path = args.all_data_path
 
-    if os.path.isdir(datapath):
-        # if datapath is a directory, use all data files
-        generate_all = True
-    else:
-        # if not, use only the file specified to generate only the edges
-        # and average graph degree plots
-        generate_all = False
-
-    cwd = os.getcwd()
-    if generate_all:
-        datapath = join(cwd, datapath)
-        data_files = []
-        for file in os.listdir(datapath):
-            if file.endswith("data.csv"):
-                data_files.append(join(datapath, file))
-        if len(data_files) == 0:
-            raise FileNotFoundError(f"No files found in {datapath}")
-        print(f"Pulling data from {datapath}")
-    else:
-        datapath, fname = split(datapath)
-        datapath = join(cwd, datapath)
-        data_files = [join(datapath, fname)]
-        print(f"Pulling data from {data_files[0]}")
-
-    nodes = []
-    edges = []
-    cycles = []
-    pars = []
-    dirpars = []
-    svd_time = []
-    kda_time = []
-    for file_path in data_files:
-        df = pd.read_csv(file_path)
-        n_nodes = df["n_states"].values
-        n_edges = df["n_edges"].values
-        n_cycles = df["n_cycles"].values
-        n_pars = df["n_pars"].values
-        n_dirpars = df["n_dirpars"].values
-        kdat = df.values.T[-1]
-        svdt = df.values.T[-2]
-        nodes.extend(n_nodes)
-        edges.extend(n_edges)
-        cycles.extend(n_cycles)
-        pars.extend(n_pars)
-        dirpars.extend(n_dirpars)
-        svd_time.extend(svdt)
-        kda_time.extend(kdat)
-    svd_time = np.array(svd_time)
-    kda_time = np.array(kda_time)
-
-    raw_cols = [
-        "n_states",
-        "n_edges",
-        "n_cycles",
-        "n_pars",
-        "n_dirpars",
-        "svd time (s)",
-        "kda time (s)",
-    ]
-
-    raw_data = np.column_stack(
-        (
-            nodes,
-            edges,
-            cycles,
-            pars,
-            dirpars,
-            svd_time,
-            kda_time,
+    if os.path.isdir(all_data_path):
+        raise Exception(
+            "Input path is a directory. Please input a path to all_data.csv."
         )
-    )
+    print(f"Pulling data from {all_data_path}")
 
-    # consolidate data from all files into single .csv
-    filename = f"all_data.csv"
-    save_to_csv(data=raw_data, cols=raw_cols, datapath=datapath, filename=filename)
+    # get the directory to store generated graphs in
+    datapath = split(all_data_path)[0]
+
+    # read in `all_data.csv` and collect required data
+    df = pd.read_csv(all_data_path)
+    graph_indices = df["graph index"]
+    nodes = df["n_states"]
+    edges = df["n_edges"]
+    cycles = df["n_cycles"]
+    pars = df["n_pars"]
+    dirpars = df["n_dirpars"]
+    svd_time = df["svd time (s)"]
+    kda_time = df["kda time (s)"]
 
     plot_t_over_edges(svd_time, kda_time, edges, datapath)
     plot_t_over_avg_degree(svd_time, kda_time, nodes, edges, datapath)
-    if generate_all:
-        plot_t_over_pars(svd_time, kda_time, pars, datapath)
-        plot_t_over_pars(svd_time, kda_time, pars, datapath, loglog=False)
-        plot_t_over_dirpars(svd_time, kda_time, dirpars, datapath)
-        plot_t_over_dirpars(svd_time, kda_time, dirpars, datapath, loglog=False)
-        plot_t_over_nodes(svd_time, kda_time, nodes, datapath)
+    plot_t_over_pars(svd_time, kda_time, pars, datapath)
+    plot_t_over_pars(svd_time, kda_time, pars, datapath, loglog=False)
+    plot_t_over_dirpars(svd_time, kda_time, dirpars, datapath)
+    plot_t_over_dirpars(svd_time, kda_time, dirpars, datapath, loglog=False)
+    plot_t_over_nodes(svd_time, kda_time, nodes, datapath)
