@@ -106,7 +106,9 @@ def _get_directional_edges(cons):
     values = []
     for target in cons.keys():
         for neighb in cons[target]:
-            values.append((neighb, target, 0))
+            edge_tuple = (neighb, target, 0)
+            if not edge_tuple in values:
+                values.append(edge_tuple)
     return values
 
 
@@ -307,7 +309,7 @@ def enumerate_partial_diagrams(K0):
     return n_partials
 
 
-def generate_partial_diagrams(G):
+def generate_partial_diagrams(G, return_edges=False):
     """
     Generates all partial diagrams for input diagram G.
 
@@ -322,30 +324,48 @@ def generate_partial_diagrams(G):
         List of NetworkX MultiDiGraphs where each graph is a unique partial
         diagram with no loops.
     """
-    # Calculate number of edges needed for each partial diagram
-    N_partial_edges = G.number_of_nodes() - 1
-    # Get list of all possible combinations of unique edges (N choose n)
-    combinations = list(itertools.combinations(_find_unique_edges(G), N_partial_edges))
-    # Using combinations, generate all possible partial diagrams (including closed loops)
-    partials_all = []
-    for i in combinations:
-        diag = G.copy()
-        diag.remove_edges_from(list(G.edges()))
-        edges = []
-        for j in i:
-            edges.append((j[0], j[1]))  # Add edge from combinations
-            edges.append((j[1], j[0]))  # Add reverse edge
-        diag.add_edges_from(edges)
-        partials_all.append(diag)
-    # Remove unwanted (closed loop) diagrams
-    valid_partials = []
-    for i in partials_all:
-        if len(list(nx.simple_cycles(i))) == N_partial_edges:
-            valid_partials.append(i)
-    return valid_partials
+    # calculate number of connections/unique edges needed for each partial diagram
+    n_connections = G.number_of_nodes() - 1
+    # get the unique edges in G
+    unique_edges = _find_unique_edges(G)
+
+    # create an empty graph and add the nodes from G for use as a base graph
+    base_graph = nx.MultiDiGraph()
+    base_graph.add_nodes_from(G.nodes())
+
+    # get list of possible combinations of unique edges (N choose n)
+    # and iterate over each unique combination
+    partial_diagrams = []
+    unique_partial_edges = []
+    for edge_list in itertools.combinations(unique_edges, n_connections):
+        # make a copy of the base graph
+        partial = base_graph.copy()
+        # convert the list of edge tuples into an array
+        edges = np.asarray(edge_list, dtype=int)
+        # create a new array of the reversed edges
+        rev_edges = np.flip(edges, axis=1)
+        # combine the forward/reverse edge lists together
+        edges = np.vstack((edges, rev_edges))
+        # add the edges to the base diagram
+        partial.add_edges_from(edges)
+        # count the number of cycles in the diagram
+        # `nx.simple_cycles()` returns cycles composed of just 2 nodes, so
+        # we have to subtract out the number of connections. This way `n_cycles`
+        # will be zero unless there is an actual multi-node cycle present
+        n_cycles = len(list(nx.simple_cycles(partial))) - n_connections
+        # if the number of simple cycles is zero
+        # this is a valid partial diagram
+        if n_cycles == 0:
+            partial_diagrams.append(partial)
+            unique_partial_edges.append(partial.edges())
+
+    if not return_edges:
+        return partial_diagrams
+    else:
+        return unique_partial_edges
 
 
-def generate_directional_partial_diagrams(G):
+def generate_directional_partial_diagrams(G, return_edges=False):
     """
     Generates all directional partial diagrams for input diagram G.
 
@@ -357,39 +377,58 @@ def generate_directional_partial_diagrams(G):
 
     Returns
     -------
-    dir_partials : list
+    directional_partial_diagrams : list
         List of all directional partial diagrams for a given set of partial
         diagrams.
     """
-    partials = generate_partial_diagrams(G)
+    partial_diagram_edges = generate_partial_diagrams(G, return_edges=True)
+
+    base_graph = nx.MultiDiGraph()
+    base_graph.add_nodes_from(G.nodes())
+
+    n_states = G.number_of_nodes()
+    n_partials = len(partial_diagram_edges)
+    n_dirpars = n_states * n_partials
+
     targets = np.sort(list(G.nodes))
-    dir_partials = []
-    for target in targets:
-        for i in range(len(partials)):
-            partial = partials[i].copy()  # Make a copy of directional partial diagram
-            unique_edges = _find_unique_edges(
-                partial
-            )  # Find unique edges of that diagram
-            cons = _get_directional_connections(
-                target, unique_edges
-            )  # Get dictionary of connections
-            dir_edges = _get_directional_edges(
-                cons
-            )  # Get directional edges from connections
-            partial.remove_edges_from(
-                list(partial.edges())
-            )  # Remove all edges from partial diagram
-            for e in dir_edges:
-                partial.add_edge(
-                    e[0], e[1], e[2]
-                )  # Add relevant edges to partial diagram
-            for t in targets:  # Add node attrbutes to label target nodes
-                if t == target:
-                    partial.nodes[t]["is_target"] = True
-                else:
-                    partial.nodes[t]["is_target"] = False
-            dir_partials.append(partial)  # Append to list of partial diagrams
-    return dir_partials
+    if not return_edges:
+        directional_partial_diagrams = np.empty(shape=(n_dirpars,), dtype=object)
+        idx = 0
+        for target in targets:
+            for n, partial_edges in enumerate(partial_diagram_edges):
+                # create a copy of the base graph
+                dirpar = base_graph.copy()
+                # get dictionary of connections
+                cons = _get_directional_connections(target, partial_edges)
+                # get directional edges from connections
+                dir_edges = _get_directional_edges(cons)
+                # add relevant edges to directional partial diagram
+                dirpar.add_edges_from(dir_edges)
+                # set "is_target" to False for all nodes
+                nx.set_node_attributes(dirpar, False, "is_target")
+                # set target node to True
+                dirpar.nodes[target]["is_target"] = True
+                # add to list of directional partial diagrams
+                directional_partial_diagrams[idx] = dirpar
+                idx += 1
+        return directional_partial_diagrams
+    else:
+        n_unique_dirpar_edges = n_states - 1
+        directional_partial_diagram_edges = np.empty(
+            shape=(n_dirpars, n_unique_dirpar_edges, 3), dtype=int
+        )
+        idx = 0
+        for target in targets:
+            for partial_edges in partial_diagram_edges:
+                # create a copy of the base graph
+                dirpar = base_graph.copy()
+                # get dictionary of connections
+                cons = _get_directional_connections(target, partial_edges)
+                # get directional edges from connections
+                dir_edges = _get_directional_edges(cons)
+                directional_partial_diagram_edges[idx] = dir_edges
+                idx += 1
+        return directional_partial_diagram_edges
 
 
 def generate_flux_diagrams(G, cycle):

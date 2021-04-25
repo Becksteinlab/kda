@@ -19,10 +19,11 @@ import time
 from tqdm import tqdm
 
 import numpy as np
+from numpy.testing import assert_allclose
 import pandas as pd
 import networkx as nx
 
-from kda import calculations, diagrams, graph_utils, svd
+from kda import calculations, diagrams, graph_utils, svd, ode
 from multibind import nonequilibrium
 
 
@@ -190,7 +191,7 @@ def get_thermodynamically_consistent_matrix(K0, rates_save_path, index):
     return K_consistent
 
 
-def check_diagram_counts(G, K, dirpars, n_states):
+def check_diagram_counts(G, K, dirpar_edges, n_states):
     """
     Uses KDA function to calculate the theoretical number of partial diagrams
     and verifies that it agrees with the number of partial diagrams generated
@@ -206,7 +207,7 @@ def check_diagram_counts(G, K, dirpars, n_states):
             f"Number of partial diagrams do not match. "
             f"Expected {n_pars_theoretical} partials, generated {n_pars} partials."
         )
-    n_dirpars = len(dirpars)
+    n_dirpars = len(dirpar_edges)
     # check that the number of directional partial diagrams are equal to
     # the number of states times the number of partial diagrams
     assert n_dirpars == n_states * n_pars
@@ -234,7 +235,7 @@ def check_cycles(G, unique_cycles):
     assert contains_all_nodes == True
 
 
-def check_net_cycle_fluxes(G, dirpars, unique_cycles):
+def check_net_cycle_fluxes(G, dirpar_edges, unique_cycles):
     """
     Verifies that for every cycle in the generated diagram, the calculated net
     cycle flux is very close to zero. Since MultiBind returns a set of rates
@@ -246,7 +247,7 @@ def check_net_cycle_fluxes(G, dirpars, unique_cycles):
         # cycle fluxes instead of using the built-in KDA function
         # calculations.calc_net_cycle_flux() (so we don't have to calculate
         # sigma every time)
-        sigma = calculations.calc_sigma(G, dirpars, key="val")
+        sigma = calculations.calc_sigma(G, dirpar_edges, key="val")
 
         for cycle in unique_cycles:
             # normally one has to manually determine the order of the nodes that
@@ -299,11 +300,7 @@ def check_transition_fluxes(G, prob_arr):
         # calculate the transition fluxes in both directions
         J_ij = pi * kij
         J_ji = pj * kji
-        if not np.isclose(J_ij, J_ji, rtol=1e-7, atol=1e-10):
-            raise ValueError(
-                f"Calculated transition fluxes do not match."
-                f"J_({i}, {j}) = {J_ij}, J_({j}, {i}) = {J_ji}"
-            )
+        assert_allclose(J_ij, J_ji, rtol=1e-7, atol=1e-10)
 
 
 def get_paths(save_path, n_states):
@@ -416,10 +413,12 @@ def run_verification(
         # use KDA to generate the edges from the rate matrix
         graph_utils.generate_edges(G, K, names=None)
         # generate the directional partial diagrams for calculations
-        dirpars = diagrams.generate_directional_partial_diagrams(G)
+        dirpar_edges = diagrams.generate_directional_partial_diagrams(
+            G, return_edges=True
+        )
         # use input diagram and directional partial diagrams to calculate
         # the state probabilities
-        kda_probs = calculations.calc_state_probs_from_diags(G, dirpars, key="val")
+        kda_probs = calculations.calc_state_probs_from_diags(G, dirpar_edges, key="val")
         kda_elapsed = time.perf_counter() - kda_start
 
         # hide prints from KDA function
@@ -431,11 +430,11 @@ def run_verification(
         par_diag_count, dir_par_diag_count = check_diagram_counts(
             G=G,
             K=K,
-            dirpars=dirpars,
+            dirpar_edges=dirpar_edges,
             n_states=n_states,
         )
         n_cycles = check_net_cycle_fluxes(
-            G=G, dirpars=dirpars, unique_cycles=unique_cycles
+            G=G, dirpar_edges=dirpar_edges, unique_cycles=unique_cycles
         )
         # verify that the state probabilities are normalized to 1
         assert np.isclose(np.sum(kda_probs), 1.0, rtol=1e-5, atol=1e-8)

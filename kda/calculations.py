@@ -27,6 +27,8 @@ from sympy import parse_expr, logcombine
 from kda import graph_utils, diagrams, expressions
 from kda.exceptions import CycleError
 
+from memory_profiler import profile
+
 
 def _get_ordered_cycle(G, input_cycle):
     """
@@ -95,7 +97,7 @@ def _get_ordered_cycle(G, input_cycle):
             )
 
 
-def calc_sigma(G, dir_partials, key, output_strings=False):
+def calc_sigma(G, dirpar_edges, key, output_strings=False):
     """
     Calculates sigma, the normalization factor for calculating state
     probabilities and cycle fluxes for a given diagram G.
@@ -104,7 +106,7 @@ def calc_sigma(G, dir_partials, key, output_strings=False):
     ----------
     G : NetworkX MultiDiGraph Object
         Input diagram
-    dir_partials : list
+    dirpar_edges : list
         List of all directional partial diagrams for the input diagram G.
     key : str
         Definition of key in NetworkX diagram edges, used to call edge rate
@@ -124,49 +126,40 @@ def calc_sigma(G, dir_partials, key, output_strings=False):
         Sum of rate products of all directional partial diagrams for input
         diagram G, in string form.
     """
-    N = G.number_of_nodes()  # Number of nodes/states
-    partial_mults = []
-    edges = list(G.edges)
-    if output_strings == False:
-        if isinstance(G.edges[edges[0][0], edges[0][1], edges[0][2]][key], str):
+    # Number of nodes/states
+    n_states = G.number_of_nodes()
+    n_dirpars = dirpar_edges.shape[0]
+    edge_value = G.edges[list(G.edges)[0]][key]
+
+    if not output_strings:
+        if isinstance(edge_value, str):
             raise TypeError(
                 "To enter variable strings set parameter output_strings=True."
             )
+        dirpar_rate_products = np.ones(n_dirpars, dtype=float)
         # iterate over the directional partial diagrams
-        for i in range(len(dir_partials)):
-            # get a list of all edges for partial directional diagram i
-            edge_list = list(dir_partials[i].edges)
-            # assign initial value of 1
-            products = 1
+        for i, edge_list in enumerate(dirpar_edges):
             # iterate over the edges in the given directional partial diagram i
-            for e in edge_list:
+            for edge in edge_list:
                 # multiply the rate of each edge in edge_list
-                products *= G.edges[e[0], e[1], e[2]][key]
-            partial_mults.append(products)
-        sigma = math.fsum(partial_mults)
+                dirpar_rate_products[i] *= G.edges[edge][key]
+        sigma = math.fsum(dirpar_rate_products)
         return sigma
-    elif output_strings == True:
-        if not isinstance(G.edges[edges[0][0], edges[0][1], edges[0][2]][key], str):
+    elif output_strings:
+        if not isinstance(edge_value, str):
             raise TypeError(
                 "To enter variable values set parameter output_strings=False."
             )
+        dirpar_rate_products = np.empty(shape=(n_dirpars,), dtype=object)
         # iterate over the directional partial diagrams
-        for i in range(len(dir_partials)):
-            # get a list of all edges for partial directional diagram i
-            edge_list = list(dir_partials[i].edges)
-            products = []
-            for e in edge_list:
+        for i, edge_list in enumerate(dirpar_edges):
+            rate_product_vals = []
+            for edge in edge_list:
                 # append rate constant names from dir_par to list
-                products.append(G.edges[e[0], e[1], e[2]][key])
-            partial_mults.append(products)
-        # create empty list to put products of rate constants (terms) in
-        state_mults = []
-        term_list = []
-        # join rate constants for each dir_par by delimeter "*"
-        for k in partial_mults:
-            term_list.append("*".join(k))
+                rate_product_vals.append(G.edges[edge][key])
+            dirpar_rate_products[i] = "*".join(rate_product_vals)
         # sum all terms to get normalization factor
-        sigma_str = "+".join(term_list)
+        sigma_str = "+".join(dirpar_rate_products)
         return sigma_str
 
 
@@ -426,15 +419,15 @@ def calc_state_probs(G, key, output_strings=False):
     state_probs_sympy : SymPy object
         List of analytic SymPy state probability functions.
     """
-    dir_pars = diagrams.generate_directional_partial_diagrams(G)
+    dirpar_edges = diagrams.generate_directional_partial_diagrams(G, return_edges=True)
     if output_strings == False:
         state_probs = calc_state_probs_from_diags(
-            G, dir_pars, key, output_strings=output_strings
+            G, dirpar_edges, key, output_strings=output_strings
         )
         return state_probs
     if output_strings == True:
         state_mults, norm = calc_state_probs_from_diags(
-            G, dir_pars, key, output_strings=output_strings
+            G, dirpar_edges, key, output_strings=output_strings
         )
         state_probs_sympy = expressions.construct_sympy_prob_funcs(state_mults, norm)
         return state_probs_sympy
@@ -468,14 +461,14 @@ def calc_net_cycle_flux(G, cycle, order, key, output_strings=False):
     net_cycle_flux_func : SymPy object
         Analytic net cycle flux SymPy function.
     """
-    dir_pars = diagrams.generate_directional_partial_diagrams(G)
+    dirpar_edges = diagrams.generate_directional_partial_diagrams(G, return_edges=True)
     flux_diags = diagrams.generate_flux_diagrams(G, cycle)
     if output_strings == False:
         pi_diff = calc_pi_difference(
             G, cycle, order, key, output_strings=output_strings
         )
         sigma_K = calc_sigma_K(G, cycle, flux_diags, key, output_strings=output_strings)
-        sigma = calc_sigma(G, dir_pars, key, output_strings=output_strings)
+        sigma = calc_sigma(G, dirpar_edges, key, output_strings=output_strings)
         net_cycle_flux = pi_diff * sigma_K / sigma
         return net_cycle_flux
     if output_strings == True:
@@ -485,14 +478,15 @@ def calc_net_cycle_flux(G, cycle, order, key, output_strings=False):
         sigma_K_str = calc_sigma_K(
             G, cycle, flux_diags, key, output_strings=output_strings
         )
-        sigma_str = calc_sigma(G, dir_pars, key, output_strings=output_strings)
+        sigma_str = calc_sigma(G, dirpar_edges, key, output_strings=output_strings)
         sympy_net_cycle_flux_func = expressions.construct_sympy_net_cycle_flux_func(
             pi_diff_str, sigma_K_str, sigma_str
         )
         return sympy_net_cycle_flux_func
 
 
-def calc_state_probs_from_diags(G, dirpars, key, output_strings=False):
+@profile
+def calc_state_probs_from_diags(G, dirpar_edges, key, output_strings=False):
     """
     Calculates state probabilities and generates analytic function strings from
     input diagram and directional partial diagrams. If directional partial
@@ -503,7 +497,7 @@ def calc_state_probs_from_diags(G, dirpars, key, output_strings=False):
     ----------
     G : NetworkX MultiDiGraph
         Input diagram
-    dirpars : list
+    dirpar_edges : list
         List of all directional partial diagrams for a given set of partial
         diagrams.
     key : str
@@ -527,67 +521,51 @@ def calc_state_probs_from_diags(G, dirpars, key, output_strings=False):
         Analytic state multiplicity function normalization function in
         string form. This is the sum of all multiplicty functions.
     """
-    N = G.number_of_nodes()  # Number of nodes/states
-    partial_mults = []
-    edges = list(G.edges)
-    if output_strings == False:
-        if isinstance(G.edges[edges[0][0], edges[0][1], edges[0][2]][key], str):
+    # get the number of nodes/states
+    n_states = G.number_of_nodes()
+    # get the number of directional partial diagrams
+    n_dirpars = dirpar_edges.shape[0]
+    # get the number of partial diagrams
+    n_partials = int(n_dirpars / n_states)
+
+    edge_value = G.edges[list(G.edges)[0]][key]
+    if not output_strings:
+        if isinstance(edge_value, str):
             raise TypeError(
                 "To enter variable strings set parameter output_strings=True."
             )
+        # create array of ones for storing rate products
+        dirpar_rate_products = np.ones(n_dirpars, dtype=float)
         # iterate over the directional partial diagrams
-        for i in range(len(dirpars)):
-            # get a list of all edges for partial directional diagram i
-            edge_list = list(dirpars[i].edges)
-            # assign initial value of 1
-            products = 1
+        for i, edge_list in enumerate(dirpar_edges):
             # iterate over the edges in the given directional partial diagram i
-            for e in edge_list:
-                # multiply the rate of each edge in edge_list
-                products *= G.edges[e[0], e[1], e[2]][key]
-            partial_mults.append(products)
-        # calculate the number of terms to be summed for given state, s
-        N_terms = np.int(len(dirpars) / N)
-        state_mults = []
-        partial_mults = np.array(partial_mults)
-        # iterate over number of states, "s"
-        for s in range(N):
-            state_mults.append(
-                math.fsum(partial_mults[N_terms * s : N_terms * s + N_terms])
-            )
-        state_mults = np.array(state_mults)
-        state_probs = state_mults / math.fsum(state_mults)
-        if any(elem < 0 for elem in state_probs) == True:
+            for edge in edge_list:
+                # multiply the rate of each edge
+                dirpar_rate_products[i] *= G.edges[edge][key]
+
+        state_mults = dirpar_rate_products.reshape(n_states, n_partials).sum(axis=1)
+        state_probs = state_mults / math.fsum(dirpar_rate_products)
+        if any(elem < 0 for elem in state_probs):
             raise ValueError(
                 "Calculated negative state probabilities, overflow or underflow occurred."
             )
         return state_probs
-    elif output_strings == True:
-        if not isinstance(G.edges[edges[0][0], edges[0][1], edges[0][2]][key], str):
+    elif output_strings:
+        if not isinstance(edge_value, str):
             raise TypeError(
                 "To enter variable values set parameter output_strings=False."
             )
-        # iterate over the directional partial diagrams
-        for i in range(len(dirpars)):
-            # get a list of all edges for partial directional diagram i
-            edge_list = list(dirpars[i].edges)
-            products = []
-            for e in edge_list:
-                # append rate constant names from dir_par to list
-                products.append(G.edges[e[0], e[1], e[2]][key])
-            partial_mults.append(products)
-        # calculate the number of terms to be summed for given state, s
-        N_terms = np.int(len(dirpars) / N)
-        # create empty list to put products of rate constants (terms) in
-        state_mults = []
-        term_list = []
-        for k in partial_mults:
-            # join rate constants for each dir_par by delimeter "*"
-            term_list.append("*".join(k))
-        # iterate over number of states, "s"
-        for s in range(N):
-            # join appropriate terms for each state by delimeter "+"
-            state_mults.append("+".join(term_list[N_terms * s : N_terms * s + N_terms]))
+        dirpar_rate_products = np.empty(shape=(n_dirpars,), dtype=object)
+        for i, edge_list in enumerate(dirpar_edges):
+            rate_product_vals = []
+            for edge in edge_list:
+                rate_product_vals.append(G.edges[edge][key])
+            dirpar_rate_products[i] = "*".join(rate_product_vals)
+
+        state_mults = np.empty(shape=(n_states,), dtype=object)
+        dirpar_rate_products = dirpar_rate_products.reshape(n_states, n_partials)
+        for i, arr in enumerate(dirpar_rate_products):
+            state_mults[i] = "+".join(arr)
         # sum all terms to get normalization factor
         norm = "+".join(state_mults)
         return state_mults, norm
