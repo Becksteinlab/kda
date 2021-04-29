@@ -27,8 +27,6 @@ from sympy import parse_expr, logcombine
 from kda import graph_utils, diagrams, expressions
 from kda.exceptions import CycleError
 
-from memory_profiler import profile
-
 
 def _get_ordered_cycle(G, input_cycle):
     """
@@ -485,7 +483,6 @@ def calc_net_cycle_flux(G, cycle, order, key, output_strings=False):
         return sympy_net_cycle_flux_func
 
 
-@profile
 def calc_state_probs_from_diags(G, dirpar_edges, key, output_strings=False):
     """
     Calculates state probabilities and generates analytic function strings from
@@ -497,9 +494,8 @@ def calc_state_probs_from_diags(G, dirpar_edges, key, output_strings=False):
     ----------
     G : NetworkX MultiDiGraph
         Input diagram
-    dirpar_edges : list
-        List of all directional partial diagrams for a given set of partial
-        diagrams.
+    dirpar_edges : array
+        Array of all directional partial diagram edges (made from 2-tuples).
     key : str
         Definition of key in NetworkX diagram edges, used to call edge rate
         values or names. This needs to match the key used for the rate
