@@ -567,7 +567,9 @@ def calc_state_probs_from_diags(G, dirpar_edges, key, output_strings=False):
         return state_mults, norm
 
 
-def calc_net_cycle_flux_from_diags(G, dirpars, cycle, order, key, output_strings=False):
+def calc_net_cycle_flux_from_diags(
+    G, dirpar_edges, cycle, order, key, output_strings=False
+):
     """
     Calculates net cycle flux and generates analytic function strings from
     input diagram and directional partial diagrams. If directional partial
@@ -578,9 +580,8 @@ def calc_net_cycle_flux_from_diags(G, dirpars, cycle, order, key, output_strings
     ----------
     G : NetworkX MultiDiGraph Object
         Input diagram.
-    dirpars : list
-        List of all directional partial diagrams for a given set of partial
-        diagrams.
+    dirpar_edges : array
+        Array of all directional partial diagram edges (made from 2-tuples).
     cycle : list of int
         List of node indices for cycle of interest, index zero. Order of node
         indices does not matter.
@@ -607,7 +608,7 @@ def calc_net_cycle_flux_from_diags(G, dirpars, cycle, order, key, output_strings
             G, cycle, order, key, output_strings=output_strings
         )
         sigma_K = calc_sigma_K(G, cycle, flux_diags, key, output_strings=output_strings)
-        sigma = calc_sigma(G, dirpars, key, output_strings=output_strings)
+        sigma = calc_sigma(G, dirpar_edges, key, output_strings=output_strings)
         net_cycle_flux = pi_diff * sigma_K / sigma
         return net_cycle_flux
     if output_strings == True:
@@ -617,7 +618,7 @@ def calc_net_cycle_flux_from_diags(G, dirpars, cycle, order, key, output_strings
         sigma_K_str = calc_sigma_K(
             G, cycle, flux_diags, key, output_strings=output_strings
         )
-        sigma_str = calc_sigma(G, dirpars, key, output_strings=output_strings)
+        sigma_str = calc_sigma(G, dirpar_edges, key, output_strings=output_strings)
         sympy_net_cycle_flux_func = expressions.construct_sympy_net_cycle_flux_func(
             pi_diff_str, sigma_K_str, sigma_str
         )
