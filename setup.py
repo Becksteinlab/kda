@@ -34,7 +34,7 @@ setup(
     },
     packages=find_packages(),
     install_requires=["numpy", "networkx", "scipy", "sympy", "matplotlib",],
-    tests_require=["pytest", "pytest-cov", "pytest-xdist",],
+    tests_require=["pytest", "pytest-cov", "pytest-xdist", "hypothesis",],
     include_package_data=True,
     setup_requires=[] + pytest_runner,
 )

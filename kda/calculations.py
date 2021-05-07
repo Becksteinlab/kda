@@ -48,14 +48,19 @@ def _get_ordered_cycle(G, input_cycle):
     ordered_cycles : list of int
         Ordered list of nodes for the input cycle
     """
+    possible_nodes = G.nodes()
+    for i in input_cycle:
+        if i not in possible_nodes:
+            raise CycleError(f"Input cycle contains nodes not within input diagram.")
+
     # get the unique cycles
     unique_cycles = graph_utils.find_all_unique_cycles(G)
     # filter out any cycles that don't contain the correct number of nodes
     filtered_cycles = [c for c in unique_cycles if len(c) == len(input_cycle)]
 
-    if isinstance(filtered_cycles[0], int):
+    if len(filtered_cycles) == 1:
         # if only 1 cycle is left after filtering, this is the ordered cycle
-        return filtered_cycles
+        return filtered_cycles[0]
 
     ordered_cycles = []
     for cycle in filtered_cycles:
@@ -63,7 +68,7 @@ def _get_ordered_cycle(G, input_cycle):
             ordered_cycles.append(cycle)
 
     if ordered_cycles == []:
-        raise CycleError(f"No cycles found for cycle: {cycle}")
+        raise CycleError(f"No cycles found for cycle: {input_cycle}")
 
     if len(ordered_cycles) == 1:
         return ordered_cycles[0]
@@ -84,7 +89,7 @@ def _get_ordered_cycle(G, input_cycle):
             raise CycleError(
                 f"Distinct ordered cycle could not be determined. Input diagram"
                 f" has multiple unique cycles that contain all nodes in the"
-                f" input cycle ({cycle}). To fix ambiguity, please input a"
+                f" input cycle ({input_cycle}). To fix ambiguity, please input a"
                 f" cycle with the nodes in the correct orientation. Select"
                 f" one of the following possibilities: {ordered_cycles}"
             )

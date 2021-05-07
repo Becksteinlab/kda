@@ -24,12 +24,12 @@ before_install:
   - python -V
 
 install:
-    # Install the package locally
-  - pip install -U pytest pytest-cov pytest-xdist codecov
+    # Install the package(s) locally
+  - pip install -U pytest pytest-cov pytest-xdist codecov hypothesis
   - pip install -e .
 
 script:
-  - pytest -v -n 2 --cov=kda kda/tests/
+  - pytest --cov-report term-missing --cov=kda -v -n 4
 
 notifications:
     email: false

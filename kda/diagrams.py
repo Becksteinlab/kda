@@ -203,13 +203,13 @@ def _flux_edge_conditions(edge_list, N):
         between the number of nodes in the diagram of interest and the number of
         unique cycle edges in the cycle of interest.
     """
-    sorted_edges = np.sort(edge_list)
-    tuples = [
-        (sorted_edges[i, 1], sorted_edges[i, 2]) for i in range(len(sorted_edges))
-    ]
-    unique_edges = list(set(tuples))
     # the number of edges must equal the number of edges in the list
     if len(edge_list) == N:
+        sorted_edges = np.sort(edge_list)
+        tuples = [
+            (sorted_edges[i, 1], sorted_edges[i, 2]) for i in range(len(sorted_edges))
+        ]
+        unique_edges = list(set(tuples))
         if len(unique_edges) == len(edge_list):
             return True
         else:
