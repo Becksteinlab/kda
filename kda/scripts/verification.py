@@ -23,7 +23,7 @@ from numpy.testing import assert_allclose
 import pandas as pd
 import networkx as nx
 
-from kda import calculations, diagrams, graph_utils, svd, ode
+from kda import calculations, diagrams, graph_utils, svd
 from multibind import nonequilibrium
 
 
