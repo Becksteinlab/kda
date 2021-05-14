@@ -6,7 +6,7 @@
 
 import pytest
 import numpy as np
-from numpy.testing import assert_almost_equal, assert_allclose
+from numpy.testing import assert_almost_equal, assert_allclose, assert_array_equal
 from hypothesis import settings, given, strategies as st
 import networkx as nx
 
@@ -601,7 +601,11 @@ class Test_Flux_Calcs:
         all_flux_diags = diagrams.generate_all_flux_diagrams(G)
         # flatten the lists of diagrams and skip the None case for method 1
         all_diags_method_1 = [diag for diags in flux_diags[1:] for diag in diags]
-        all_diags_method_2 = [diag for diags in all_flux_diags for diag in diags]
+        all_diags_method_2 = []
+        for diags in all_flux_diags:
+            if diags is not None:
+                for diag in diags:
+                    all_diags_method_2.append(diag)
 
         # for all 4 flux diagrams, make sure their edges match
         assert all_diags_method_1[0].edges == all_diags_method_2[0].edges
@@ -717,7 +721,9 @@ class Test_Flux_Calcs:
         [([(0, 1, 0), (1, 2, 0)], 3, False), ([(0, 1, 0), (1, 0, 0)], 2, False)],
     )
     def test_flux_edge_conditions(self, edge_list, N, expected_truth_value):
-        truth_value = diagrams._flux_edge_conditions(edge_list=edge_list, N=N)
+        truth_value = diagrams._flux_edge_conditions(
+            edge_list=edge_list, n_flux_edges=N
+        )
         assert truth_value == expected_truth_value
 
 
@@ -1003,3 +1009,27 @@ def test_function_inputs():
         calculations.calc_state_probs_from_diags(
             G, dirpar_edges, key="val", output_strings=True
         )
+
+
+def test_retrieve_rate_matrix():
+    # regression test for `graph_utils.retrieve_rate_matrix()`
+    # checks that input and output rate matrices are the same
+
+    # create 5-state model with all unique values
+    K = np.array(
+        [
+            [0, 1, 2, 3, 4],
+            [5, 0, 6, 7, 8],
+            [9, 10, 0, 11, 12],
+            [13, 14, 15, 0, 16],
+            [17, 18, 19, 20, 0],
+        ]
+    )
+    # initialize graph object
+    G = nx.MultiDiGraph()
+    # use KDA utility to generate the edges from K
+    graph_utils.generate_edges(G, K)
+    # now retrieve K from the diagram
+    K_new = graph_utils.retrieve_rate_matrix(G)
+    # check that arrays are the same
+    assert_array_equal(K, K_new)

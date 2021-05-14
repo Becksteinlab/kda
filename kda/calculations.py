@@ -523,6 +523,8 @@ def calc_state_probs_from_diags(G, dirpar_edges, key, output_strings=False):
     n_dirpars = dirpar_edges.shape[0]
     # get the number of partial diagrams
     n_partials = int(n_dirpars / n_states)
+    # retrieve the rate matrix from G
+    Kij = graph_utils.retrieve_rate_matrix(G)
 
     edge_value = G.edges[list(G.edges)[0]][key]
     if not output_strings:
@@ -534,10 +536,12 @@ def calc_state_probs_from_diags(G, dirpar_edges, key, output_strings=False):
         dirpar_rate_products = np.ones(n_dirpars, dtype=float)
         # iterate over the directional partial diagrams
         for i, edge_list in enumerate(dirpar_edges):
-            # iterate over the edges in the given directional partial diagram i
-            for edge in edge_list:
-                # multiply the rate of each edge
-                dirpar_rate_products[i] *= G.edges[edge][key]
+            # for each edge list, retrieve an array of the ith and jth indices,
+            # retrieve the values associated with each (i, j) pair, and
+            # calculate the product of those values
+            Ki = edge_list[:, 0]
+            Kj = edge_list[:, 1]
+            dirpar_rate_products[i] = np.prod(Kij[Ki, Kj])
 
         state_mults = dirpar_rate_products.reshape(n_states, n_partials).sum(axis=1)
         state_probs = state_mults / math.fsum(dirpar_rate_products)
