@@ -6,7 +6,7 @@
 
 import pytest
 import numpy as np
-from numpy.testing import assert_almost_equal, assert_allclose
+from numpy.testing import assert_almost_equal, assert_allclose, assert_array_equal
 from hypothesis import settings, given, strategies as st
 import networkx as nx
 
@@ -601,7 +601,11 @@ class Test_Flux_Calcs:
         all_flux_diags = diagrams.generate_all_flux_diagrams(G)
         # flatten the lists of diagrams and skip the None case for method 1
         all_diags_method_1 = [diag for diags in flux_diags[1:] for diag in diags]
-        all_diags_method_2 = [diag for diags in all_flux_diags for diag in diags]
+        all_diags_method_2 = []
+        for diags in all_flux_diags:
+            if diags is not None:
+                for diag in diags:
+                    all_diags_method_2.append(diag)
 
         # for all 4 flux diagrams, make sure their edges match
         assert all_diags_method_1[0].edges == all_diags_method_2[0].edges
@@ -625,14 +629,16 @@ class Test_Flux_Calcs:
         G = nx.MultiDiGraph()
         graph_utils.generate_edges(G, K)
         # generate the directional partial diagrams
-        dirpars = diagrams.generate_directional_partial_diagrams(G)
+        dirpar_edges = diagrams.generate_directional_partial_diagrams(
+            G, return_edges=True
+        )
         # pick one of the 3-node cycles and the CCW direction
         cycle = [0, 1, 3]
         order = [0, 1]
         # calculate the net cycle flux
         net_cycle_flux = calculations.calc_net_cycle_flux_from_diags(
             G,
-            dirpars=dirpars,
+            dirpar_edges=dirpar_edges,
             cycle=cycle,
             order=order,
             key="val",
@@ -641,7 +647,7 @@ class Test_Flux_Calcs:
         # generate the net cycle flux function
         net_cycle_flux_sympy_func = calculations.calc_net_cycle_flux_from_diags(
             G,
-            dirpars=dirpars,
+            dirpar_edges=dirpar_edges,
             cycle=cycle,
             order=order,
             key="name",
@@ -715,7 +721,9 @@ class Test_Flux_Calcs:
         [([(0, 1, 0), (1, 2, 0)], 3, False), ([(0, 1, 0), (1, 0, 0)], 2, False)],
     )
     def test_flux_edge_conditions(self, edge_list, N, expected_truth_value):
-        truth_value = diagrams._flux_edge_conditions(edge_list=edge_list, N=N)
+        truth_value = diagrams._flux_edge_conditions(
+            edge_list=edge_list, n_flux_edges=N
+        )
         assert truth_value == expected_truth_value
 
 
@@ -854,11 +862,11 @@ class Test_Diagram_Generation:
         graph_utils.generate_edges(G, K)
         # generate the partial diagrams and verify
         # they agree with the expected value
-        partials = diagrams.generate_partial_diagrams(G)
+        partials = diagrams.generate_partial_diagrams(G, return_edges=False)
         assert len(partials) == expected_pars
         # generate the directional partial diagrams and verify
         # they agree with the expected value
-        dirpars = diagrams.generate_directional_partial_diagrams(G)
+        dirpars = diagrams.generate_directional_partial_diagrams(G, return_edges=False)
         assert len(dirpars) == expected_dirpars
         # count the number of partial diagrams
         # and verify they agree with the expected value
@@ -875,14 +883,16 @@ class Test_Diagram_Generation:
         graph_utils.generate_edges(G, K)
         # generate the partial diagrams and verify
         # they agree with the expected value
-        partials = diagrams.generate_partial_diagrams(G)
+        partial_edges = diagrams.generate_partial_diagrams(G, return_edges=True)
         expected_pars = n_states ** (n_states - 2)
-        assert len(partials) == expected_pars
+        assert len(partial_edges) == expected_pars
         # generate the directional partial diagrams and verify
         # they agree with the expected value
-        dirpars = diagrams.generate_directional_partial_diagrams(G)
+        dirpar_edges = diagrams.generate_directional_partial_diagrams(
+            G, return_edges=True
+        )
         expected_dirpars = n_states ** (n_states - 1)
-        assert len(dirpars) == expected_dirpars
+        assert len(dirpar_edges) == expected_dirpars
         # count the number of partial diagrams
         # and verify they agree with the expected value
         n_pars = diagrams.enumerate_partial_diagrams(K)
@@ -952,13 +962,13 @@ def test_function_inputs():
     G = nx.MultiDiGraph()
     graph_utils.generate_edges(G, K)
     # generate the directional partial diagrams
-    dirpars = diagrams.generate_directional_partial_diagrams(G)
+    dirpar_edges = diagrams.generate_directional_partial_diagrams(G, return_edges=True)
 
     # test both cases for calc_sigma()
     with pytest.raises(TypeError):
-        calculations.calc_sigma(G, dirpars, key="name", output_strings=False)
+        calculations.calc_sigma(G, dirpar_edges, key="name", output_strings=False)
     with pytest.raises(TypeError):
-        calculations.calc_sigma(G, dirpars, key="val", output_strings=True)
+        calculations.calc_sigma(G, dirpar_edges, key="val", output_strings=True)
 
     # pick one of the 3-node cycles and generate the flux diagrams for it
     cycle = [0, 1, 3]
@@ -993,9 +1003,33 @@ def test_function_inputs():
     # test both cases for calc_state_probs_from_diags()
     with pytest.raises(TypeError):
         calculations.calc_state_probs_from_diags(
-            G, dirpars, key="name", output_strings=False
+            G, dirpar_edges, key="name", output_strings=False
         )
     with pytest.raises(TypeError):
         calculations.calc_state_probs_from_diags(
-            G, dirpars, key="val", output_strings=True
+            G, dirpar_edges, key="val", output_strings=True
         )
+
+
+def test_retrieve_rate_matrix():
+    # regression test for `graph_utils.retrieve_rate_matrix()`
+    # checks that input and output rate matrices are the same
+
+    # create 5-state model with all unique values
+    K = np.array(
+        [
+            [0, 1, 2, 3, 4],
+            [5, 0, 6, 7, 8],
+            [9, 10, 0, 11, 12],
+            [13, 14, 15, 0, 16],
+            [17, 18, 19, 20, 0],
+        ]
+    )
+    # initialize graph object
+    G = nx.MultiDiGraph()
+    # use KDA utility to generate the edges from K
+    graph_utils.generate_edges(G, K)
+    # now retrieve K from the diagram
+    K_new = graph_utils.retrieve_rate_matrix(G)
+    # check that arrays are the same
+    assert_array_equal(K, K_new)

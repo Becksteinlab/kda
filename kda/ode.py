@@ -74,7 +74,8 @@ def ode_solver(P, K, t_max, tol=1e-16, **options):
 
     def terminate(t, y):
         y_prime = np.matmul(k, y, dtype=np.float64)
-        if all(elem < tol for elem in y_prime) == True:
+        if all(elem < tol for elem in y_prime):
+            print(f"\n kda.ode.ode_solver() reached convergence at t={t}\n")
             return False
         else:
             return True

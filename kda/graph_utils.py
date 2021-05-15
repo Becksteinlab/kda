@@ -10,6 +10,7 @@ This file contains a host of utility functions for NetworkX graphs.
 
 .. autofunction:: generate_K_string_matrix
 .. autofunction:: generate_edges
+.. autofunction:: retrieve_rate_matrix
 .. autofunction:: add_node_attribute
 .. autofunction:: add_graph_attribute
 .. autofunction:: find_all_unique_cycles
@@ -86,6 +87,35 @@ def generate_edges(G, vals, names=None, val_key="val", name_key="name"):
                 G.add_edge(i, j, **attrs)
 
 
+def retrieve_rate_matrix(G, key="val"):
+    """
+    Retrieves rate matrix from edge data stored in input diagram G.
+
+    Parameters
+    ----------
+    G : NetworkX MultiDiGraph
+        Input diagram
+    val : str (optional)
+        Key used to retrieve values from edges. Default is 'val'.
+
+    Returns
+    -------
+    rate_matrix : array
+        'NxN' array where 'N' is the number of nodes/states in the diagram G.
+        Contains the values/rates for each edge.
+    """
+    # get the number of states
+    n_states = G.number_of_nodes()
+    # create `n_states x n_states` zero-array
+    rate_matrix = np.zeros(shape=(n_states, n_states), dtype=float)
+    # iterate over edges
+    for edge in G.edges(data=True):
+        i, j, data = edge
+        # use edge indices and edge values to construct rate matrix
+        rate_matrix[i, j] = data[key]
+    return rate_matrix
+
+
 def add_node_attribute(G, data, label):
     """
     Sequentially add attributes to nodes from array of values, i.e. state
@@ -142,8 +172,6 @@ def find_all_unique_cycles(G):
         reverse_cycle = [cycle[0]] + cycle[len(G.nodes) : 0 : -1]
         if not reverse_cycle in temp:
             unique_cycles.append(cycle)
-    if len(unique_cycles) == 1:
-        print("Only 1 cycle found: {}".format(unique_cycles[0]))
     return unique_cycles
 
 

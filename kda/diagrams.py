@@ -64,26 +64,39 @@ def _get_directional_connections(target, unique_edges):
     ----------
     target : int
         Index of target state
-    unique_edges : list
-        List of edges (2-tuples) that are unique to the diagram,
-        [(0, 1), (1, 2), ...].
+    unique_edges : array
+        Array of edges (made from 2-tuples) that are unique to the diagram,
+        [[0, 1], [1, 2], ...].
     """
-    edges = [
-        i for i in unique_edges if target in i
-    ]  # Find edges that connect to target state
-    neighbors = [
-        [j for j in i if not j == target][0] for i in edges
-    ]  # Find states neighboring target state
-    if not neighbors:
+    # get the indices for each edge pair that contains the target state
+    adj_idx = np.nonzero(unique_edges == target)[0]
+    # collect the edges that contain the target state
+    adj_edges = unique_edges[adj_idx]
+    # from the adjacent edges, get the neighbors of the target state
+    neighbors = adj_edges[np.nonzero(adj_edges != target)]
+    # if there are neighbors, continue
+    if neighbors.size:
+        # get the list of all possible indices
+        all_idx = np.arange(unique_edges.shape[0])
+        # get the indices for the edges that are
+        # not connected to the target state
+        nonadj_mask = np.ones(all_idx.size, dtype=bool)
+        nonadj_mask[adj_idx] = False
+        nonadj_idx = all_idx[nonadj_mask]
+        # collect the edges that do not contain the target state
+        nonadj_edges = unique_edges[nonadj_idx]
+        # get the unique neighbors
+        neighbors = np.unique(neighbors)
+        # recursively generate a dictionary of all connections
+        con_dict = functools.reduce(
+            _combine,
+            [{target: neighbors}]
+            + [_get_directional_connections(i, nonadj_edges) for i in neighbors],
+        )
+        return con_dict
+    else:
+        # if there are no neighbors, return empty dictionary
         return {}
-    unique_edges = [
-        k for k in unique_edges if not k in edges
-    ]  # Make new list of unique edges that does not contain original unique edges
-    return functools.reduce(
-        _combine,
-        [{target: neighbors}]
-        + [_get_directional_connections(i, unique_edges) for i in neighbors],
-    )
 
 
 def _get_directional_edges(cons):
@@ -106,7 +119,9 @@ def _get_directional_edges(cons):
     values = []
     for target in cons.keys():
         for neighb in cons[target]:
-            values.append((neighb, target, 0))
+            edge_tuple = (neighb, target, 0)
+            if not edge_tuple in values:
+                values.append(edge_tuple)
     return values
 
 
@@ -188,7 +203,7 @@ def _find_unique_uncommon_edges(G_edges, cycle):
     return valid_non_cycle_edges
 
 
-def _flux_edge_conditions(edge_list, N):
+def _flux_edge_conditions(edge_list, n_flux_edges):
     """
     Conditions that need to be true for flux edges to be valid.
 
@@ -198,24 +213,28 @@ def _flux_edge_conditions(edge_list, N):
         List of edges (tuples) to be checked. Common cases that need to be
         filtered out are where half the edges are the same but reversed, or
         there are simply too many edges to be a flux diagram.
-    N : int
+    n_flux_edges : int
         Number of unique edges in given flux diagram. Defined as the difference
         between the number of nodes in the diagram of interest and the number of
         unique cycle edges in the cycle of interest.
     """
-    # the number of edges must equal the number of edges in the list
-    if len(edge_list) == N:
+    # count the edges
+    n_input_edges = len(edge_list)
+    # check if the number of input edges are the
+    # correct number of flux diagram edges
+    if n_input_edges == n_flux_edges:
+        # sort the list of edges into arrays of increasing order
         sorted_edges = np.sort(edge_list)
         tuples = [
-            (sorted_edges[i, 1], sorted_edges[i, 2]) for i in range(len(sorted_edges))
+            (sorted_edges[i, 1], sorted_edges[i, 2]) for i in range(n_input_edges)
         ]
-        unique_edges = list(set(tuples))
-        if len(unique_edges) == len(edge_list):
+        # count how many of the sorted edges are unique
+        n_unique_edges = len(set(tuples))
+        if n_unique_edges == n_input_edges:
+            # if there are no redundant edges, return True
             return True
-        else:
-            return False
-    else:
-        return False
+
+    return False
 
 
 def _append_reverse_edges(edge_list):
@@ -307,7 +326,7 @@ def enumerate_partial_diagrams(K0):
     return n_partials
 
 
-def generate_partial_diagrams(G):
+def generate_partial_diagrams(G, return_edges=False):
     """
     Generates all partial diagrams for input diagram G.
 
@@ -315,37 +334,60 @@ def generate_partial_diagrams(G):
     ----------
     G : NetworkX MultiDiGraph
         Input diagram
+    return_edges : bool
+        Binary used for determining whether to return NetworkX diagram objects
+        (primarily for plotting) or the edge tuples (generally for
+        calculations).
 
     Returns
     -------
-    valid_partials : list
+    partial_diagrams : list
         List of NetworkX MultiDiGraphs where each graph is a unique partial
         diagram with no loops.
+    unique_partial_edges : array
+        Array of unique edges (made from 2-tuples) for valid partial diagrams.
+        Here, "unique" means we only keep the edge in 1-direction since the
+        edge pairs are generated in `generate_directional_partial_diagrams()`.
     """
-    # Calculate number of edges needed for each partial diagram
-    N_partial_edges = G.number_of_nodes() - 1
-    # Get list of all possible combinations of unique edges (N choose n)
-    combinations = list(itertools.combinations(_find_unique_edges(G), N_partial_edges))
-    # Using combinations, generate all possible partial diagrams (including closed loops)
-    partials_all = []
-    for i in combinations:
-        diag = G.copy()
-        diag.remove_edges_from(list(G.edges()))
-        edges = []
-        for j in i:
-            edges.append((j[0], j[1]))  # Add edge from combinations
-            edges.append((j[1], j[0]))  # Add reverse edge
-        diag.add_edges_from(edges)
-        partials_all.append(diag)
-    # Remove unwanted (closed loop) diagrams
-    valid_partials = []
-    for i in partials_all:
-        if len(list(nx.simple_cycles(i))) == N_partial_edges:
-            valid_partials.append(i)
-    return valid_partials
+    # calculate number of connections/unique edges needed for each partial diagram
+    n_connections = G.number_of_nodes() - 1
+    # get the unique edges in G
+    unique_edges = _find_unique_edges(G)
+
+    # create an empty graph and add the nodes from G for use as a base graph
+    base_graph = nx.Graph()
+    base_graph.add_nodes_from(G.nodes())
+
+    # get list of possible combinations of unique edges (N choose n)
+    # and iterate over each unique combination
+    partial_diagrams = []
+    unique_partial_edges = []
+    for edge_list in itertools.combinations(unique_edges, n_connections):
+        # make a copy of the base graph
+        partial = base_graph.copy()
+        # convert the list of edge tuples into an array
+        edges = np.asarray(edge_list, dtype=int)
+        # create a new array of the reversed edges
+        rev_edges = np.flip(edges, axis=1)
+        # combine the forward/reverse edge lists together
+        edges = np.vstack((edges, rev_edges))
+        # add the edges to the base diagram
+        partial.add_edges_from(edges)
+        # if the constructed partial diagram is a
+        # tree, it is a valid diagram
+        if nx.is_tree(partial):
+            if return_edges:
+                unique_partial_edges.append(list(partial.edges()))
+            else:
+                partial_diagrams.append(partial)
+
+    if return_edges:
+        return np.asarray(unique_partial_edges, dtype=int)
+    else:
+        return partial_diagrams
 
 
-def generate_directional_partial_diagrams(G):
+def generate_directional_partial_diagrams(G, return_edges=False):
     """
     Generates all directional partial diagrams for input diagram G.
 
@@ -354,42 +396,68 @@ def generate_directional_partial_diagrams(G):
     partials : list
         List of NetworkX MultiDiGraphs where each graph is a unique partial
         diagram with no loops.
+    return_edges : bool
+        Binary used for determining whether to return NetworkX diagram objects
+        (primarily for plotting) or the edge tuples (generally for
+        calculations).
 
     Returns
     -------
-    dir_partials : list
+    directional_partial_diagrams : list
         List of all directional partial diagrams for a given set of partial
         diagrams.
+    directional_partial_diagram_edges : array
+        Array of edges (made from 2-tuples) for valid directional partial
+        diagrams.
     """
-    partials = generate_partial_diagrams(G)
+    partial_diagram_edges = generate_partial_diagrams(G, return_edges=True)
+
+    base_graph = nx.MultiDiGraph()
+    base_graph.add_nodes_from(G.nodes())
+
+    n_states = G.number_of_nodes()
+    n_partials = len(partial_diagram_edges)
+    n_dirpars = n_states * n_partials
+
     targets = np.sort(list(G.nodes))
-    dir_partials = []
-    for target in targets:
-        for i in range(len(partials)):
-            partial = partials[i].copy()  # Make a copy of directional partial diagram
-            unique_edges = _find_unique_edges(
-                partial
-            )  # Find unique edges of that diagram
-            cons = _get_directional_connections(
-                target, unique_edges
-            )  # Get dictionary of connections
-            dir_edges = _get_directional_edges(
-                cons
-            )  # Get directional edges from connections
-            partial.remove_edges_from(
-                list(partial.edges())
-            )  # Remove all edges from partial diagram
-            for e in dir_edges:
-                partial.add_edge(
-                    e[0], e[1], e[2]
-                )  # Add relevant edges to partial diagram
-            for t in targets:  # Add node attrbutes to label target nodes
-                if t == target:
-                    partial.nodes[t]["is_target"] = True
-                else:
-                    partial.nodes[t]["is_target"] = False
-            dir_partials.append(partial)  # Append to list of partial diagrams
-    return dir_partials
+    if not return_edges:
+        directional_partial_diagrams = np.empty(shape=(n_dirpars,), dtype=object)
+        idx = 0
+        for target in targets:
+            for partial_edges in partial_diagram_edges:
+                # create a copy of the base graph
+                dirpar = base_graph.copy()
+                # get dictionary of connections
+                cons = _get_directional_connections(target, partial_edges)
+                # get directional edges from connections
+                dir_edges = _get_directional_edges(cons)
+                # add relevant edges to directional partial diagram
+                dirpar.add_edges_from(dir_edges)
+                # set "is_target" to False for all nodes
+                nx.set_node_attributes(dirpar, False, "is_target")
+                # set target node to True
+                dirpar.nodes[target]["is_target"] = True
+                # add to list of directional partial diagrams
+                directional_partial_diagrams[idx] = dirpar
+                idx += 1
+        return directional_partial_diagrams
+    else:
+        n_unique_dirpar_edges = n_states - 1
+        directional_partial_diagram_edges = np.empty(
+            shape=(n_dirpars, n_unique_dirpar_edges, 3), dtype=int
+        )
+        idx = 0
+        for target in targets:
+            for partial_edges in partial_diagram_edges:
+                # create a copy of the base graph
+                dirpar = base_graph.copy()
+                # get dictionary of connections
+                cons = _get_directional_connections(target, partial_edges)
+                # get directional edges from connections
+                dir_edges = _get_directional_edges(cons)
+                directional_partial_diagram_edges[idx] = dir_edges
+                idx += 1
+        return directional_partial_diagram_edges
 
 
 def generate_flux_diagrams(G, cycle):
@@ -412,50 +480,76 @@ def generate_flux_diagrams(G, cycle):
         where remaining edges follow path pointing to cycle. Cycle nodes are
         labeled by attribute 'is_target'.
     """
-    if sorted(cycle) == sorted(list(G.nodes)):
+    if sorted(cycle) == sorted(G.nodes):
         print(
             f"Cycle {cycle} contains all nodes in G, no flux diagrams can be"
             f" generated. Value of None Returned."
         )
-    else:
-        cycle_edges = _construct_cycle_edges(cycle)
-        G_edges = _find_unique_edges(G)
-        # get edges that are uncommon between cycle and G
-        non_cycle_edges = _find_unique_uncommon_edges(G_edges, cycle)
-        # number of non-cycle edges in flux diagram
-        N = G.number_of_nodes() - len(cycle_edges)
-        # all combinations of valid edges
-        # generates too many edge lists: some create cycles, some use both forward and reverse edges
-        flux_edge_lists = list(itertools.combinations(non_cycle_edges, r=N))
-        flux_diagrams = []
-        for edge_list in flux_edge_lists:
-            dir_edges = []
-            for target in cycle:
-                cons = _get_directional_connections(target, edge_list)
-                if not len(cons) == 0:
-                    dir_edges.append(_get_directional_edges(cons))
-            dir_edges_flat = [edge for edges in dir_edges for edge in edges]
-            if _flux_edge_conditions(dir_edges_flat, N) == True:
-                diag = G.copy()
-                diag.remove_edges_from(G.edges)
-                for edge in dir_edges_flat:
-                    diag.add_edge(edge[0], edge[1], edge[2])
-                for edge in cycle_edges:
-                    diag.add_edge(edge[0], edge[1], 0)
-                    diag.add_edge(edge[1], edge[0], 0)
-                included_nodes = np.unique(diag.edges)
-                if sorted(G.nodes) == sorted(included_nodes):
-                    for target in diag.nodes():
-                        if target in cycle:
-                            diag.nodes[target]["is_target"] = True
-                        else:
-                            diag.nodes[target]["is_target"] = False
-                    flux_diagrams.append(diag)
-                else:
-                    continue
-            else:
-                continue
-        return flux_diagrams
+        return None
+    # create a base flux diagram from input
+    # diagram and remove all of the edges
+    base_graph = G.copy()
+    base_graph.remove_edges_from(G.edges)
+    # get the edge tuples created by the input cycle
+    cycle_edges = _construct_cycle_edges(cycle)
+    # add all cycle edges to base graph since
+    # all flux diagrams contain the cycle edges
+    for edge in cycle_edges:
+        base_graph.add_edge(edge[0], edge[1], 0)
+        base_graph.add_edge(edge[1], edge[0], 0)
+    # get all of the unique edges in the input diagram
+    G_edges = _find_unique_edges(G)
+    # get edges that are uncommon between cycle and G
+    non_cycle_edges = _find_unique_uncommon_edges(G_edges, cycle)
+    # number of non-cycle edges in flux diagram
+    n_non_cycle_edges = G.number_of_nodes() - len(cycle_edges)
+    # generate all combinations of valid edges
+    # TODO: generates too many edge lists: some create cycles, some
+    # use both forward and reverse edges
+    flux_diagrams = []
+    for edge_list in itertools.combinations(non_cycle_edges, r=n_non_cycle_edges):
+        # convert each edge list into numpy array
+        edge_list = np.asarray(edge_list, dtype=int)
+        # initialize empty list for storing uni-directional edges
+        dir_edges = []
+        for target in cycle:
+            # for each node in the cycle, collect the directional
+            # connection dictionary
+            cons = _get_directional_connections(target, edge_list)
+            if cons:
+                # if there are directional connections, generate and
+                # store the directional edges
+                dir_edges.append(_get_directional_edges(cons))
+        # flatten the nested lists of edges
+        dir_edges = [edge for edges in dir_edges for edge in edges]
+        if _flux_edge_conditions(dir_edges, n_non_cycle_edges):
+            # make a copy of the base graph
+            flux_diag = base_graph.copy()
+            # add all directional edges to flux diagram
+            flux_diag.add_edges_from(dir_edges)
+            # collect all nodes in the potential flux
+            # diagram from the diagram edges
+            included_nodes = np.unique(flux_diag.edges)
+            # if the diagram contains all nodes it is not invalid
+            if included_nodes.size == G.number_of_nodes():
+                # count how many cycles are in the flux diagram by removing
+                # 2-node cycles
+                # NetworkX stores forward/reverse cycles, so if 2 remain there
+                # is 1 unique cycle for this flux diagram
+                contains_1_cycle = (
+                    len([c for c in nx.simple_cycles(flux_diag) if len(c) > 2]) == 2
+                )
+                # if there is exactly 1 unique cycle in the
+                # generated diagram, it is valid
+                if contains_1_cycle:
+                    # set "is_target" to False for all nodes
+                    nx.set_node_attributes(flux_diag, False, "is_target")
+                    for target in cycle:
+                        # for nodes in cycle, mark True
+                        flux_diag.nodes[target]["is_target"] = True
+                    # append valid flux diagram to list
+                    flux_diagrams.append(flux_diag)
+    return flux_diagrams
 
 
 def generate_all_flux_diagrams(G):
@@ -474,22 +568,14 @@ def generate_all_flux_diagrams(G):
         in G.
     """
     all_cycles = graph_utils.find_all_unique_cycles(G)
+    n_nodes = G.number_of_nodes()
     all_flux_diagrams = []
     for cycle in all_cycles:
-        flux_diagrams = generate_flux_diagrams(G, cycle)
-        if flux_diagrams == None:
+        if len(cycle) == n_nodes:
+            # for all-node cycles just append None since
+            # they cannot have any flux diagrams
+            all_flux_diagrams.append(None)
             continue
-        else:
-            for diag in flux_diagrams:
-                if (
-                    len(graph_utils.find_all_unique_cycles(diag)) == 1
-                ):  # check if there is only 1 unique cycle
-                    continue
-                else:
-                    raise CycleError(
-                        "Flux diagram has more than 1 closed loop for cycle {}.".format(
-                            cycle
-                        )
-                    )
-            all_flux_diagrams.append(flux_diagrams)
+        flux_diagrams = generate_flux_diagrams(G, cycle)
+        all_flux_diagrams.append(flux_diagrams)
     return all_flux_diagrams
