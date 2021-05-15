@@ -373,22 +373,18 @@ def generate_partial_diagrams(G, return_edges=False):
         edges = np.vstack((edges, rev_edges))
         # add the edges to the base diagram
         partial.add_edges_from(edges)
-        # count the number of cycles in the diagram
-        # `nx.simple_cycles()` returns cycles composed of just 2 nodes, so
-        # we have to subtract out the number of connections. This way `n_cycles`
-        # will be zero unless there is an actual multi-node cycle present
-        # if the number of simple cycles is zero
-        # this is a valid partial diagram
+        # if the constructed partial diagram is a
+        # tree, it is a valid diagram
         if nx.is_tree(partial):
             if return_edges:
                 unique_partial_edges.append(list(partial.edges()))
             else:
                 partial_diagrams.append(partial)
 
-    if not return_edges:
-        return partial_diagrams
-    else:
+    if return_edges:
         return np.asarray(unique_partial_edges, dtype=int)
+    else:
+        return partial_diagrams
 
 
 def generate_directional_partial_diagrams(G, return_edges=False):
