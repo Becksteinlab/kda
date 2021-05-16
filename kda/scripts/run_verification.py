@@ -15,7 +15,7 @@ import time
 import argparse
 from multiprocessing import Process
 
-from verification import run_verification
+from verification import main
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -89,10 +89,10 @@ if __name__ == "__main__":
         # create processes for each run
         processes = []
         for n_states, max_rates in list(zip(states_list, max_rates_list)):
-            # verification_functions.run_verification() has 4 arguments:
+            # verification_functions.main() has 4 arguments:
             #       n_states, n_datasets, max_rates, and save_path
             p = Process(
-                target=run_verification,
+                target=main,
                 args=(
                     n_states,
                     n_runs,
