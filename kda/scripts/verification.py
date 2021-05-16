@@ -300,7 +300,7 @@ def check_transition_fluxes(G, prob_arr):
         # calculate the transition fluxes in both directions
         J_ij = pi * kij
         J_ji = pj * kji
-        assert_allclose(J_ij, J_ji, rtol=1e-7, atol=1e-10)
+        assert_allclose(J_ij, J_ji, rtol=1e-8, atol=1e-11)
 
 
 def get_paths(save_path, n_states):
@@ -336,7 +336,37 @@ def get_paths(save_path, n_states):
     return graph_save_path, rates_save_path, data_save_path
 
 
-def run_verification(
+def construct_rate_matrix(
+    n_states, min_cons_to_mute, max_rates, rates_save_path, graph_index
+):
+    # start by generating random data set
+    powers = 5 * (np.random.random(size=(n_states, n_states)) - 0.5)
+    dataset = 10 ** powers
+    # now we have to convert these into NxN K-matrices, where `N` is the number
+    # of states in the diagram
+    K_matrix = np.reshape(dataset, newshape=(n_states, n_states))
+    # fill the diagonal elements with zero values
+    np.fill_diagonal(K_matrix, val=0)
+    # get the indices for the off-diagonal elements
+    off_diagonal_indices = get_off_diagonal_indices(K_matrix)
+    # create new array with random muted rates
+    K = construct_varied_array(
+        N=n_states,
+        arr=K_matrix,
+        off_diag_idx=off_diagonal_indices,
+        min_to_mute=min_cons_to_mute,
+        max_rates=max_rates,
+    )
+    # run K-matrix through MultiBind thermodynamic consistency function
+    K = get_thermodynamically_consistent_matrix(
+        K0=K,
+        rates_save_path=rates_save_path,
+        index=graph_index,
+    )
+    return K
+
+
+def main(
     n_states,
     n_datasets,
     max_rates,
@@ -373,34 +403,28 @@ def run_verification(
     dirpar_count = np.zeros(n_datasets)
     par_count = np.zeros(n_datasets)
     graph_indices = []
-    for i in tqdm(range(n_datasets), desc="Random graphs", file=sys.stdout):
-
-        # start by generating random data set
-        powers = 10 * (np.random.random(size=(n_states, n_states)) - 0.5)
-        dataset = 10 ** powers
-        # now we have to convert these into NxN K-matrices, where `N` is the number
-        # of states in the diagram
-        K_matrix = np.reshape(dataset, newshape=(n_states, n_states))
-        # fill the diagonal elements with zero values
-        np.fill_diagonal(K_matrix, val=0)
-        # get the indices for the off-diagonal elements
-        off_diagonal_indices = get_off_diagonal_indices(K_matrix)
-        # create new array with random muted rates
-        K = construct_varied_array(
-            N=n_states,
-            arr=K_matrix,
-            off_diag_idx=off_diagonal_indices,
-            min_to_mute=min_cons_to_mute,
-            max_rates=max_rates,
-        )
-
-        # run K-matrix through MultiBind thermodynamic consistency function
+    for i in tqdm(range(n_datasets), desc="Datasets", file=sys.stdout):
+        # create an index for each graph for identification purposes
         graph_index = f"{n_states}_{i+1}"
-        K = get_thermodynamically_consistent_matrix(
-            K0=K,
-            rates_save_path=rates_save_path,
-            index=graph_index,
-        )
+        while True:
+            # construct a thermodynamically consistent rate matrix
+            # from randomly generated numbers
+            K = construct_rate_matrix(
+                n_states=n_states,
+                min_cons_to_mute=min_cons_to_mute,
+                max_rates=max_rates,
+                rates_save_path=rates_save_path,
+                graph_index=graph_index,
+            )
+            # arbitrarily limit the min and max values to stay within
+            # 1e-7 and 1e7 to ensure calculation accuracy (for fair comparison)
+            K_min = K[K != 0].min()
+            K_max = K[K != 0].max()
+            if (K_min > 1e-7) and (K_max < 1e7):
+                # if the min/max values are within
+                # the desired range, continue
+                break
+
         # get SVD solution
         svd_start = time.perf_counter()
         svd_probs = svd.svd_solver(K, tol=1e-15)
@@ -519,7 +543,7 @@ if __name__ == "__main__":
     save_path = args.save_path
 
     # run main function that handles verification
-    run_verification(
+    main(
         n_states=n_states,
         n_datasets=n_datasets,
         max_rates=max_rates,
