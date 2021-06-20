@@ -17,7 +17,7 @@ import numpy as np
 import scipy.integrate
 
 
-def ode_solver(P, K, t_max, tol=1e-16, **options):
+def ode_solver(P, K, t_max, method="LSODA", tol=1e-16, **options):
     """
     Integrates state probability ODE's to find steady state probabilities.
 
@@ -32,6 +32,10 @@ def ode_solver(P, K, t_max, tol=1e-16, **options):
         matrix.
     t_max : int
         Length of time for integrator to run, in seconds.
+    method : str
+        Integration method used in `scipy.integrate.solve_ivp()`. Default is
+        LSODA since it has automatic stiffness detection, and generally
+        requires much less run time to reach convergence than RK45.
     tol : float (optional)
         Tolerance value used as convergence criteria. Once all dp/dt values for
         each state are less than the tolerance the integrator will terminate.
@@ -83,6 +87,13 @@ def ode_solver(P, K, t_max, tol=1e-16, **options):
     terminate.terminal = True
     k = convert_K(K)
     y0 = np.array(P, dtype=np.float64)
-    return scipy.integrate.solve_ivp(
-        fun=KdotP, t_span=(0, t_max), y0=y0, events=[terminate], **options
+    solution = scipy.integrate.solve_ivp(
+        fun=KdotP,
+        t_span=(0, t_max),
+        y0=y0,
+        t_eval=np.linspace(0, t_max, 500),
+        method=method,
+        events=[terminate],
+        **options,
     )
+    return solution
