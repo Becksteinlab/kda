@@ -403,7 +403,7 @@ def main(
     dirpar_count = np.zeros(n_datasets)
     par_count = np.zeros(n_datasets)
     graph_indices = []
-    for i in tqdm(range(n_datasets), desc="Datasets", file=sys.stdout):
+    for i in tqdm(range(n_datasets), desc="Models", file=sys.stdout):
         # create an index for each graph for identification purposes
         graph_index = f"{n_states}_{i+1}"
         while True:
@@ -425,9 +425,9 @@ def main(
                 # the desired range, continue
                 break
 
-        # get SVD solution
+        # get the matrix solution
         svd_start = time.perf_counter()
-        svd_probs = svd.svd_solver(K, tol=1e-15)
+        svd_probs = svd.matrix_solver(K)
         svd_elapsed = time.perf_counter() - svd_start
 
         # initialize an empty graph object

@@ -7,7 +7,7 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_almost_equal, assert_allclose, assert_array_equal
-from hypothesis import settings, given, strategies as st
+from hypothesis import settings, given, example, strategies as st
 import networkx as nx
 
 from kda import calculations, diagrams, graph_utils, expressions, ode, svd
@@ -279,16 +279,21 @@ class Test_Probability_Calcs:
         # use the SVD solver to calculate the state probabilities
         svd_probs = svd.svd_solver(K, tol=1e-15)
 
+        # use the matrix solver to calculate the state probabilities
+        mat_probs = svd.matrix_solver(K)
+
         # make sure all probabilities sum to 1
         assert_allclose(np.sum(kda_probs), 1.0, rtol=1e-09, atol=1e-12)
         assert_allclose(np.sum(sympy_probs), 1.0, rtol=1e-09, atol=1e-12)
         assert_allclose(np.sum(svd_probs), 1.0, rtol=1e-09, atol=1e-12)
+        assert_allclose(np.sum(mat_probs), 1.0, rtol=1e-09, atol=1e-12)
         assert_allclose(np.sum(ode_probs), 1.0, rtol=1e-09, atol=1e-12)
 
         # compare all probabilities to the expected outcome
         assert_almost_equal(kda_probs, expected_probs, decimal=15)
         assert_almost_equal(sympy_probs, expected_probs, decimal=15)
         assert_almost_equal(svd_probs, expected_probs, decimal=12)
+        assert_almost_equal(mat_probs, expected_probs, decimal=15)
         assert_almost_equal(ode_probs, expected_probs, decimal=10)
 
     @settings(deadline=None)
@@ -332,16 +337,21 @@ class Test_Probability_Calcs:
         # use the SVD solver to calculate the state probabilities
         svd_probs = svd.svd_solver(K, tol=1e-15)
 
+        # use the matrix solver to calculate the state probabilities
+        mat_probs = svd.matrix_solver(K)
+
         # make sure all probabilities sum to 1
         assert_allclose(np.sum(kda_probs), 1.0, rtol=1e-09, atol=1e-12)
         assert_allclose(np.sum(sympy_probs), 1.0, rtol=1e-09, atol=1e-12)
         assert_allclose(np.sum(svd_probs), 1.0, rtol=1e-09, atol=1e-12)
+        assert_allclose(np.sum(mat_probs), 1.0, rtol=1e-09, atol=1e-12)
         assert_allclose(np.sum(ode_probs), 1.0, rtol=1e-09, atol=1e-12)
 
         # compare all probabilities to the expected outcome
         assert_almost_equal(kda_probs, expected_probs, decimal=15)
         assert_almost_equal(sympy_probs, expected_probs, decimal=15)
         assert_almost_equal(svd_probs, expected_probs, decimal=12)
+        assert_almost_equal(mat_probs, expected_probs, decimal=15)
         assert_almost_equal(ode_probs, expected_probs, decimal=10)
 
     @settings(deadline=None)
@@ -400,16 +410,21 @@ class Test_Probability_Calcs:
         # use the SVD solver to calculate the state probabilities
         svd_probs = svd.svd_solver(K, tol=1e-15)
 
+        # use the matrix solver to calculate the state probabilities
+        mat_probs = svd.matrix_solver(K)
+
         # make sure all probabilities sum to 1
         assert_allclose(np.sum(kda_probs), 1.0, rtol=1e-09, atol=1e-12)
         assert_allclose(np.sum(sympy_probs), 1.0, rtol=1e-09, atol=1e-12)
         assert_allclose(np.sum(svd_probs), 1.0, rtol=1e-09, atol=1e-12)
+        assert_allclose(np.sum(mat_probs), 1.0, rtol=1e-09, atol=1e-12)
         assert_allclose(np.sum(ode_probs), 1.0, rtol=1e-09, atol=1e-12)
 
         # compare all probabilities to the expected outcome
         assert_almost_equal(kda_probs, expected_probs, decimal=15)
         assert_almost_equal(sympy_probs, expected_probs, decimal=15)
         assert_almost_equal(svd_probs, expected_probs, decimal=12)
+        assert_almost_equal(mat_probs, expected_probs, decimal=15)
         assert_almost_equal(ode_probs, expected_probs, decimal=10)
 
     @settings(deadline=None)
@@ -476,16 +491,72 @@ class Test_Probability_Calcs:
         # use the SVD solver to calculate the state probabilities
         svd_probs = svd.svd_solver(K, tol=1e-15)
 
+        # use the matrix solver to calculate the state probabilities
+        mat_probs = svd.matrix_solver(K)
+
         # make sure all probabilities sum to 1
         assert_allclose(np.sum(kda_probs), 1.0, rtol=1e-09, atol=1e-12)
         assert_allclose(np.sum(sympy_probs), 1.0, rtol=1e-09, atol=1e-12)
         assert_allclose(np.sum(svd_probs), 1.0, rtol=1e-09, atol=1e-12)
+        assert_allclose(np.sum(mat_probs), 1.0, rtol=1e-09, atol=1e-12)
         assert_allclose(np.sum(ode_probs), 1.0, rtol=1e-09, atol=1e-12)
 
         # compare all probabilities to the expected outcome
         assert_almost_equal(kda_probs, expected_probs, decimal=15)
         assert_almost_equal(sympy_probs, expected_probs, decimal=15)
         assert_almost_equal(svd_probs, expected_probs, decimal=12)
+        assert_almost_equal(mat_probs, expected_probs, decimal=15)
+        assert_almost_equal(ode_probs, expected_probs, decimal=10)
+
+    @pytest.mark.parametrize(
+        "k_vals", [(1e5, 2e-4, 5e-8, 5e-8, 1e5, 2e-4, 6, 4e8, 3e-8, 4e8, 3e-8, 6)]
+    )
+    def test_5wl_state_probs_bad_apple(self, k_vals, SP5WL):
+        # assign the rates accordingly
+        (k12, k21, k23, k32, k13, k31, k24, k42, k35, k53, k45, k54) = k_vals
+        expected_probs = SP5WL.return_probs(
+            k12, k21, k23, k32, k13, k31, k24, k42, k35, k53, k45, k54
+        )
+
+        K = np.array(
+            [
+                [0, k12, k13, 0, 0],
+                [k21, 0, k23, k24, 0],
+                [k31, k32, 0, 0, k35],
+                [0, k42, 0, 0, k45],
+                [0, 0, k53, k54, 0],
+            ]
+        )
+        # generate the diagram and edges
+        G = nx.MultiDiGraph()
+        graph_utils.generate_edges(G, K)
+
+        # calculate the state probabilities using KDA
+        kda_probs = calculations.calc_state_probs(G, key="val")
+
+        # use the ODE integrator to calculate the state probabilities
+        probability_guess = np.array([1, 1, 1, 1, 1]) / 5
+        ode_results = ode.ode_solver(
+            probability_guess, K, t_max=1e4, tol=1e-16, atol=1e-17, rtol=1e-13
+        )
+        ode_probs = ode_results.y.T[-1]
+
+        # use the SVD solver to calculate the state probabilities
+        svd_probs = svd.svd_solver(K, tol=1e-12)
+
+        # use the matrix solver to calculate the state probabilities
+        mat_probs = svd.matrix_solver(K)
+
+        # make sure all probabilities sum to 1
+        assert_allclose(np.sum(kda_probs), 1.0, rtol=1e-09, atol=1e-12)
+        assert_allclose(np.sum(svd_probs), 1.0, rtol=1e-09, atol=1e-12)
+        assert_allclose(np.sum(mat_probs), 1.0, rtol=1e-09, atol=1e-12)
+        assert_allclose(np.sum(ode_probs), 1.0, rtol=1e-09, atol=1e-12)
+
+        # compare all probabilities to the expected outcome
+        assert_almost_equal(kda_probs, expected_probs, decimal=15)
+        assert_almost_equal(svd_probs, expected_probs, decimal=3)
+        assert_almost_equal(mat_probs, expected_probs, decimal=8)
         assert_almost_equal(ode_probs, expected_probs, decimal=10)
 
     @settings(deadline=None)
@@ -553,16 +624,21 @@ class Test_Probability_Calcs:
         # use the SVD solver to calculate the state probabilities
         svd_probs = svd.svd_solver(K, tol=1e-15)
 
+        # use the matrix solver to calculate the state probabilities
+        mat_probs = svd.matrix_solver(K)
+
         # make sure all probabilities sum to 1
         assert_allclose(np.sum(kda_probs), 1.0, rtol=1e-09, atol=1e-12)
         assert_allclose(np.sum(sympy_probs), 1.0, rtol=1e-09, atol=1e-12)
         assert_allclose(np.sum(svd_probs), 1.0, rtol=1e-09, atol=1e-12)
+        assert_allclose(np.sum(mat_probs), 1.0, rtol=1e-09, atol=1e-12)
         assert_allclose(np.sum(ode_probs), 1.0, rtol=1e-09, atol=1e-12)
 
         # compare all probabilities to the expected outcome
         assert_almost_equal(kda_probs, expected_probs, decimal=15)
         assert_almost_equal(sympy_probs, expected_probs, decimal=15)
         assert_almost_equal(svd_probs, expected_probs, decimal=12)
+        assert_almost_equal(mat_probs, expected_probs, decimal=15)
         assert_almost_equal(ode_probs, expected_probs, decimal=10)
 
 
