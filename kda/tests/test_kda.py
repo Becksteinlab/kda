@@ -7,7 +7,7 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_almost_equal, assert_allclose, assert_array_equal
-from hypothesis import settings, given, example, strategies as st
+from hypothesis import settings, given, strategies as st
 import networkx as nx
 
 from kda import calculations, diagrams, graph_utils, expressions, ode, svd
@@ -848,21 +848,9 @@ class Test_Misc_Funcs:
     @pytest.mark.parametrize(
         "cycle, cycle_order, expected_func",
         [
-            (
-                [0, 3, 2, 1],
-                [3, 0],
-                "log(k12*k23*k34*k41/(k14*k21*k32*k43))",
-            ),
-            (
-                [0, 3, 1],
-                [3, 0],
-                "log(k12*k24*k41/(k14*k21*k42))",
-            ),
-            (
-                [1, 3, 2],
-                [3, 1],
-                "log(k23*k34*k42/(k24*k32*k43))",
-            ),
+            ([0, 3, 2, 1], [3, 0], "log(k12*k23*k34*k41/(k14*k21*k32*k43))",),
+            ([0, 3, 1], [3, 0], "log(k12*k24*k41/(k14*k21*k42))",),
+            ([1, 3, 2], [3, 1], "log(k23*k34*k42/(k24*k32*k43))",),
         ],
     )
     def test_thermo_force_4WL(self, k_vals, cycle, cycle_order, expected_func):

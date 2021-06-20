@@ -91,8 +91,6 @@ def _get_linearly_dependent_row_index(matrix, tol=1e-12):
         # if there is exactly 1 linearly dependent vector detected, replace it
         # select that row for replacement
         return ld_inds[0]
-    elif ld_inds.size > 1:
-        raise ValueError(f"{ld_inds.size} linearly dependent equations detected.")
 
 
 def matrix_solver(K):
@@ -125,7 +123,7 @@ def matrix_solver(K):
         Kc[i, i] = -math.fsum(Kc[:, i])
     # find linearly dependent row/equation, if one exists
     ld_row_idx = _get_linearly_dependent_row_index(matrix=Kc)
-    # replace the last equation with the probability sum equation
+    # replace equation with the probability sum equation
     # (p1 + p2 + ... + pN = 1) by setting the values in the
     # bottom row equal to 1
     Kc[ld_row_idx, :] = np.ones(N, dtype=float)
