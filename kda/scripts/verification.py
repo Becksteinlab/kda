@@ -3,13 +3,13 @@
 KDA Verification
 ================
 The purpose of this module is to test the outputs of Kinetic Diagram Analysis
-against the SVD matrix solution. It does this by generating random sets of rate
+against the matrix solution. It does this by generating random sets of rate
 constants, using MultiBind to get a thermodynamically consistent set of
 equilibrium rate constants, then running them through KDA state probability
-calculation functions `svd.SVD()` and `calculations.calc_state_probs()`. A host
-of data is produced and stored in CSV files for analysis via modules `timing.py`
-and `rms.py`, and all produced rates and graphs are stored in corresponding
-directories.
+calculation functions `svd.matrix_solver()` and
+`calculations.calc_state_probs()`. A host of data is produced and stored in
+CSV files for analysis via modules `timing.py` and `rms.py`, and all
+produced rates and graphs are stored in corresponding directories.
 """
 import os
 from os.path import join
@@ -394,9 +394,9 @@ def main(
     min_cons_to_mute = get_min_connections(N=n_states, max_rates=max_rates)
 
     # create empty arrays/lists for storing data
-    svd_data = np.zeros((n_datasets, n_states))
+    mat_data = np.zeros((n_datasets, n_states))
     kda_data = np.zeros((n_datasets, n_states))
-    svd_time = np.zeros(n_datasets)
+    mat_time = np.zeros(n_datasets)
     kda_time = np.zeros(n_datasets)
     graph_edge_count = np.zeros(n_datasets)
     graph_cycle_count = np.zeros(n_datasets)
@@ -426,9 +426,9 @@ def main(
                 break
 
         # get the matrix solution
-        svd_start = time.perf_counter()
-        svd_probs = svd.matrix_solver(K)
-        svd_elapsed = time.perf_counter() - svd_start
+        mat_start = time.perf_counter()
+        mat_probs = svd.matrix_solver(K)
+        mat_elapsed = time.perf_counter() - mat_start
 
         # initialize an empty graph object
         G = nx.MultiDiGraph()
@@ -462,19 +462,19 @@ def main(
         )
         # verify that the state probabilities are normalized to 1
         assert np.isclose(np.sum(kda_probs), 1.0, rtol=1e-5, atol=1e-8)
-        assert np.isclose(np.sum(svd_probs), 1.0, rtol=1e-5, atol=1e-8)
-        # check the transition fluxes for both KDA and SVD
+        assert np.isclose(np.sum(mat_probs), 1.0, rtol=1e-5, atol=1e-8)
+        # check the transition fluxes for both KDA and the matrix solution
         check_transition_fluxes(G=G, prob_arr=kda_probs)
-        check_transition_fluxes(G=G, prob_arr=svd_probs)
+        check_transition_fluxes(G=G, prob_arr=mat_probs)
 
         # pickle and save the graph
         graph_save_string = f"graph_{n_states}_{i+1}.pk"
         nx.write_gpickle(G, join(graph_save_path, graph_save_string))
 
         # store/assign relevant data
-        svd_data[i] = svd_probs
+        mat_data[i] = mat_probs
         kda_data[i] = kda_probs
-        svd_time[i] = svd_elapsed
+        mat_time[i] = mat_elapsed
         kda_time[i] = kda_elapsed
         dirpar_count[i] = dir_par_diag_count
         par_count[i] = par_diag_count
@@ -494,10 +494,10 @@ def main(
         "n_pars",
         "n_dirpars",
     ]
-    time_cols = ["svd time (s)", "kda time (s)"]
+    time_cols = ["mat time (s)", "kda time (s)"]
     cols.extend(time_cols)
-    svd_prob_cols = [f"svd p_{i+1}" for i in range(n_states)]
-    cols.extend(svd_prob_cols)
+    mat_prob_cols = [f"mat p_{i+1}" for i in range(n_states)]
+    cols.extend(mat_prob_cols)
     kda_prob_cols = [f"kda p_{i+1}" for i in range(n_states)]
     cols.extend(kda_prob_cols)
 
@@ -510,9 +510,9 @@ def main(
         par_count,
         dirpar_count,
     ]
-    data.extend([svd_time, kda_time])
-    svd_probs = [svd_data[:, i] for i in range(n_states)]
-    data.extend(svd_probs)
+    data.extend([mat_time, kda_time])
+    mat_probs = [mat_data[:, i] for i in range(n_states)]
+    data.extend(mat_probs)
     kda_probs = [kda_data[:, i] for i in range(n_states)]
     data.extend(kda_probs)
     data = np.array(data).T
