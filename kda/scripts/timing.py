@@ -134,10 +134,7 @@ def get_fit_string(a, k):
 
 def plot_t_over_avg_degree(mat_time, kda_time, nodes, edges, datapath):
     unique_degrees, mat_data, kda_data = get_avg_degree_data(
-        mat_time=mat_time,
-        kda_time=kda_time,
-        nodes=nodes,
-        edges=edges,
+        mat_time=mat_time, kda_time=kda_time, nodes=nodes, edges=edges,
     )
 
     fig = plt.figure(tight_layout=True)
@@ -179,9 +176,7 @@ def plot_t_over_avg_degree(mat_time, kda_time, nodes, edges, datapath):
 
 def plot_t_over_nodes(mat_time, kda_time, nodes, datapath):
     unique_nodes, mat_data, kda_data = get_node_data(
-        mat_time=mat_time,
-        kda_time=kda_time,
-        nodes=nodes,
+        mat_time=mat_time, kda_time=kda_time, nodes=nodes,
     )
 
     fig = plt.figure(tight_layout=True)
@@ -223,9 +218,7 @@ def plot_t_over_nodes(mat_time, kda_time, nodes, datapath):
 
 def plot_t_over_edges(mat_time, kda_time, edges, datapath):
     unique_edges, mat_data, kda_data = get_edge_data(
-        mat_time=mat_time,
-        kda_time=kda_time,
-        edges=edges,
+        mat_time=mat_time, kda_time=kda_time, edges=edges,
     )
 
     fig = plt.figure(tight_layout=True)
@@ -267,9 +260,7 @@ def plot_t_over_edges(mat_time, kda_time, edges, datapath):
 
 def plot_t_over_dirpars(mat_time, kda_time, dirpars, datapath, loglog=True):
     unique_dirpars, mat_data, kda_data = get_dirpar_data(
-        mat_time=mat_time,
-        kda_time=kda_time,
-        dirpars=dirpars,
+        mat_time=mat_time, kda_time=kda_time, dirpars=dirpars,
     )
 
     # get fit for log-log plot
@@ -325,9 +316,7 @@ def plot_t_over_dirpars(mat_time, kda_time, dirpars, datapath, loglog=True):
 
 def plot_t_over_pars(mat_time, kda_time, pars, datapath, loglog=True):
     unique_pars, mat_data, kda_data = get_par_data(
-        mat_time=mat_time,
-        kda_time=kda_time,
-        pars=pars,
+        mat_time=mat_time, kda_time=kda_time, pars=pars,
     )
 
     # get fit for log-log plot

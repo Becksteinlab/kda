@@ -50,26 +50,11 @@ if __name__ == "__main__":
     # because they share memory, and some cases can use as much as 16 GB of memory
     # on their own.
     run_dict = {
-        1: {
-            "states": [3, 4, 5],
-            "max_rates": [8, 12, 20],
-        },
-        2: {
-            "states": [6, 7, 8],
-            "max_rates": [30, 40, 40],
-        },
-        3: {
-            "states": [9, 10, 11],
-            "max_rates": [40, 40, 40],
-        },
-        4: {
-            "states": [12, 13],
-            "max_rates": [40, 40],
-        },
-        5: {
-            "states": [14, 15],
-            "max_rates": [40, 40],
-        },
+        1: {"states": [3, 4, 5], "max_rates": [8, 12, 20],},
+        2: {"states": [6, 7, 8], "max_rates": [30, 40, 40],},
+        3: {"states": [9, 10, 11], "max_rates": [40, 40, 40],},
+        4: {"states": [12, 13], "max_rates": [40, 40],},
+        5: {"states": [14, 15], "max_rates": [40, 40],},
     }
 
     # convert the input to seconds
@@ -91,15 +76,7 @@ if __name__ == "__main__":
         for n_states, max_rates in list(zip(states_list, max_rates_list)):
             # verification_functions.main() has 4 arguments:
             #       n_states, n_datasets, max_rates, and save_path
-            p = Process(
-                target=main,
-                args=(
-                    n_states,
-                    n_runs,
-                    max_rates,
-                    save_path,
-                ),
-            )
+            p = Process(target=main, args=(n_states, n_runs, max_rates, save_path,),)
             p.start()
             processes.append(p)
 

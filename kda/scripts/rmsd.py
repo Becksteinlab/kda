@@ -40,6 +40,7 @@ def generate_rmsd_table(states, rmsd_list, data_path):
         table_path, index=False, float_format="{:0.2e}".format, label="RMSD_table"
     )
 
+
 def plot_rmsd_over_states(states, rmsd_list, data_path):
 
     fig, ax = plt.subplots(figsize=(4, 3), tight_layout=True)
