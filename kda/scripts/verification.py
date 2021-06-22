@@ -160,14 +160,7 @@ def write_multibind_rates_file(rate_matrix, rates_path):
     k_vars = k_vals * random_vars
     # create pandas dataframes to save
     rates_cols = ["state1", "state2", "k", "kvar"]
-    rates_data = list(
-        zip(
-            state1,
-            state2,
-            k_vals,
-            k_vars,
-        )
-    )
+    rates_data = list(zip(state1, state2, k_vals, k_vars,))
     rates_df = pd.DataFrame(data=rates_data, columns=rates_cols)
     # save dataframes as .csv file at location rates_path
     rates_df.to_csv(path_or_buf=rates_path, sep=",", columns=rates_cols, index=False)
@@ -257,12 +250,7 @@ def check_net_cycle_fluxes(G, dirpar_edges, unique_cycles):
             # we can just assign an arbitrary direction and not worry about signs
             order = cycle[:2]
             flux_diags = diagrams.generate_flux_diagrams(G, cycle)
-            pi_diff = calculations.calc_pi_difference(
-                G,
-                cycle,
-                order,
-                key="val",
-            )
+            pi_diff = calculations.calc_pi_difference(G, cycle, order, key="val",)
             sigma_K = calculations.calc_sigma_K(G, cycle, flux_diags, key="val")
             net_cycle_flux = pi_diff * sigma_K / sigma
 
@@ -359,18 +347,13 @@ def construct_rate_matrix(
     )
     # run K-matrix through MultiBind thermodynamic consistency function
     K = get_thermodynamically_consistent_matrix(
-        K0=K,
-        rates_save_path=rates_save_path,
-        index=graph_index,
+        K0=K, rates_save_path=rates_save_path, index=graph_index,
     )
     return K
 
 
 def main(
-    n_states,
-    n_datasets,
-    max_rates,
-    save_path,
+    n_states, n_datasets, max_rates, save_path,
 ):
     """
     Primary function for running verification.
@@ -452,10 +435,7 @@ def main(
         # perform various checks and acquire remaining data for G
         check_cycles(G=G, unique_cycles=unique_cycles)
         par_diag_count, dir_par_diag_count = check_diagram_counts(
-            G=G,
-            K=K,
-            dirpar_edges=dirpar_edges,
-            n_states=n_states,
+            G=G, K=K, dirpar_edges=dirpar_edges, n_states=n_states,
         )
         n_cycles = check_net_cycle_fluxes(
             G=G, dirpar_edges=dirpar_edges, unique_cycles=unique_cycles
