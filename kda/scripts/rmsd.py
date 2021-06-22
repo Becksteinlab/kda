@@ -40,87 +40,7 @@ def generate_rmsd_table(states, rmsd_list, data_path):
         table_path, index=False, float_format="{:0.2e}".format, label="RMSD_table"
     )
 
-
 def plot_rmsd_over_states(states, rmsd_list, data_path):
-    unique_states, avg_rmsd, std_dev_rmsd = get_rmsd_data(states=states, rmsd=rmsd_list)
-    fig = plt.figure(tight_layout=True)
-    ax = fig.add_subplot(111)
-    ax.errorbar(
-        unique_states,
-        avg_rmsd,
-        yerr=std_dev_rmsd,
-        color="black",
-        ecolor="grey",
-        fmt=".",
-        barsabove=False,
-        elinewidth=0.8,
-        capsize=4,
-        capthick=0.8,
-    )
-    ax.set_yscale("log", nonpositive="clip")
-    ax.set_xlim(left=1, right=16)
-    ax.set_xticks(np.arange(unique_states[-1] + 1, step=3), minor=False)
-    ax.set_ylabel(r"Avg. RMSD")
-    ax.set_xlabel(r"Number of States")
-    fig_savepath = join(datapath, f"rmsd_vs_states.pdf")
-    print(f"Saving Avg. RMSD vs. states plot at location: {fig_savepath}")
-    fig.savefig(fig_savepath, dpi=500)
-
-
-def plot_rmsd_over_partials(partials, rmsd_list, data_path):
-    unique_partials, avg_rmsd, std_dev_rmsd = get_rmsd_data(
-        states=partials, rmsd=rmsd_list
-    )
-    fig = plt.figure(tight_layout=True)
-    ax = fig.add_subplot(111)
-    ax.errorbar(
-        unique_partials,
-        avg_rmsd,
-        yerr=std_dev_rmsd,
-        color="black",
-        ecolor="grey",
-        fmt=".",
-        barsabove=False,
-        elinewidth=0.8,
-        capsize=4,
-        capthick=0.8,
-    )
-    ax.set_xscale("log", nonpositive="clip")
-    ax.set_yscale("log", nonpositive="clip")
-    ax.set_ylabel(r"Avg. RMSD")
-    ax.set_xlabel(r"Number of Partial Diagrams")
-    fig_savepath = join(datapath, f"rmsd_vs_partials.pdf")
-    print(f"Saving Avg. RMSD vs. partials plot at location: {fig_savepath}")
-    fig.savefig(fig_savepath, dpi=500)
-
-
-def plot_rmsd_np(partials, rmsd_list, data_path):
-    unique_partials, avg_rmsd, std_dev_rmsd = get_rmsd_data(
-        states=partials, rmsd=rmsd_list
-    )
-    fig = plt.figure(tight_layout=True)
-    ax = fig.add_subplot(111)
-    ax.errorbar(
-        unique_partials,
-        avg_rmsd,
-        yerr=std_dev_rmsd,
-        color="black",
-        ecolor="grey",
-        fmt=".",
-        barsabove=False,
-        elinewidth=0.8,
-        capsize=4,
-        capthick=0.8,
-    )
-    ax.set_xscale("log", nonpositive="clip")
-    ax.set_yscale("log", nonpositive="clip")
-    ax.set_ylabel(r"Avg. RMSD")
-    ax.set_xlabel(r"n_states ^ 2 * n_partials")
-    fig_savepath = join(datapath, f"rmsd_vs_n_squared_pars.pdf")
-    fig.savefig(fig_savepath, dpi=500)
-
-
-def plot_rmsd_over_states_all(states, rmsd_list, data_path):
 
     fig, ax = plt.subplots(figsize=(4, 3), tight_layout=True)
     sns.boxplot(
@@ -134,7 +54,7 @@ def plot_rmsd_over_states_all(states, rmsd_list, data_path):
     ax.set_title(r"RMSD vs. Number of States")
     ax.set_xlabel(r"Number of States")
     ax.set_ylabel(r"RMSD")
-    fig_savepath = join(datapath, f"rmsd_vs_states_all.pdf")
+    fig_savepath = join(datapath, f"rmsd_vs_states.pdf")
     print(f"Saving RMSD vs. states plot at location: {fig_savepath}")
     fig.savefig(fig_savepath, dpi=500)
 
@@ -173,22 +93,11 @@ if __name__ == "__main__":
         kda_vals = p[n_nodes:]
         # calculate the RMSD
         RMSD = np.sqrt(np.mean((kda_vals - svd_vals) ** 2))
-        # if RMSD > 1e-4:
-        #     print(" ")
-        #     print("=" * 20)
-        #     print(idx[i], RMSD)
-        #     print("SVD probs: ", svd_vals)
-        #     print("KDA probs: ", kda_vals)
-        # append relevant values to lists
         rmsd_list.append(RMSD)
 
     rmsd_list = np.asarray(rmsd_list)
 
     assert len(rmsd_list) == len(states)
 
-    # generate_rmsd_table(states=states, rmsd_list=rmsd_list, data_path=datapath)
-    # plot_rmsd_over_states(states, rmsd_list, data_path=datapath)
-    plot_rmsd_over_states_all(states, rmsd_list, data_path=datapath)
-    # plot_rmsd_over_partials(partials, rmsd_list, data_path=datapath)
-    # a = (states ** 2) * partials
-    # plot_rmsd_np(a, rmsd_list, data_path=datapath)
+    plot_rmsd_over_states(states=states, rmsd_list=rmsd_list, data_path=datapath)
+    generate_rmsd_table(states=states, rmsd_list=rmsd_list, data_path=datapath)

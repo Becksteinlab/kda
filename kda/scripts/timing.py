@@ -14,100 +14,100 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
-def get_avg_degree_data(svd_time, kda_time, nodes, edges):
+def get_avg_degree_data(mat_time, kda_time, nodes, edges):
     avg_degree = np.asarray(edges) / np.asarray(nodes)
     unique_degrees = np.unique(avg_degree)
-    svd_data = []
+    mat_data = []
     kda_data = []
     for deg in unique_degrees:
         mask = avg_degree == deg
-        svdt = svd_time[mask]
+        matt = mat_time[mask]
         kdat = kda_time[mask]
-        svd_avg = np.mean(svdt)
+        mat_avg = np.mean(matt)
         kda_avg = np.mean(kdat)
-        svd_std = np.std(svdt)
+        mat_std = np.std(matt)
         kda_std = np.std(kdat)
-        svd_data.append([svd_avg, svd_std])
+        mat_data.append([mat_avg, mat_std])
         kda_data.append([kda_avg, kda_std])
-    svd_data = np.array(svd_data)
+    mat_data = np.array(mat_data)
     kda_data = np.array(kda_data)
-    return (unique_degrees, svd_data, kda_data)
+    return (unique_degrees, mat_data, kda_data)
 
 
-def get_node_data(svd_time, kda_time, nodes):
+def get_node_data(mat_time, kda_time, nodes):
     unique_nodes = np.unique(nodes)
-    svd_data = []
+    mat_data = []
     kda_data = []
     for n_nodes in unique_nodes:
         mask = nodes == n_nodes
-        svdt = svd_time[mask]
+        matt = mat_time[mask]
         kdat = kda_time[mask]
-        svd_avg = np.mean(svdt)
+        mat_avg = np.mean(matt)
         kda_avg = np.mean(kdat)
-        svd_std = np.std(svdt)
+        mat_std = np.std(matt)
         kda_std = np.std(kdat)
-        svd_data.append([svd_avg, svd_std])
+        mat_data.append([mat_avg, mat_std])
         kda_data.append([kda_avg, kda_std])
-    svd_data = np.array(svd_data)
+    mat_data = np.array(mat_data)
     kda_data = np.array(kda_data)
-    return (unique_nodes, svd_data, kda_data)
+    return (unique_nodes, mat_data, kda_data)
 
 
-def get_edge_data(svd_time, kda_time, edges):
+def get_edge_data(mat_time, kda_time, edges):
     unique_edges = np.unique(edges)
-    svd_data = []
+    mat_data = []
     kda_data = []
     for n_edges in unique_edges:
         mask = edges == n_edges
-        svdt = svd_time[mask]
+        matt = mat_time[mask]
         kdat = kda_time[mask]
-        svd_avg = np.mean(svdt)
+        mat_avg = np.mean(matt)
         kda_avg = np.mean(kdat)
-        svd_std = np.std(svdt)
+        mat_std = np.std(matt)
         kda_std = np.std(kdat)
-        svd_data.append([svd_avg, svd_std])
+        mat_data.append([mat_avg, mat_std])
         kda_data.append([kda_avg, kda_std])
-    svd_data = np.array(svd_data)
+    mat_data = np.array(mat_data)
     kda_data = np.array(kda_data)
-    return (unique_edges, svd_data, kda_data)
+    return (unique_edges, mat_data, kda_data)
 
 
-def get_par_data(svd_time, kda_time, pars):
+def get_par_data(mat_time, kda_time, pars):
     unique_pars = np.unique(pars)
-    svd_data = []
+    mat_data = []
     kda_data = []
     for n_pars in unique_pars:
         mask = pars == n_pars
-        svdt = svd_time[mask]
+        matt = mat_time[mask]
         kdat = kda_time[mask]
-        svd_avg = np.mean(svdt)
+        mat_avg = np.mean(matt)
         kda_avg = np.mean(kdat)
-        svd_std = np.std(svdt)
+        mat_std = np.std(matt)
         kda_std = np.std(kdat)
-        svd_data.append([svd_avg, svd_std])
+        mat_data.append([mat_avg, mat_std])
         kda_data.append([kda_avg, kda_std])
-    svd_data = np.array(svd_data)
+    mat_data = np.array(mat_data)
     kda_data = np.array(kda_data)
-    return (unique_pars, svd_data, kda_data)
+    return (unique_pars, mat_data, kda_data)
 
 
-def get_dirpar_data(svd_time, kda_time, dirpars):
+def get_dirpar_data(mat_time, kda_time, dirpars):
     unique_dirpars = np.unique(dirpars)
-    svd_data = []
+    mat_data = []
     kda_data = []
     for n_dirpars in unique_dirpars:
         mask = dirpars == n_dirpars
-        svdt = svd_time[mask]
+        matt = mat_time[mask]
         kdat = kda_time[mask]
-        svd_avg = np.mean(svdt)
+        mat_avg = np.mean(matt)
         kda_avg = np.mean(kdat)
-        svd_std = np.std(svdt)
+        mat_std = np.std(matt)
         kda_std = np.std(kdat)
-        svd_data.append([svd_avg, svd_std])
+        mat_data.append([mat_avg, mat_std])
         kda_data.append([kda_avg, kda_std])
-    svd_data = np.array(svd_data)
+    mat_data = np.array(mat_data)
     kda_data = np.array(kda_data)
-    return (unique_dirpars, svd_data, kda_data)
+    return (unique_dirpars, mat_data, kda_data)
 
 
 def fit_powerlaw(diagrams, kda_data):
@@ -132,9 +132,9 @@ def get_fit_string(a, k):
     return r"$T = %1.1g D ^ {%1.3g} $" % (a, k)
 
 
-def plot_t_over_avg_degree(svd_time, kda_time, nodes, edges, datapath):
-    unique_degrees, svd_data, kda_data = get_avg_degree_data(
-        svd_time=svd_time,
+def plot_t_over_avg_degree(mat_time, kda_time, nodes, edges, datapath):
+    unique_degrees, mat_data, kda_data = get_avg_degree_data(
+        mat_time=mat_time,
         kda_time=kda_time,
         nodes=nodes,
         edges=edges,
@@ -144,8 +144,8 @@ def plot_t_over_avg_degree(svd_time, kda_time, nodes, edges, datapath):
     ax = fig.add_subplot(111)
     ax.errorbar(
         unique_degrees,
-        svd_data[:, 0],
-        yerr=svd_data[:, 1],
+        mat_data[:, 0],
+        yerr=mat_data[:, 1],
         color="black",
         ecolor="grey",
         fmt=".",
@@ -153,7 +153,7 @@ def plot_t_over_avg_degree(svd_time, kda_time, nodes, edges, datapath):
         elinewidth=0.8,
         capsize=4,
         capthick=0.8,
-        label="SVD",
+        label="MAT",
     )
     ax.errorbar(
         unique_degrees,
@@ -177,9 +177,9 @@ def plot_t_over_avg_degree(svd_time, kda_time, nodes, edges, datapath):
     fig.savefig(fig_savepath, dpi=500)
 
 
-def plot_t_over_nodes(svd_time, kda_time, nodes, datapath):
-    unique_nodes, svd_data, kda_data = get_node_data(
-        svd_time=svd_time,
+def plot_t_over_nodes(mat_time, kda_time, nodes, datapath):
+    unique_nodes, mat_data, kda_data = get_node_data(
+        mat_time=mat_time,
         kda_time=kda_time,
         nodes=nodes,
     )
@@ -188,8 +188,8 @@ def plot_t_over_nodes(svd_time, kda_time, nodes, datapath):
     ax = fig.add_subplot(111)
     ax.errorbar(
         unique_nodes,
-        svd_data[:, 0],
-        yerr=svd_data[:, 1],
+        mat_data[:, 0],
+        yerr=mat_data[:, 1],
         color="black",
         ecolor="grey",
         fmt=".",
@@ -197,7 +197,7 @@ def plot_t_over_nodes(svd_time, kda_time, nodes, datapath):
         elinewidth=0.8,
         capsize=4,
         capthick=0.8,
-        label="SVD",
+        label="MAT",
     )
     ax.errorbar(
         unique_nodes,
@@ -221,9 +221,9 @@ def plot_t_over_nodes(svd_time, kda_time, nodes, datapath):
     fig.savefig(fig_savepath, dpi=500)
 
 
-def plot_t_over_edges(svd_time, kda_time, edges, datapath):
-    unique_edges, svd_data, kda_data = get_edge_data(
-        svd_time=svd_time,
+def plot_t_over_edges(mat_time, kda_time, edges, datapath):
+    unique_edges, mat_data, kda_data = get_edge_data(
+        mat_time=mat_time,
         kda_time=kda_time,
         edges=edges,
     )
@@ -232,8 +232,8 @@ def plot_t_over_edges(svd_time, kda_time, edges, datapath):
     ax = fig.add_subplot(111)
     ax.errorbar(
         unique_edges,
-        svd_data[:, 0],
-        yerr=svd_data[:, 1],
+        mat_data[:, 0],
+        yerr=mat_data[:, 1],
         color="black",
         ecolor="grey",
         fmt=".",
@@ -241,7 +241,7 @@ def plot_t_over_edges(svd_time, kda_time, edges, datapath):
         elinewidth=0.8,
         capsize=4,
         capthick=0.8,
-        label="SVD",
+        label="MAT",
     )
     ax.errorbar(
         unique_edges,
@@ -265,9 +265,9 @@ def plot_t_over_edges(svd_time, kda_time, edges, datapath):
     fig.savefig(fig_savepath, dpi=500)
 
 
-def plot_t_over_dirpars(svd_time, kda_time, dirpars, datapath, loglog=True):
-    unique_dirpars, svd_data, kda_data = get_dirpar_data(
-        svd_time=svd_time,
+def plot_t_over_dirpars(mat_time, kda_time, dirpars, datapath, loglog=True):
+    unique_dirpars, mat_data, kda_data = get_dirpar_data(
+        mat_time=mat_time,
         kda_time=kda_time,
         dirpars=dirpars,
     )
@@ -281,14 +281,14 @@ def plot_t_over_dirpars(svd_time, kda_time, dirpars, datapath, loglog=True):
     if loglog == True:
         ax.set_xscale("log", nonpositive="clip")
         ax.set_yscale("log", nonpositive="clip")
-        min_y = 0.5 * np.min(np.abs(svd_data[:, 0] - svd_data[:, 1]))
+        min_y = 0.5 * np.min(np.abs(mat_data[:, 0] - mat_data[:, 1]))
         max_y = 5 * np.max(np.abs(kda_data[:, 0] + kda_data[:, 1]))
         ax.set_ylim(bottom=min_y, top=max_y)
     ax.plot(unique_dirpars, fit_func, color="blue", ls="-", lw=1.5, label=fit_func_str)
     ax.errorbar(
         unique_dirpars,
-        svd_data[:, 0],
-        yerr=svd_data[:, 1],
+        mat_data[:, 0],
+        yerr=mat_data[:, 1],
         color="black",
         ecolor="grey",
         fmt=".",
@@ -296,7 +296,7 @@ def plot_t_over_dirpars(svd_time, kda_time, dirpars, datapath, loglog=True):
         elinewidth=0.8,
         capsize=4,
         capthick=0.8,
-        label="SVD",
+        label="MAT",
     )
     ax.errorbar(
         unique_dirpars,
@@ -323,9 +323,9 @@ def plot_t_over_dirpars(svd_time, kda_time, dirpars, datapath, loglog=True):
     fig.savefig(fig_savepath, dpi=500)
 
 
-def plot_t_over_pars(svd_time, kda_time, pars, datapath, loglog=True):
-    unique_pars, svd_data, kda_data = get_par_data(
-        svd_time=svd_time,
+def plot_t_over_pars(mat_time, kda_time, pars, datapath, loglog=True):
+    unique_pars, mat_data, kda_data = get_par_data(
+        mat_time=mat_time,
         kda_time=kda_time,
         pars=pars,
     )
@@ -339,14 +339,14 @@ def plot_t_over_pars(svd_time, kda_time, pars, datapath, loglog=True):
     if loglog == True:
         ax.set_xscale("log", nonpositive="clip")
         ax.set_yscale("log", nonpositive="clip")
-        min_y = 0.5 * np.min(np.abs(svd_data[:, 0] - svd_data[:, 1]))
+        min_y = 0.5 * np.min(np.abs(mat_data[:, 0] - mat_data[:, 1]))
         max_y = 5 * np.max(np.abs(kda_data[:, 0] + kda_data[:, 1]))
         ax.set_ylim(bottom=min_y, top=max_y)
     ax.plot(unique_pars, fit_func, color="blue", ls="-", lw=1.5, label=fit_func_str)
     ax.errorbar(
         unique_pars,
-        svd_data[:, 0],
-        yerr=svd_data[:, 1],
+        mat_data[:, 0],
+        yerr=mat_data[:, 1],
         color="black",
         ecolor="grey",
         fmt=".",
@@ -354,7 +354,7 @@ def plot_t_over_pars(svd_time, kda_time, pars, datapath, loglog=True):
         elinewidth=0.8,
         capsize=4,
         capthick=0.8,
-        label="SVD",
+        label="MAT",
     )
     ax.errorbar(
         unique_pars,
@@ -404,13 +404,13 @@ if __name__ == "__main__":
     cycles = df["n_cycles"]
     pars = df["n_pars"]
     dirpars = df["n_dirpars"]
-    svd_time = df["svd time (s)"]
+    mat_time = df["mat time (s)"]
     kda_time = df["kda time (s)"]
 
-    plot_t_over_edges(svd_time, kda_time, edges, datapath)
-    plot_t_over_avg_degree(svd_time, kda_time, nodes, edges, datapath)
-    plot_t_over_pars(svd_time, kda_time, pars, datapath)
-    plot_t_over_pars(svd_time, kda_time, pars, datapath, loglog=False)
-    plot_t_over_dirpars(svd_time, kda_time, dirpars, datapath)
-    plot_t_over_dirpars(svd_time, kda_time, dirpars, datapath, loglog=False)
-    plot_t_over_nodes(svd_time, kda_time, nodes, datapath)
+    plot_t_over_edges(mat_time, kda_time, edges, datapath)
+    plot_t_over_avg_degree(mat_time, kda_time, nodes, edges, datapath)
+    plot_t_over_pars(mat_time, kda_time, pars, datapath)
+    plot_t_over_pars(mat_time, kda_time, pars, datapath, loglog=False)
+    plot_t_over_dirpars(mat_time, kda_time, dirpars, datapath)
+    plot_t_over_dirpars(mat_time, kda_time, dirpars, datapath, loglog=False)
+    plot_t_over_nodes(mat_time, kda_time, nodes, datapath)

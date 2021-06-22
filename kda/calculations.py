@@ -78,7 +78,7 @@ def _get_ordered_cycle(G, input_cycle):
         # contain the nodes in the input cycle
         # for this case, we just need to check that the input cycle is
         # identical to one of the ordered cycles found
-        if input_cycle in ordered_cycles:
+        if list(input_cycle) in ordered_cycles:
             # if the input cycle matches one of the ordered cycles
             # then we can simply return the input cycle since it is
             # already ordered
