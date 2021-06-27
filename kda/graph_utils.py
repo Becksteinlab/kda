@@ -76,7 +76,7 @@ def generate_edges(G, vals, names=None, val_key="val", name_key="name"):
         raise TypeError(
             "Values entered for 'vals' must be integers or floats, not strings."
         )
-    elif not isinstance(names[0, 0], str):
+    if not isinstance(names[0, 0], str):
         raise TypeError("Labels entered for 'names' must be strings.")
     np.fill_diagonal(vals, 0)  # Make sure diagonal elements are set to zero
 
@@ -196,7 +196,7 @@ def _is_ccw(cycle, start, end):
     for i in range(len(double) - 1):
         if (double[i], double[i + 1]) == (start, end):
             return True
-    return None
+    return False
 
 
 def get_ccw_cycle(cycle, order):
@@ -214,10 +214,7 @@ def get_ccw_cycle(cycle, order):
         input cycle. This pair of nodes is used to determine which direction is
         CCW.
     """
-    CCW = _is_ccw(cycle, order[0], order[1])
-    if CCW == True:
+    if _is_ccw(cycle, order[0], order[1]):
         return cycle
-    elif not CCW:
-        return cycle[::-1]
     else:
-        raise CycleError("Direction of cycle {} could not be determined.".format(cycle))
+        return cycle[::-1]

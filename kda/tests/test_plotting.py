@@ -68,27 +68,40 @@ def results_4wl():
     return results4wl
 
 
-def test_plot_diagram(G4wl, pos_4wl):
-    plotting.draw_diagrams(G4wl)
-    plotting.draw_diagrams(G4wl, pos=pos_4wl)
-
-
 def test_plot_cycle(G4wl, pos_4wl):
-    plotting.draw_cycles(G4wl, [0, 1, 3])
-    plotting.draw_cycles(G4wl, [0, 3, 2, 1])
-    plotting.draw_cycles(G4wl, [0, 1, 3], pos=pos_4wl)
-    plotting.draw_cycles(G4wl, [0, 1, 3], pos=pos_4wl, cbt=True)
-    plotting.draw_cycles(G4wl, [[0, 1, 3], [0, 3, 2, 1]], panel=True)
-    plotting.draw_cycles(G4wl, [[0, 1, 3], [0, 3, 2, 1]], panel=True, cbt=True)
-    plotting.draw_cycles(G4wl, [[0, 1, 3], [0, 3, 2, 1]], cbt=True)
+    cycles = [[0, 1, 3], [0, 3, 2, 1]]
+    plotting.draw_cycles(G4wl, cycles[0])
+    plotting.draw_cycles(G4wl, cycles[1])
+    plotting.draw_cycles(G4wl, cycles[0], pos=pos_4wl)
+    plotting.draw_cycles(G4wl, cycles[0], pos=pos_4wl, cbt=True)
+    plotting.draw_cycles(G4wl, cycles, panel=True)
+    plotting.draw_cycles(G4wl, cycles, panel=True, cbt=True)
+    plotting.draw_cycles(G4wl, cycles, cbt=True)
+    cycles = 4 * cycles
+    plotting.draw_cycles(G4wl, cycles[:-1], panel=True, cbt=True)
 
 
 def test_plot_diagrams(G4wl, pos_4wl):
-    flux_diags = diagrams.generate_flux_diagrams(G4wl, [0, 1, 3])
+    plotting.draw_diagrams(G4wl)
+    plotting.draw_diagrams(G4wl, pos=pos_4wl)
+    cycles = graph_utils.find_all_unique_cycles(G4wl)
+
+    flux_diags = []
+    for cycle in cycles:
+        if not cycle is None:
+            flux_diags = diagrams.generate_flux_diagrams(G4wl, cycle)
+            if not flux_diags is None:
+                flux_diags.extend(flux_diags)
+
     plotting.draw_diagrams(flux_diags)
     plotting.draw_diagrams(flux_diags, pos=pos_4wl, cbt=True)
     plotting.draw_diagrams(flux_diags, pos=pos_4wl, panel=True, cbt=True)
+    plotting.draw_diagrams(flux_diags, pos=pos_4wl, panel=True, cbt=False, rows=2)
+    plotting.draw_diagrams(flux_diags, pos=pos_4wl, panel=True, cbt=False, cols=2)
+    flux_diags = 2 * flux_diags
+    plotting.draw_diagrams(flux_diags[:-1], pos=pos_4wl, panel=True, cbt=False)
 
 
 def test_plot_ODE_probs(results_4wl):
     plotting.draw_ODE_results(results_4wl)
+    plotting.draw_ODE_results(results_4wl, bbox_coords=(0, 1))

@@ -848,9 +848,21 @@ class Test_Misc_Funcs:
     @pytest.mark.parametrize(
         "cycle, cycle_order, expected_func",
         [
-            ([0, 3, 2, 1], [3, 0], "log(k12*k23*k34*k41/(k14*k21*k32*k43))",),
-            ([0, 3, 1], [3, 0], "log(k12*k24*k41/(k14*k21*k42))",),
-            ([1, 3, 2], [3, 1], "log(k23*k34*k42/(k24*k32*k43))",),
+            (
+                [0, 3, 2, 1],
+                [3, 0],
+                "log(k12*k23*k34*k41/(k14*k21*k32*k43))",
+            ),
+            (
+                [0, 3, 1],
+                [3, 0],
+                "log(k12*k24*k41/(k14*k21*k42))",
+            ),
+            (
+                [1, 3, 2],
+                [3, 1],
+                "log(k23*k34*k42/(k24*k32*k43))",
+            ),
         ],
     )
     def test_thermo_force_4WL(self, k_vals, cycle, cycle_order, expected_func):
@@ -1097,3 +1109,87 @@ def test_retrieve_rate_matrix():
     K_new = graph_utils.retrieve_rate_matrix(G)
     # check that arrays are the same
     assert_array_equal(K, K_new)
+
+
+def test_add_attributes():
+    K = np.array(
+        [
+            [0, 1, 2, 3, 4],
+            [5, 0, 6, 7, 8],
+            [9, 10, 0, 11, 12],
+            [13, 14, 15, 0, 16],
+            [17, 18, 19, 20, 0],
+        ]
+    )
+    # initialize graph object
+    G = nx.MultiDiGraph()
+    # use KDA utility to generate the edges from K
+    graph_utils.generate_edges(G, K)
+
+    # calculate the state probabilities using KDA
+    kda_probs = calculations.calc_state_probs(G, key="val")
+
+    node_data = kda_probs
+    node_label = "probability"
+    graph_utils.add_node_attribute(G, data=node_data, label=node_label)
+    for i in range(G.number_of_nodes()):
+        assert G.nodes[i][node_label] == kda_probs[i]
+
+    graph_data = K
+    graph_label = "Graph rate matrix"
+    graph_utils.add_graph_attribute(G, data=graph_data, label=graph_label)
+    assert np.all(G.graph[graph_label] == K)
+
+
+def test_generate_edges_errors():
+    k_vals = np.array(
+        [
+            [0, 1, 2],
+            [5, 0, 6],
+            [9, 10, 0],
+        ]
+    )
+    k_names = np.array(
+        [
+            ["k11", "k12", "k13"],
+            ["k21", "k22", "k23"],
+            ["k31", "k32", "k33"],
+        ]
+    )
+
+    # initialize graph object
+    G = nx.MultiDiGraph()
+    graph_utils.generate_edges(G, vals=k_vals, names=k_names)
+
+    G = nx.MultiDiGraph()
+    with pytest.raises(TypeError):
+        graph_utils.generate_edges(G, vals=k_names, names=k_names)
+
+    G = nx.MultiDiGraph()
+    with pytest.raises(TypeError):
+        graph_utils.generate_edges(G, vals=k_vals, names=k_vals)
+
+
+def test_ccw():
+    K = np.array(
+        [
+            [0, 1, 2, 3, 4],
+            [5, 0, 6, 7, 8],
+            [9, 10, 0, 11, 12],
+            [13, 14, 15, 0, 16],
+            [17, 18, 19, 20, 0],
+        ]
+    )
+    # initialize graph object
+    G = nx.MultiDiGraph()
+    # use KDA utility to generate the edges from K
+    graph_utils.generate_edges(G, K)
+
+    cycles = graph_utils.find_all_unique_cycles(G)
+
+    for cycle in cycles:
+        # TODO: should definitely find out a way
+        # to make some assertions here. The problem is defining what CCW means
+        # is problem-dependent, and you have to choose node positions to make
+        # that decision, which would appear arbitrary here.
+        graph_utils.get_ccw_cycle(cycle, order=cycle[:2])
