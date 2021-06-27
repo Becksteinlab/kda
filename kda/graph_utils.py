@@ -21,6 +21,8 @@ This file contains a host of utility functions for NetworkX graphs.
 import numpy as np
 import networkx as nx
 
+from kda.exceptions import CycleError
+
 
 def generate_K_string_matrix(N_states):
     """
@@ -214,6 +216,8 @@ def get_ccw_cycle(cycle, order):
         input cycle. This pair of nodes is used to determine which direction is
         CCW.
     """
+    if not all(i in cycle for i in order):
+        raise CycleError(f"Input node indices {order} do not exist in cycle {cycle}")
     if _is_ccw(cycle, order[0], order[1]):
         return cycle
     else:

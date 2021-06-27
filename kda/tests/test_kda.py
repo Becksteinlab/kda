@@ -1192,4 +1192,10 @@ def test_ccw():
         # to make some assertions here. The problem is defining what CCW means
         # is problem-dependent, and you have to choose node positions to make
         # that decision, which would appear arbitrary here.
-        graph_utils.get_ccw_cycle(cycle, order=cycle[:2])
+        new_cycle = graph_utils.get_ccw_cycle(cycle, order=cycle[:2])
+        # since we feed in an order that is just the first 2 nodes of the
+        # cycle, this should return the same cycle
+        assert cycle == new_cycle
+
+    with pytest.raises(CycleError):
+        graph_utils.get_ccw_cycle(cycles[0], [4, 5, 6])
