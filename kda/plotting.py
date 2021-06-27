@@ -24,6 +24,62 @@ import matplotlib.pyplot as plt
 from kda.diagrams import _construct_cycle_edges, _append_reverse_edges
 
 
+def _get_node_labels(node_list):
+    """
+    Builds the dictionary of node labels for NetworkX nodes.
+
+    Parameters
+    ----------
+    node_list : list
+        List of integers (i.e. [0, 2, 3, 1]) for which labels should be made.
+    """
+    labels = {}
+    for i in node_list:
+        labels[i] = r"${}$".format(i + 1)
+    return labels
+
+
+def _contains_all_nodes(cycle, node_list):
+    """
+    Determines if the input cycle contains all nodes in the input node list.
+    """
+    sorted_cycle = np.sort(cycle)
+    sorted_nodes = np.sort(node_list)
+    if np.array_equal(sorted_cycle, sorted_nodes):
+        # if the the arrays are the same length and contain the same
+        # node indices, the input cycle must contain all nodes
+        return True
+    else:
+        return False
+
+
+def _get_node_colors(color_by_target, cycle):
+    """
+    Returns a list of color values (either grey or coral) depending
+    on whether color by target is turned on.
+    """
+    if color_by_target:
+        node_colors = ["#FF8080" for n in cycle]
+    else:
+        node_colors = ["0.8" for n in cycle]
+    return node_colors
+
+
+def _get_axis_limits(pos, scale_factor=1.4):
+    """
+    Retrieves the x/y limits based on the node positions. Values are scaled by
+    a constant factor to compensate for the size of the nodes.
+    """
+    x = np.zeros(len(pos))
+    y = np.zeros(len(pos))
+    for i, positions in pos.items():
+        x[i] = positions[0]
+        y[i] = positions[1]
+    xlims = [scale_factor * x.min(), scale_factor * x.max()]
+    ylims = [scale_factor * y.min(), scale_factor * y.max()]
+    return xlims, ylims
+
+
 def draw_diagrams(
     diagrams,
     pos=None,
@@ -83,38 +139,42 @@ def draw_diagrams(
     """
     if not isinstance(diagrams, list):  # single diagram case
         G = diagrams
-        if pos == None:
+        if pos is None:
             pos = nx.spring_layout(G)
         fig = plt.figure(figsize=(4, 4), tight_layout=True)
-        fig.add_subplot(111)
+        ax = fig.add_subplot(111)
         node_list = list(G.nodes)
+        node_size = 500
         nx.draw_networkx_nodes(
-            G, pos, node_size=500, nodelist=node_list, node_color="0.8"
+            G, pos, node_size=node_size, nodelist=node_list, node_color="0.8"
         )
         nx.draw_networkx_edges(
-            G, pos, node_size=500, width=4, arrowstyle="->", arrowsize=15
+            G,
+            pos,
+            node_size=node_size,
+            width=2,
+            arrowsize=12,
+            arrowstyle="->",
+            connectionstyle="arc3, rad = 0.11",
         )
-        labels = {}
-        for i in node_list:
-            labels[i] = r"${}$".format(i + 1)
+        labels = _get_node_labels(node_list=node_list)
         nx.draw_networkx_labels(G, pos, labels, font_size=font_size)
         plt.axis("off")
-        if not path == None:
+        if not path is None:
             fig.savefig(path + "/{}_diagram.png".format(label), dpi=300)
+        plt.close()
     else:  # array of diagrams case
-        if pos == None:
+        if pos is None:
             pos = nx.spring_layout(diagrams[0])
         node_list = list(diagrams[0].nodes)
-        labels = {}
-        for j in node_list:
-            labels[j] = r"${}$".format(j + 1)
-        if panel == True:
+        labels = _get_node_labels(node_list=node_list)
+        if panel:
             N = len(diagrams)
-            if not rows == None:
+            if not rows is None:
                 Nrows = rows
             else:
                 Nrows = int(np.sqrt(N))
-            if not cols == None:
+            if not cols is None:
                 Ncols = cols
             else:
                 Ncols = int(np.ceil(N / Nrows))
@@ -123,23 +183,24 @@ def draw_diagrams(
             fig.set_figheight(Nrows * panel_scale)
             fig.set_figwidth(1.2 * Ncols * panel_scale)
             for i, partial in enumerate(diagrams):
-                if cbt == True:
+                if cbt:
                     node_colors = []
-                    for n in list(partial.nodes):
-                        if partial.nodes[n]["is_target"] == True:
+                    for n in partial.nodes:
+                        if partial.nodes[n]["is_target"]:
                             node_colors.append("#FF8080")
                         else:
                             node_colors.append("0.8")
                 else:
-                    node_colors = ["0.8" for n in range(len(partial))]
+                    node_colors = ["0.8" for n in partial.nodes]
                 ix = np.unravel_index(i, ax.shape)
                 plt.sca(ax[ix])
                 ax[ix].set_axis_off()
+                node_size = 150 * panel_scale
                 nx.draw_networkx_nodes(
                     partial,
                     pos,
                     ax=ax[ix],
-                    node_size=150 * panel_scale,
+                    node_size=node_size,
                     nodelist=node_list,
                     node_color=node_colors,
                 )
@@ -147,39 +208,52 @@ def draw_diagrams(
                     partial,
                     pos,
                     ax=ax[ix],
-                    node_size=150 * panel_scale,
+                    node_size=node_size,
+                    width=1.5,
+                    arrowsize=12,
                     arrowstyle="->",
+                    connectionstyle="arc3, rad = 0.11",
                 )
                 nx.draw_networkx_labels(
                     partial, pos, labels, font_size=font_size, ax=ax[ix]
                 )
             for i in range(excess_plots):
                 ax.flat[-i - 1].set_visible(False)
-            if not path == None:
+            if not path is None:
                 fig.savefig(path + "/{}_diagram_panel.png".format(label), dpi=300)
+            plt.close()
+
         else:
             for i, partial in enumerate(diagrams):
-                if cbt == True:
+                if cbt:
                     node_colors = []
-                    for n in list(partial.nodes):
-                        if partial.nodes[n]["is_target"] == True:
+                    for n in partial.nodes:
+                        if partial.nodes[n]["is_target"]:
                             node_colors.append("#FF8080")
                         else:
                             node_colors.append("0.8")
                 else:
-                    node_colors = ["0.8" for n in range(len(partial))]
+                    node_colors = ["0.8" for n in partial.nodes]
                 fig = plt.figure(figsize=(3, 3), tight_layout=True)
-                fig.add_subplot(111)
+                ax = fig.add_subplot(111)
                 nx.draw_networkx_nodes(
                     partial, pos, nodelist=node_list, node_color=node_colors
                 )
-                nx.draw_networkx_edges(partial, pos, arrowstyle="->")
+                nx.draw_networkx_edges(
+                    partial,
+                    pos,
+                    width=1.5,
+                    arrowsize=12,
+                    arrowstyle="->",
+                    connectionstyle="arc3, rad = 0.11",
+                )
                 nx.draw_networkx_labels(partial, pos, labels, font_size=font_size)
                 plt.axis("off")
-                if not path == None:
+                if not path is None:
                     fig.savefig(
                         path + "/{}_diagram_{}.png".format(label, i + 1), dpi=300
                     )
+                plt.close()
 
 
 def draw_cycles(
@@ -231,38 +305,23 @@ def draw_cycles(
     When using panel=True, if number of diagrams is not a perfect square, extra
     plots will be generated as empty coordinate axes.
     """
-    if pos == None:
+    if pos is None:
         pos = nx.spring_layout(G)
     if isinstance(cycles[0], int):  # single cycle case
         cycle = cycles
         nodes = list(G.nodes)
-        if len(cycle) == len(nodes):  # if cycle contains all nodes
-            labels = {}
-            for i in nodes:
-                labels[i] = r"${}$".format(i + 1)
-            if cbt == True:
-                node_colors = ["#FF8080" for n in nodes]
-            else:
-                node_colors = ["0.8" for n in nodes]
+        if _contains_all_nodes(cycle, nodes):  # if cycle contains all nodes
+            labels = _get_node_labels(node_list=nodes)
+            node_colors = _get_node_colors(color_by_target=cbt, cycle=nodes)
             node_list = nodes
         else:  # if cycle doesn't contain all nodes
-            labels = {}
-            for i in cycle:
-                labels[i] = r"${}$".format(i + 1)
-            if cbt == True:
-                node_colors = ["#FF8080" for n in cycle]
-            else:
-                node_colors = ["0.8" for n in cycle]
-            pos_copy = pos.copy()
-            pos = {}
-            for n, position in pos_copy.items():
-                if n in cycle:
-                    pos[n] = position
+            labels = _get_node_labels(node_list=cycle)
+            node_colors = _get_node_colors(color_by_target=cbt, cycle=cycle)
             node_list = cycle
         cycle_edges = _construct_cycle_edges(cycle)
         edge_list = _append_reverse_edges(cycle_edges)
         fig = plt.figure(figsize=(4, 4), tight_layout=True)
-        fig.add_subplot(111)
+        ax = fig.add_subplot(111)
         nx.draw_networkx_nodes(
             G, pos, nodelist=node_list, node_size=500, node_color=node_colors
         )
@@ -271,16 +330,18 @@ def draw_cycles(
             pos,
             edgelist=edge_list,
             node_size=500,
-            width=4,
+            width=1.5,
+            arrowsize=12,
             arrowstyle="->",
-            arrowsize=15,
+            connectionstyle="arc3, rad = 0.11",
         )
         nx.draw_networkx_labels(G, pos, labels, font_size=font_size)
         plt.axis("off")
-        if not path == None:
+        if not path is None:
             fig.savefig(path + "/{}_cycle.png".format(label), dpi=300)
+        plt.close()
     else:  # list of cycles case
-        if panel == True:  # draw panel case
+        if panel:  # draw panel case
             N = len(cycles)
             Nrows = int(np.sqrt(N))
             Ncols = int(np.ceil(N / Nrows))
@@ -289,110 +350,87 @@ def draw_cycles(
             fig.set_figheight(Nrows * panel_scale)
             fig.set_figwidth(1.2 * Ncols * panel_scale)
             nodes = list(G.nodes)
+            xlims, ylims = _get_axis_limits(pos, scale_factor=1.4)
             for i, cycle in enumerate(cycles):
-                if len(cycle) == len(nodes):  # if cycle contains all nodes
-                    labels = {}
-                    for n in nodes:
-                        labels[n] = r"${}$".format(n + 1)
-                    if cbt == True:
-                        node_colors = ["#FF8080" for n in nodes]
-                    else:
-                        node_colors = ["0.8" for n in nodes]
+                if _contains_all_nodes(cycle, nodes):  # if cycle contains all nodes
+                    labels = _get_node_labels(node_list=nodes)
+                    node_colors = _get_node_colors(color_by_target=cbt, cycle=nodes)
                     node_list = nodes
-                    pos_new = pos
                 else:  # if cycle doesn't contain all nodes
-                    labels = {}
-                    for c in cycle:
-                        labels[c] = r"${}$".format(c + 1)
-                    if cbt == True:
-                        node_colors = ["#FF8080" for n in cycle]
-                    else:
-                        node_colors = ["0.8" for n in cycle]
-                    pos_copy = pos.copy()
-                    pos_new = {}
-                    for n, position in pos_copy.items():
-                        if n in cycle:
-                            pos_new[n] = position
+                    labels = _get_node_labels(node_list=cycle)
+                    node_colors = _get_node_colors(color_by_target=cbt, cycle=cycle)
                     node_list = cycle
                 cycle_edges = _construct_cycle_edges(cycle)
                 edge_list = _append_reverse_edges(cycle_edges)
                 ix = np.unravel_index(i, ax.shape)
                 plt.sca(ax[ix])
                 ax[ix].set_axis_off()
+                node_size = 150 * panel_scale
                 nx.draw_networkx_nodes(
                     G,
-                    pos_new,
+                    pos,
                     ax=ax[ix],
-                    node_size=150 * panel_scale,
+                    node_size=node_size,
                     nodelist=node_list,
                     node_color=node_colors,
                 )
                 nx.draw_networkx_edges(
                     G,
-                    pos_new,
+                    pos,
                     ax=ax[ix],
-                    node_size=150 * panel_scale,
+                    node_size=node_size,
                     edgelist=edge_list,
+                    width=1.5,
+                    arrowsize=12,
                     arrowstyle="->",
+                    connectionstyle="arc3, rad = 0.11",
                 )
-                nx.draw_networkx_labels(
-                    G, pos_new, labels, font_size=font_size, ax=ax[ix]
-                )
+                ax[ix].set_xlim(xlims)
+                ax[ix].set_ylim(ylims)
+                nx.draw_networkx_labels(G, pos, labels, font_size=font_size, ax=ax[ix])
             for j in range(excess_plots):
                 ax.flat[-j - 1].set_visible(False)
-            if not path == None:
+            if not path is None:
                 fig.savefig(path + "/{}_cycle_panel.png".format(label), dpi=300)
+            plt.close()
         else:  # draw individual plots case
             nodes = list(G.nodes)
             for i, cycle in enumerate(cycles):
-                if len(cycle) == len(nodes):  # if cycle contains all nodes
-                    labels = {}
-                    for n in nodes:
-                        labels[n] = r"${}$".format(n + 1)
-                    if cbt == True:
-                        node_colors = ["#FF8080" for n in nodes]
-                    else:
-                        node_colors = ["0.8" for n in nodes]
+                if _contains_all_nodes(cycle, nodes):  # if cycle contains all nodes
+                    labels = _get_node_labels(node_list=nodes)
+                    node_colors = _get_node_colors(color_by_target=cbt, cycle=nodes)
                     node_list = nodes
-                    pos_new = pos
                 else:  # if cycle doesn't contain all nodes
-                    labels = {}
-                    for c in cycle:
-                        labels[c] = r"${}$".format(c + 1)
-                    if cbt == True:
-                        node_colors = ["#FF8080" for n in cycle]
-                    else:
-                        node_colors = ["0.8" for n in cycle]
-                    pos_copy = pos.copy()
-                    pos_new = {}
-                    for n, position in pos_copy.items():
-                        if n in cycle:
-                            pos_new[n] = position
+                    labels = _get_node_labels(node_list=cycle)
+                    node_colors = _get_node_colors(color_by_target=cbt, cycle=cycle)
                     node_list = cycle
                 cycle_edges = _construct_cycle_edges(cycle)
                 edge_list = _append_reverse_edges(cycle_edges)
                 fig = plt.figure(figsize=(4, 4), tight_layout=True)
-                fig.add_subplot(111)
+                ax = fig.add_subplot(111)
+                node_size = 500
                 nx.draw_networkx_nodes(
                     G,
-                    pos_new,
+                    pos,
                     nodelist=node_list,
-                    node_size=500,
+                    node_size=node_size,
                     node_color=node_colors,
                 )
                 nx.draw_networkx_edges(
                     G,
-                    pos_new,
+                    pos,
                     edgelist=edge_list,
-                    node_size=500,
-                    width=4,
+                    node_size=node_size,
+                    width=1.5,
+                    arrowsize=12,
                     arrowstyle="->",
-                    arrowsize=15,
+                    connectionstyle="arc3, rad = 0.11",
                 )
-                nx.draw_networkx_labels(G, pos_new, labels, font_size=font_size)
+                nx.draw_networkx_labels(G, pos, labels, font_size=font_size)
                 plt.axis("off")
-                if not path == None:
+                if not path is None:
                     fig.savefig(path + "/{}_cycle_{}.png".format(label, i + 1), dpi=300)
+                plt.close()
 
 
 def draw_ODE_results(
@@ -437,9 +475,10 @@ def draw_ODE_results(
     ax.set_title("State Probabilities for {} State Model".format(N))
     ax.set_ylabel(r"Probability")
     ax.set_xlabel(r"Time (s)")
-    if bbox_coords == None:
+    if bbox_coords is None:
         ax.legend(loc=legendloc)
     else:
         ax.legend(loc=legendloc, bbox_to_anchor=bbox_coords)
-    if not path == None:
+    if not path is None:
         fig.savefig(path + "/ODE_probs_{}.png".format(label), dpi=300)
+    plt.close()
