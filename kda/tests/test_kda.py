@@ -848,21 +848,9 @@ class Test_Misc_Funcs:
     @pytest.mark.parametrize(
         "cycle, cycle_order, expected_func",
         [
-            (
-                [0, 3, 2, 1],
-                [3, 0],
-                "log(k12*k23*k34*k41/(k14*k21*k32*k43))",
-            ),
-            (
-                [0, 3, 1],
-                [3, 0],
-                "log(k12*k24*k41/(k14*k21*k42))",
-            ),
-            (
-                [1, 3, 2],
-                [3, 1],
-                "log(k23*k34*k42/(k24*k32*k43))",
-            ),
+            ([0, 3, 2, 1], [3, 0], "log(k12*k23*k34*k41/(k14*k21*k32*k43))",),
+            ([0, 3, 1], [3, 0], "log(k12*k24*k41/(k14*k21*k42))",),
+            ([1, 3, 2], [3, 1], "log(k23*k34*k42/(k24*k32*k43))",),
         ],
     )
     def test_thermo_force_4WL(self, k_vals, cycle, cycle_order, expected_func):
@@ -1142,19 +1130,9 @@ def test_add_attributes():
 
 
 def test_generate_edges_errors():
-    k_vals = np.array(
-        [
-            [0, 1, 2],
-            [5, 0, 6],
-            [9, 10, 0],
-        ]
-    )
+    k_vals = np.array([[0, 1, 2], [5, 0, 6], [9, 10, 0],])
     k_names = np.array(
-        [
-            ["k11", "k12", "k13"],
-            ["k21", "k22", "k23"],
-            ["k31", "k32", "k33"],
-        ]
+        [["k11", "k12", "k13"], ["k21", "k22", "k23"], ["k31", "k32", "k33"],]
     )
 
     # initialize graph object
