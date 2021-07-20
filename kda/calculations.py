@@ -627,19 +627,3 @@ def calc_net_cycle_flux_from_diags(
             pi_diff_str, sigma_K_str, sigma_str
         )
         return sympy_net_cycle_flux_func
-
-def test_coverage(x=None):
-    # dummy function for testing CI 
-    x += 1
-    x += 2
-    x += 1
-    x += 2
-    x += 1
-    x += 2
-    x += 1
-    x += 2
-    x += 1
-    x += 2
-    x += 1
-    x += 2
-    return x
