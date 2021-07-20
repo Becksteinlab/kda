@@ -6,7 +6,7 @@ coverage:
       default:
         threshold: 50%
 comment:
-  layout: "header"
+  layout: "header, reach, diff, files"
   require_changes: false
   branches: null
   behavior: default
