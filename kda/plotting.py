@@ -162,7 +162,7 @@ def draw_diagrams(
         plt.axis("off")
         if not path is None:
             fig.savefig(path + "/{}_diagram.png".format(label), dpi=300)
-        plt.close()
+            plt.close()
     else:  # array of diagrams case
         if pos is None:
             pos = nx.spring_layout(diagrams[0])
@@ -221,7 +221,7 @@ def draw_diagrams(
                 ax.flat[-i - 1].set_visible(False)
             if not path is None:
                 fig.savefig(path + "/{}_diagram_panel.png".format(label), dpi=300)
-            plt.close()
+                plt.close()
 
         else:
             for i, partial in enumerate(diagrams):
@@ -253,7 +253,7 @@ def draw_diagrams(
                     fig.savefig(
                         path + "/{}_diagram_{}.png".format(label, i + 1), dpi=300
                     )
-                plt.close()
+                    plt.close()
 
 
 def draw_cycles(
@@ -339,7 +339,7 @@ def draw_cycles(
         plt.axis("off")
         if not path is None:
             fig.savefig(path + "/{}_cycle.png".format(label), dpi=300)
-        plt.close()
+            plt.close()
     else:  # list of cycles case
         if panel:  # draw panel case
             N = len(cycles)
@@ -392,7 +392,7 @@ def draw_cycles(
                 ax.flat[-j - 1].set_visible(False)
             if not path is None:
                 fig.savefig(path + "/{}_cycle_panel.png".format(label), dpi=300)
-            plt.close()
+                plt.close()
         else:  # draw individual plots case
             nodes = list(G.nodes)
             for i, cycle in enumerate(cycles):
@@ -430,7 +430,7 @@ def draw_cycles(
                 plt.axis("off")
                 if not path is None:
                     fig.savefig(path + "/{}_cycle_{}.png".format(label, i + 1), dpi=300)
-                plt.close()
+                    plt.close()
 
 
 def draw_ODE_results(
@@ -481,4 +481,4 @@ def draw_ODE_results(
         ax.legend(loc=legendloc, bbox_to_anchor=bbox_coords)
     if not path is None:
         fig.savefig(path + "/ODE_probs_{}.png".format(label), dpi=300)
-    plt.close()
+        plt.close()

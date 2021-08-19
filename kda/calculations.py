@@ -22,7 +22,8 @@ interest from biochemical kinetic diagrams, using the methods of T.L. Hill.
 import math
 import numpy as np
 import networkx as nx
-from sympy import parse_expr, logcombine
+from sympy import logcombine
+from sympy.parsing.sympy_parser import parse_expr
 
 from kda import graph_utils, diagrams, expressions
 from kda.exceptions import CycleError
