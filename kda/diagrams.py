@@ -282,20 +282,18 @@ def _get_cofactor_matrix(K_laplace):
     return K_cof
 
 
-def enumerate_partial_diagrams(K0):
+def enumerate_partial_diagrams(G):
     """
     Quantifies the number of partial diagrams/spanning trees that can be
-    generated from an input graph, represented by a rate matrix. This implements
-    Kirchhoff's theroem by generating the adjacency matrix from the input
-    matrix, generating the Laplacian matrix from the adjacency matrix, then
-    getting the cofactor matrix of the Laplacian matrix.
+    generated from an input graph. This implements Kirchhoff's theroem by
+    generating the adjacency matrix from the input matrix, generating the
+    Laplacian matrix from the adjacency matrix, then getting the cofactor
+    matrix of the Laplacian matrix.
 
     Parameters
     ==========
-    K0 : array
-        'NxN' matrix, where N is the number of states. Element i, j represents
-        the rate constant from state i to state j. Diagonal elements should be
-        zero, but does not have to be in input K matrix.
+    G : NetworkX MultiDiGraph
+        Input diagram
 
     Returns
     =======
@@ -303,10 +301,8 @@ def enumerate_partial_diagrams(K0):
         The number of unique partial diagrams (spanning trees) that can be
         generated from a graph represented by the input rate matrix.
     """
-    # make a copy of the input rate matrix to operate on
-    K = copy.deepcopy(K0)
     # get the adjacency matrix for K
-    K_adj = np.asarray(K != 0, dtype=int)
+    K_adj = nx.to_numpy_array(G)
     # use the adjacency matrix to generate the Laplacian matrix
     # multiply through by -1
     K_laplace = -1 * K_adj
@@ -349,40 +345,40 @@ def generate_partial_diagrams(G, return_edges=False):
         Here, "unique" means we only keep the edge in 1-direction since the
         edge pairs are generated in `generate_directional_partial_diagrams()`.
     """
-    # calculate number of connections/unique edges needed for each partial diagram
-    n_connections = G.number_of_nodes() - 1
+    # calculate number of edges needed for each partial diagram
+    n_edges = G.number_of_nodes() - 1
+    # collect the nodes for the partial diagrams
+    base_nodes = G.nodes()
     # get the unique edges in G
     unique_edges = _find_unique_edges(G)
-
-    # create an empty graph and add the nodes from G for use as a base graph
-    base_graph = nx.Graph()
-    base_graph.add_nodes_from(G.nodes())
-
-    # get list of possible combinations of unique edges (N choose n)
+    # calculate the number of expected partial diagrams
+    n_partials = enumerate_partial_diagrams(G)
+    # preallocate arrays for storing partial diagrams edges/graphs
+    # and initialize a counter
+    i = 0
+    if return_edges:
+        unique_partial_edges = np.empty((n_partials, n_edges, 2), dtype=np.int32)
+    else:
+        partial_diagrams = np.empty(n_partials, dtype=object)
+    # get list of possible combinations of unique edges (N choose N-1)
     # and iterate over each unique combination
-    partial_diagrams = []
-    unique_partial_edges = []
-    for edge_list in itertools.combinations(unique_edges, n_connections):
-        # make a copy of the base graph
-        partial = base_graph.copy()
-        # convert the list of edge tuples into an array
-        edges = np.asarray(edge_list, dtype=int)
-        # create a new array of the reversed edges
-        rev_edges = np.flip(edges, axis=1)
-        # combine the forward/reverse edge lists together
-        edges = np.vstack((edges, rev_edges))
-        # add the edges to the base diagram
-        partial.add_edges_from(edges)
-        # if the constructed partial diagram is a
-        # tree, it is a valid diagram
-        if nx.is_tree(partial):
+    for edge_list in itertools.combinations(unique_edges, n_edges):
+        # make a base partial graph
+        partial = nx.Graph()
+        partial.add_nodes_from(base_nodes)
+        partial.add_edges_from(edge_list)
+        # for the tree to be valid, it must have N-1 edges and
+        # be connected. Since we already have the edge list
+        # generated for N-1 edges, just check if it is connected
+        if nx.is_connected(partial):
             if return_edges:
-                unique_partial_edges.append(list(partial.edges()))
+                unique_partial_edges[i, :] = edge_list
             else:
-                partial_diagrams.append(partial)
+                partial_diagrams[i] = partial
+            i += 1
 
     if return_edges:
-        return np.asarray(unique_partial_edges, dtype=int)
+        return unique_partial_edges
     else:
         return partial_diagrams
 
