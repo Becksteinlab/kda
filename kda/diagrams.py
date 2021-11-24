@@ -337,13 +337,10 @@ def generate_partial_diagrams(G, return_edges=False):
 
     Returns
     -------
-    partial_diagrams : list
-        List of NetworkX MultiDiGraphs where each graph is a unique partial
-        diagram with no loops.
-    unique_partial_edges : array
-        Array of unique edges (made from 2-tuples) for valid partial diagrams.
-        Here, "unique" means we only keep the edge in 1-direction since the
-        edge pairs are generated in `generate_directional_partial_diagrams()`.
+    partials : array
+        Array of NetworkX MultiDiGraphs where each graph is a unique
+        partial diagram with no loops (return_edges=False), or a nested
+        array of unique edges for valid partial diagrams (return_edges=True).
     """
     # calculate number of edges needed for each partial diagram
     n_edges = G.number_of_nodes() - 1
@@ -357,9 +354,9 @@ def generate_partial_diagrams(G, return_edges=False):
     # and initialize a counter
     i = 0
     if return_edges:
-        unique_partial_edges = np.empty((n_partials, n_edges, 2), dtype=np.int32)
+        partials = np.empty((n_partials, n_edges, 2), dtype=np.int32)
     else:
-        partial_diagrams = np.empty(n_partials, dtype=object)
+        partials = np.empty(n_partials, dtype=object)
     # get list of possible combinations of unique edges (N choose N-1)
     # and iterate over each unique combination
     for edge_list in itertools.combinations(unique_edges, n_edges):
@@ -372,15 +369,12 @@ def generate_partial_diagrams(G, return_edges=False):
         # generated for N-1 edges, just check if it is connected
         if nx.is_connected(partial):
             if return_edges:
-                unique_partial_edges[i, :] = edge_list
+                partials[i, :] = edge_list
             else:
-                partial_diagrams[i] = partial
+                partials[i] = partial
             i += 1
 
-    if return_edges:
-        return unique_partial_edges
-    else:
-        return partial_diagrams
+    return partials
 
 
 def generate_directional_partial_diagrams(G, return_edges=False):
