@@ -104,7 +104,7 @@ A third directory, `/data`, is created for storing all of the other pertinent
 information, where a `_data.csv` file is stored for each execution of
 `verification.py`. Each `_data.csv` file contains the graph index, number of
 states, number of edges/rates, number of cycles in the diagram, number of
-partial diagrams generated, number of directional partial diagrams generated,
+partial diagrams generated, number of directional diagrams generated,
 steady state probabilities, and SVD/KDA run time information for each run case.
 
 ### rmsd.py
