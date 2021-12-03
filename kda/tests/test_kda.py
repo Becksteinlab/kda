@@ -705,7 +705,7 @@ class Test_Flux_Calcs:
         G = nx.MultiDiGraph()
         graph_utils.generate_edges(G, K)
         # generate the directional partial diagrams
-        dirpar_edges = diagrams.generate_directional_partial_diagrams(
+        dirpar_edges = diagrams.generate_directional_diagrams(
             G, return_edges=True
         )
         # pick one of the 3-node cycles and the CCW direction
@@ -930,7 +930,7 @@ class Test_Diagram_Generation:
         assert len(partials) == expected_pars
         # generate the directional partial diagrams and verify
         # they agree with the expected value
-        dirpars = diagrams.generate_directional_partial_diagrams(G, return_edges=False)
+        dirpars = diagrams.generate_directional_diagrams(G, return_edges=False)
         assert len(dirpars) == expected_dirpars
         # count the number of partial diagrams
         # and verify they agree with the expected value
@@ -1005,7 +1005,7 @@ class Test_Diagram_Generation:
         assert len(partial_edges) == expected_pars
         # generate the directional partial diagrams and verify
         # they agree with the expected value
-        dirpar_edges = diagrams.generate_directional_partial_diagrams(
+        dirpar_edges = diagrams.generate_directional_diagrams(
             G, return_edges=True
         )
         expected_dirpars = n_states ** (n_states - 1)
@@ -1079,7 +1079,7 @@ def test_function_inputs():
     G = nx.MultiDiGraph()
     graph_utils.generate_edges(G, K)
     # generate the directional partial diagrams
-    dirpar_edges = diagrams.generate_directional_partial_diagrams(G, return_edges=True)
+    dirpar_edges = diagrams.generate_directional_diagrams(G, return_edges=True)
 
     # test both cases for calc_sigma()
     with pytest.raises(TypeError):

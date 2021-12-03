@@ -418,7 +418,7 @@ def calc_state_probs(G, key, output_strings=False):
     state_probs_sympy : SymPy object
         List of analytic SymPy state probability functions.
     """
-    dirpar_edges = diagrams.generate_directional_partial_diagrams(G, return_edges=True)
+    dirpar_edges = diagrams.generate_directional_diagrams(G, return_edges=True)
     if output_strings == False:
         state_probs = calc_state_probs_from_diags(
             G, dirpar_edges, key, output_strings=output_strings
@@ -460,7 +460,7 @@ def calc_net_cycle_flux(G, cycle, order, key, output_strings=False):
     net_cycle_flux_func : SymPy object
         Analytic net cycle flux SymPy function.
     """
-    dirpar_edges = diagrams.generate_directional_partial_diagrams(G, return_edges=True)
+    dirpar_edges = diagrams.generate_directional_diagrams(G, return_edges=True)
     flux_diags = diagrams.generate_flux_diagrams(G, cycle)
     if output_strings == False:
         pi_diff = calc_pi_difference(
