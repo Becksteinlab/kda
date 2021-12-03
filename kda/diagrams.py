@@ -11,7 +11,7 @@ kinetic diagrams, using the methods of Hill.
 
 .. autofunction:: enumerate_partial_diagrams
 .. autofunction:: generate_partial_diagrams
-.. autofunction:: generate_directional_partial_diagrams
+.. autofunction:: generate_directional_diagrams
 .. autofunction:: generate_flux_diagrams
 .. autofunction:: generate_all_flux_diagrams
 """
@@ -377,9 +377,9 @@ def generate_partial_diagrams(G, return_edges=False):
     return partials
 
 
-def generate_directional_partial_diagrams(G, return_edges=False):
+def generate_directional_diagrams(G, return_edges=False):
     """
-    Generates all directional partial diagrams for input diagram G.
+    Generates all directional diagrams for input diagram G.
 
     Parameters
     ----------
@@ -402,52 +402,37 @@ def generate_directional_partial_diagrams(G, return_edges=False):
     """
     partial_diagram_edges = generate_partial_diagrams(G, return_edges=True)
 
-    base_graph = nx.MultiDiGraph()
-    base_graph.add_nodes_from(G.nodes())
-
+    base_nodes = G.nodes()
     n_states = G.number_of_nodes()
     n_partials = len(partial_diagram_edges)
-    n_dirpars = n_states * n_partials
+    n_dir_diags = n_states * n_partials
+
+    if return_edges:
+        directional_diagrams = np.empty((n_dir_diags, n_states - 1, 3), dtype=np.int32)
+    else:
+        directional_diagrams = np.empty((n_dir_diags,), dtype=object)
 
     targets = np.sort(list(G.nodes))
-    if not return_edges:
-        directional_partial_diagrams = np.empty(shape=(n_dirpars,), dtype=object)
-        idx = 0
-        for target in targets:
-            for partial_edges in partial_diagram_edges:
-                # create a copy of the base graph
-                dirpar = base_graph.copy()
-                # get dictionary of connections
-                cons = _get_directional_connections(target, partial_edges)
-                # get directional edges from connections
-                dir_edges = _get_directional_edges(cons)
-                # add relevant edges to directional partial diagram
-                dirpar.add_edges_from(dir_edges)
+    for i, target in enumerate(targets):
+        for j, partial_edges in enumerate(partial_diagram_edges):
+            # get dictionary of connections
+            cons = _get_directional_connections(target, partial_edges)
+            # get directional edges from connections
+            dir_edges = _get_directional_edges(cons)
+            if return_edges:
+                directional_diagrams[j + i*n_partials] = dir_edges
+            else:
+                directional_diagram = nx.MultiDiGraph()
+                directional_diagram.add_nodes_from(base_nodes)
+                directional_diagram.add_edges_from(dir_edges)
                 # set "is_target" to False for all nodes
-                nx.set_node_attributes(dirpar, False, "is_target")
+                nx.set_node_attributes(directional_diagram, False, "is_target")
                 # set target node to True
-                dirpar.nodes[target]["is_target"] = True
-                # add to list of directional partial diagrams
-                directional_partial_diagrams[idx] = dirpar
-                idx += 1
-        return directional_partial_diagrams
-    else:
-        n_unique_dirpar_edges = n_states - 1
-        directional_partial_diagram_edges = np.empty(
-            shape=(n_dirpars, n_unique_dirpar_edges, 3), dtype=int
-        )
-        idx = 0
-        for target in targets:
-            for partial_edges in partial_diagram_edges:
-                # create a copy of the base graph
-                dirpar = base_graph.copy()
-                # get dictionary of connections
-                cons = _get_directional_connections(target, partial_edges)
-                # get directional edges from connections
-                dir_edges = _get_directional_edges(cons)
-                directional_partial_diagram_edges[idx] = dir_edges
-                idx += 1
-        return directional_partial_diagram_edges
+                directional_diagram.nodes[target]["is_target"] = True
+                # add to array of directional partial diagrams
+                directional_diagrams[j + i*n_partials] = directional_diagram
+
+    return directional_diagrams
 
 
 def generate_flux_diagrams(G, cycle):

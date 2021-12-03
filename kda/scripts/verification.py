@@ -189,7 +189,7 @@ def check_diagram_counts(G, K, dirpar_edges, n_states):
     Uses KDA function to calculate the theoretical number of partial diagrams
     and verifies that it agrees with the number of partial diagrams generated
     for the state probability calculations. Also verifies that the number of
-    generated directional partial diagrams agree with the theoretical value.
+    generated directional diagrams agree with the theoretical value.
     """
     n_pars_theoretical = diagrams.enumerate_partial_diagrams(K0=K)
     # generate the partial diagrams for counting purposes
@@ -201,7 +201,7 @@ def check_diagram_counts(G, K, dirpar_edges, n_states):
             f"Expected {n_pars_theoretical} partials, generated {n_pars} partials."
         )
     n_dirpars = len(dirpar_edges)
-    # check that the number of directional partial diagrams are equal to
+    # check that the number of directional diagrams are equal to
     # the number of states times the number of partial diagrams
     assert n_dirpars == n_states * n_pars
     return n_pars, n_dirpars
@@ -419,11 +419,11 @@ def main(
         kda_start = time.perf_counter()
         # use KDA to generate the edges from the rate matrix
         graph_utils.generate_edges(G, K, names=None)
-        # generate the directional partial diagrams for calculations
-        dirpar_edges = diagrams.generate_directional_partial_diagrams(
+        # generate the directional diagrams for calculations
+        dirpar_edges = diagrams.generate_directional_diagrams(
             G, return_edges=True
         )
-        # use input diagram and directional partial diagrams to calculate
+        # use input diagram and directional diagrams to calculate
         # the state probabilities
         kda_probs = calculations.calc_state_probs_from_diags(G, dirpar_edges, key="val")
         kda_elapsed = time.perf_counter() - kda_start
