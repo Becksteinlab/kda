@@ -134,8 +134,7 @@ def _construct_cycle_edges(cycle):
     Parameters
     ----------
     cycle : list of int
-        List of node indices for cycle of interest, index zero. Order of node
-        indices does not matter.
+        List of node indices for cycle of interest, index zero.
 
     Returns
     -------
@@ -457,8 +456,7 @@ def generate_flux_diagrams(G, cycle):
     """
     if sorted(cycle) == sorted(G.nodes):
         print(
-            f"Cycle {cycle} contains all nodes in G, no flux diagrams can be"
-            f" generated. Value of None Returned."
+            f"Cycle {cycle} contains all nodes in G. No flux diagrams generated."
         )
         return None
     # create a base flux diagram from input
@@ -505,7 +503,7 @@ def generate_flux_diagrams(G, cycle):
             # collect all nodes in the potential flux
             # diagram from the diagram edges
             included_nodes = np.unique(flux_diag.edges)
-            # if the diagram contains all nodes it is not invalid
+            # if the diagram contains all nodes it is still valid
             if included_nodes.size == G.number_of_nodes():
                 # count how many cycles are in the flux diagram by removing
                 # 2-node cycles
