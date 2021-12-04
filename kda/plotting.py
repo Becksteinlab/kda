@@ -12,7 +12,7 @@ results from ODE solver.
 
 .. autofunction:: draw_diagrams
 .. autofunction:: draw_cycles
-.. autofunction:: draw_ODE_results
+.. autofunction:: draw_ode_results
 
 """
 
@@ -433,7 +433,7 @@ def draw_cycles(
                     plt.close()
 
 
-def draw_ODE_results(
+def draw_ode_results(
     results, figsize=(5, 4), legendloc="best", bbox_coords=None, path=None, label=None
 ):
     """
