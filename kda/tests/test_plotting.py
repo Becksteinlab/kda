@@ -22,7 +22,7 @@ def G4wl():
     return G4wl
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def flux_diagrams_4wl(G4wl):
     cycles = graph_utils.find_all_unique_cycles(G4wl)
 

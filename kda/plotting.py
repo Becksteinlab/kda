@@ -15,7 +15,7 @@ results from ODE solver.
 .. autofunction:: draw_ode_results
 
 """
-
+import os
 import numpy as np
 import networkx as nx
 import matplotlib as mpl
@@ -53,15 +53,26 @@ def _contains_all_nodes(cycle, node_list):
         return False
 
 
-def _get_node_colors(color_by_target, cycle):
+def _get_node_colors(cbt, obj):
     """
     Returns a list of color values (either grey or coral) depending
     on whether color by target is turned on.
     """
-    if color_by_target:
-        node_colors = ["#FF8080" for n in cycle]
+    base_color = "0.8"
+    target_color = "#FF8080"
+    if isinstance(obj, nx.Graph) or isinstance(obj, nx.MultiDiGraph):
+        node_colors = [base_color for i in obj.nodes]
+        if cbt:
+            node_colors = np.asarray(node_colors, dtype=object)
+            target_mask = list(nx.get_node_attributes(obj, "is_target").values())
+            node_colors[target_mask] = target_color
     else:
-        node_colors = ["0.8" for n in cycle]
+        if cbt:
+            color = target_color
+        else:
+            color = base_color
+        node_colors = [color for i in obj]
+
     return node_colors
 
 
@@ -80,17 +91,127 @@ def _get_axis_limits(pos, scale_factor=1.4):
     return xlims, ylims
 
 
+def _plot_single_diagram(
+    diagram,
+    pos=None,
+    node_labels=None,
+    node_list=None,
+    edge_list=None,
+    font_size=12,
+    figsize=(3, 3),
+    node_size=300,
+    arrow_width=1.5,
+    arrow_size=12,
+    arrow_style="->",
+    connection_style="arc3",
+    ax=None,
+    cbt=False,
+):
+    if ax is None:
+        fig = plt.figure(figsize=figsize, tight_layout=True)
+        ax = fig.add_subplot(111)
+    else:
+        fig = None
+
+    if node_labels is None:
+        node_list = list(diagram.nodes)
+        node_labels = _get_node_labels(node_list)
+
+    if pos is None:
+        pos = nx.spring_layout(diagram)
+
+    node_colors = _get_node_colors(cbt=cbt, obj=diagram)
+    nx.draw_networkx_nodes(
+        diagram,
+        pos,
+        node_size=node_size,
+        nodelist=node_list,
+        node_color=node_colors,
+        ax=ax,
+    )
+    nx.draw_networkx_edges(
+        diagram,
+        pos,
+        edgelist=edge_list,
+        node_size=node_size,
+        width=arrow_width,
+        arrowsize=arrow_size,
+        arrowstyle=arrow_style,
+        connectionstyle=connection_style,
+        ax=ax,
+    )
+    nx.draw_networkx_labels(diagram, pos, node_labels, font_size=font_size, ax=ax)
+    ax.set_axis_off()
+    return fig
+
+
+def _plot_panel(
+    diagrams,
+    rows,
+    cols,
+    pos=None,
+    panel_scale=2,
+    font_size=12,
+    cbt=False,
+    curved_arrows=False,
+):
+    N = len(diagrams)
+    if not rows is None:
+        Nrows = rows
+    else:
+        Nrows = int(np.sqrt(N))
+    if not cols is None:
+        Ncols = cols
+    else:
+        Ncols = int(np.ceil(N / Nrows))
+    excess_plots = Nrows * Ncols - N
+    fig, ax = plt.subplots(nrows=Nrows, ncols=Ncols, tight_layout=True)
+    fig.set_figheight(Nrows * panel_scale)
+    fig.set_figwidth(1.2 * Ncols * panel_scale)
+
+    node_list = list(diagrams[0].nodes)
+    node_labels = _get_node_labels(node_list=node_list)
+    node_size = 150 * panel_scale
+
+    if pos is None:
+        pos = nx.spring_layout(diagrams[0])
+
+    if curved_arrows:
+        connection_style = "arc3, rad = 0.11"
+    else:
+        connection_style = "arc3"
+
+    for i, diag in enumerate(diagrams):
+        ix = np.unravel_index(i, ax.shape)
+        plt.sca(ax[ix])
+        _plot_single_diagram(
+            diagram=diag,
+            pos=pos,
+            node_list=node_list,
+            node_labels=node_labels,
+            font_size=font_size,
+            node_size=node_size,
+            ax=ax[ix],
+            cbt=cbt,
+            connection_style=connection_style,
+        )
+    for i in range(excess_plots):
+        ax.flat[-i - 1].set_visible(False)
+    return fig
+
+
 def draw_diagrams(
     diagrams,
     pos=None,
     panel=False,
-    panel_scale=1,
+    panel_scale=2,
     font_size=12,
     cbt=False,
     rows=None,
     cols=None,
     path=None,
     label=None,
+    curved_arrows=False,
 ):
     """
     Plots any number of input diagrams. Typically used for plotting input
@@ -130,129 +251,72 @@ def draw_diagrams(
         at the specified location. Default is None.
     label : str (optional)
         Figure label, used to create unique figure label if a save path is
-        given. Default is None.
+        given. Includes `.png` file extension. Default is None.
 
     Notes
     -----
     When using panel=True, if number of diagrams is not a perfect square, extra
     plots will be generated as empty coordinate axes.
     """
-    if not isinstance(diagrams, list):  # single diagram case
-        G = diagrams
-        if pos is None:
-            pos = nx.spring_layout(G)
-        fig = plt.figure(figsize=(4, 4), tight_layout=True)
-        ax = fig.add_subplot(111)
-        node_list = list(G.nodes)
-        node_size = 500
-        nx.draw_networkx_nodes(
-            G, pos, node_size=node_size, nodelist=node_list, node_color="0.8"
+
+    if curved_arrows:
+        connection_style = "arc3, rad = 0.11"
+    else:
+        connection_style = "arc3"
+
+    if isinstance(diagrams, nx.Graph) or isinstance(diagrams, nx.MultiDiGraph):
+        # single diagram case
+        fig = _plot_single_diagram(
+            diagram=diagrams,
+            pos=pos,
+            font_size=font_size,
+            figsize=(4, 4),
+            node_size=500,
+            arrow_width=2,
+            cbt=False,
+            connection_style=connection_style,
         )
-        nx.draw_networkx_edges(
-            G,
-            pos,
-            node_size=node_size,
-            width=2,
-            arrowsize=12,
-            arrowstyle="->",
-            connectionstyle="arc3, rad = 0.11",
-        )
-        labels = _get_node_labels(node_list=node_list)
-        nx.draw_networkx_labels(G, pos, labels, font_size=font_size)
-        plt.axis("off")
-        if not path is None:
-            fig.savefig(path + "/{}_diagram.png".format(label), dpi=300)
+        if path:
+            save_path = os.path.join(path, f"{label}.png")
+            fig.savefig(save_path, dpi=300)
             plt.close()
+
     else:  # array of diagrams case
         if pos is None:
             pos = nx.spring_layout(diagrams[0])
-        node_list = list(diagrams[0].nodes)
-        labels = _get_node_labels(node_list=node_list)
         if panel:
-            N = len(diagrams)
-            if not rows is None:
-                Nrows = rows
-            else:
-                Nrows = int(np.sqrt(N))
-            if not cols is None:
-                Ncols = cols
-            else:
-                Ncols = int(np.ceil(N / Nrows))
-            excess_plots = Nrows * Ncols - N
-            fig, ax = plt.subplots(nrows=Nrows, ncols=Ncols, tight_layout=True)
-            fig.set_figheight(Nrows * panel_scale)
-            fig.set_figwidth(1.2 * Ncols * panel_scale)
-            for i, partial in enumerate(diagrams):
-                if cbt:
-                    node_colors = []
-                    for n in partial.nodes:
-                        if partial.nodes[n]["is_target"]:
-                            node_colors.append("#FF8080")
-                        else:
-                            node_colors.append("0.8")
-                else:
-                    node_colors = ["0.8" for n in partial.nodes]
-                ix = np.unravel_index(i, ax.shape)
-                plt.sca(ax[ix])
-                ax[ix].set_axis_off()
-                node_size = 150 * panel_scale
-                nx.draw_networkx_nodes(
-                    partial,
-                    pos,
-                    ax=ax[ix],
-                    node_size=node_size,
-                    nodelist=node_list,
-                    node_color=node_colors,
-                )
-                nx.draw_networkx_edges(
-                    partial,
-                    pos,
-                    ax=ax[ix],
-                    node_size=node_size,
-                    width=1.5,
-                    arrowsize=12,
-                    arrowstyle="->",
-                    connectionstyle="arc3, rad = 0.11",
-                )
-                nx.draw_networkx_labels(
-                    partial, pos, labels, font_size=font_size, ax=ax[ix]
-                )
-            for i in range(excess_plots):
-                ax.flat[-i - 1].set_visible(False)
-            if not path is None:
-                fig.savefig(path + "/{}_diagram_panel.png".format(label), dpi=300)
+            fig = _plot_panel(
+                diagrams=diagrams,
+                pos=pos,
+                rows=rows,
+                cols=cols,
+                font_size=font_size,
+                panel_scale=panel_scale,
+                cbt=cbt,
+                curved_arrows=curved_arrows,
+            )
+            if path:
+                save_path = os.path.join(path, f"{label}.png")
+                fig.savefig(save_path, dpi=300)
                 plt.close()
 
-        else:
-            for i, partial in enumerate(diagrams):
-                if cbt:
-                    node_colors = []
-                    for n in partial.nodes:
-                        if partial.nodes[n]["is_target"]:
-                            node_colors.append("#FF8080")
-                        else:
-                            node_colors.append("0.8")
-                else:
-                    node_colors = ["0.8" for n in partial.nodes]
-                fig = plt.figure(figsize=(3, 3), tight_layout=True)
-                ax = fig.add_subplot(111)
-                nx.draw_networkx_nodes(
-                    partial, pos, nodelist=node_list, node_color=node_colors
+        else:  # individual plots case
+            node_list = list(diagrams[0].nodes)
+            node_labels = _get_node_labels(node_list=node_list)
+
+            for i, diag in enumerate(diagrams):
+                fig = _plot_single_diagram(
+                    diagram=diag,
+                    pos=pos,
+                    node_list=node_list,
+                    node_labels=node_labels,
+                    font_size=font_size,
+                    cbt=cbt,
+                    connection_style=connection_style,
                 )
-                nx.draw_networkx_edges(
-                    partial,
-                    pos,
-                    width=1.5,
-                    arrowsize=12,
-                    arrowstyle="->",
-                    connectionstyle="arc3, rad = 0.11",
-                )
-                nx.draw_networkx_labels(partial, pos, labels, font_size=font_size)
-                plt.axis("off")
-                if not path is None:
-                    fig.savefig(
-                        path + "/{}_diagram_{}.png".format(label, i + 1), dpi=300
-                    )
+                if path:
+                    save_path = os.path.join(path, f"{label}_{i+1}.png")
+                    fig.savefig(save_path, dpi=300)
                     plt.close()
 
 
@@ -261,7 +325,7 @@ def draw_cycles(
     cycles,
     pos=None,
     panel=False,
-    panel_scale=1,
+    panel_scale=2,
     font_size=12,
     cbt=False,
     path=None,
@@ -298,7 +362,7 @@ def draw_cycles(
         at the specified location. Default is None.
     label : str (optional)
         Figure label, used to create unique figure label if a save path is
-        given. Default is None.
+        given. Includes `.png` file extension. Default is None.
 
     Notes
     -----
@@ -312,18 +376,25 @@ def draw_cycles(
         nodes = list(G.nodes)
         if _contains_all_nodes(cycle, nodes):  # if cycle contains all nodes
             labels = _get_node_labels(node_list=nodes)
-            node_colors = _get_node_colors(color_by_target=cbt, cycle=nodes)
+            node_colors = _get_node_colors(cbt=cbt, obj=nodes)
             node_list = nodes
         else:  # if cycle doesn't contain all nodes
             labels = _get_node_labels(node_list=cycle)
-            node_colors = _get_node_colors(color_by_target=cbt, cycle=cycle)
+            node_colors = _get_node_colors(cbt=cbt, obj=cycle)
             node_list = cycle
+
         cycle_edges = _construct_cycle_edges(cycle)
         edge_list = _append_reverse_edges(cycle_edges)
+
         fig = plt.figure(figsize=(4, 4), tight_layout=True)
         ax = fig.add_subplot(111)
+
         nx.draw_networkx_nodes(
-            G, pos, nodelist=node_list, node_size=500, node_color=node_colors
+            G,
+            pos,
+            nodelist=node_list,
+            node_size=500,
+            node_color=node_colors
         )
         nx.draw_networkx_edges(
             G,
@@ -336,10 +407,13 @@ def draw_cycles(
             connectionstyle="arc3, rad = 0.11",
         )
         nx.draw_networkx_labels(G, pos, labels, font_size=font_size)
-        plt.axis("off")
-        if not path is None:
-            fig.savefig(path + "/{}_cycle.png".format(label), dpi=300)
+        ax.set_axis_off()
+
+        if path:
+            save_path = os.path.join(path, f"{label}.png")
+            fig.savefig(save_path, dpi=300)
             plt.close()
+
     else:  # list of cycles case
         if panel:  # draw panel case
             N = len(cycles)
@@ -354,11 +428,11 @@ def draw_cycles(
             for i, cycle in enumerate(cycles):
                 if _contains_all_nodes(cycle, nodes):  # if cycle contains all nodes
                     labels = _get_node_labels(node_list=nodes)
-                    node_colors = _get_node_colors(color_by_target=cbt, cycle=nodes)
+                    node_colors = _get_node_colors(cbt=cbt, obj=nodes)
                     node_list = nodes
                 else:  # if cycle doesn't contain all nodes
                     labels = _get_node_labels(node_list=cycle)
-                    node_colors = _get_node_colors(color_by_target=cbt, cycle=cycle)
+                    node_colors = _get_node_colors(cbt=cbt, obj=cycle)
                     node_list = cycle
                 cycle_edges = _construct_cycle_edges(cycle)
                 edge_list = _append_reverse_edges(cycle_edges)
@@ -390,46 +464,48 @@ def draw_cycles(
                 nx.draw_networkx_labels(G, pos, labels, font_size=font_size, ax=ax[ix])
             for j in range(excess_plots):
                 ax.flat[-j - 1].set_visible(False)
-            if not path is None:
-                fig.savefig(path + "/{}_cycle_panel.png".format(label), dpi=300)
+            if path:
+                save_path = os.path.join(path, f"{label}.png")
+                fig.savefig(save_path, dpi=300)
                 plt.close()
         else:  # draw individual plots case
             nodes = list(G.nodes)
             for i, cycle in enumerate(cycles):
                 if _contains_all_nodes(cycle, nodes):  # if cycle contains all nodes
                     labels = _get_node_labels(node_list=nodes)
-                    node_colors = _get_node_colors(color_by_target=cbt, cycle=nodes)
+                    node_colors = _get_node_colors(cbt=cbt, obj=nodes)
                     node_list = nodes
                 else:  # if cycle doesn't contain all nodes
                     labels = _get_node_labels(node_list=cycle)
-                    node_colors = _get_node_colors(color_by_target=cbt, cycle=cycle)
+                    node_colors = _get_node_colors(cbt=cbt, obj=cycle)
                     node_list = cycle
                 cycle_edges = _construct_cycle_edges(cycle)
                 edge_list = _append_reverse_edges(cycle_edges)
+
                 fig = plt.figure(figsize=(4, 4), tight_layout=True)
                 ax = fig.add_subplot(111)
-                node_size = 500
                 nx.draw_networkx_nodes(
                     G,
                     pos,
                     nodelist=node_list,
-                    node_size=node_size,
+                    node_size=500,
                     node_color=node_colors,
                 )
                 nx.draw_networkx_edges(
                     G,
                     pos,
                     edgelist=edge_list,
-                    node_size=node_size,
+                    node_size=500,
                     width=1.5,
                     arrowsize=12,
                     arrowstyle="->",
                     connectionstyle="arc3, rad = 0.11",
                 )
                 nx.draw_networkx_labels(G, pos, labels, font_size=font_size)
-                plt.axis("off")
-                if not path is None:
-                    fig.savefig(path + "/{}_cycle_{}.png".format(label, i + 1), dpi=300)
+                ax.set_axis_off()
+                if path:
+                    save_path = os.path.join(path, f"{label}_{i+1}.png")
+                    fig.savefig(save_path, dpi=300)
                     plt.close()
 
 
@@ -479,6 +555,7 @@ def draw_ode_results(
         ax.legend(loc=legendloc)
     else:
         ax.legend(loc=legendloc, bbox_to_anchor=bbox_coords)
-    if not path is None:
-        fig.savefig(path + "/ODE_probs_{}.png".format(label), dpi=300)
+    if path:
+        save_path = os.path.join(path, f"{label}.png")
+        fig.savefig(save_path, dpi=300)
         plt.close()
