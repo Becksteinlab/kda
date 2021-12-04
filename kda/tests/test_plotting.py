@@ -4,11 +4,9 @@
 #
 # Kinetic Diagram Analyzer Testing
 
+import os
 import pytest
 import numpy as np
-from numpy.testing import assert_almost_equal
-import matplotlib as mpl
-import matplotlib.pyplot as plt
 import networkx as nx
 
 from kda import plotting, graph_utils, diagrams, ode
@@ -16,9 +14,8 @@ from kda import plotting, graph_utils, diagrams, ode
 
 @pytest.fixture(scope="module")
 def G4wl():
-    k12, k21, k23, k32, k34, k43, k41, k14, k24, k42 = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
     k4wl = np.array(
-        [[0, k12, 0, k14], [k21, 0, k23, k24], [0, k32, 0, k34], [k41, k42, k43, 0]]
+        [[0, 1, 0, 1], [1, 0, 1, 1], [0, 1, 0, 1], [1, 1, 1, 0]]
     )
     G4wl = nx.MultiDiGraph()
     graph_utils.generate_edges(G4wl, k4wl)
@@ -26,82 +23,122 @@ def G4wl():
 
 
 @pytest.fixture(scope="module")
-def pos_4wl(center=[0, 0], radius=10):
-    N = 4
-    angle = np.pi * np.array(
-        [1 / 4, 3 / 4, 5 / 4, 7 / 4]
-    )  # Angles start at 0 and go clockwise (like unit circle)
-    array = np.zeros((N, 2))  # Empty 2D array of shape (6x2)
-    for i in range(N):  # Creates hexagon of atoms in the xy-plane
-        array[i, 0] = np.cos(angle[i])
-        array[i, 1] = np.sin(angle[i])
-    pos = {}
-    for i in range(N):
-        pos[i] = array[i] * radius + center
+def flux_diagrams_4wl(G4wl):
+    cycles = graph_utils.find_all_unique_cycles(G4wl)
+
+    flux_diagrams = []
+    for cycle in cycles:
+        if not cycle is None:
+            flux_diagrams = diagrams.generate_flux_diagrams(G4wl, cycle)
+            if not flux_diagrams is None:
+                flux_diagrams.extend(flux_diagrams)
+    return flux_diagrams
+
+
+@pytest.fixture(scope="module")
+def pos_4wl():
+    pos = {
+        0: [1, 1],
+        1: [-1, 1],
+        2: [-1, -1],
+        3: [1, -1],
+    }
     return pos
 
 
 @pytest.fixture(scope="module")
 def results_4wl():
-    k12, k21, k23, k32, k34, k43, k41, k14, k24, k42 = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
     k4wl = np.array(
-        [[0, k12, 0, k14], [k21, 0, k23, k24], [0, k32, 0, k34], [k41, k42, k43, 0]]
+        [[0, 1, 0, 1], [1, 0, 1, 1], [0, 1, 0, 1], [1, 1, 1, 0]]
     )
-    rate_names4wl = [
-        "k12",
-        "k21",
-        "k23",
-        "k32",
-        "k34",
-        "k43",
-        "k41",
-        "k14",
-        "k24",
-        "k42",
-    ]
     G4wl = nx.MultiDiGraph()
     graph_utils.generate_edges(G4wl, k4wl)
-    p4wl = np.array([1, 1, 1, 1]) / 4
+    p4wl = np.array([1, 0, 0, 0])
     results4wl = ode.ode_solver(
         p4wl, k4wl, t_max=1e2, tol=1e-12, atol=1e-16, rtol=1e-13
     )
     return results4wl
 
 
-def test_plot_cycle(G4wl, pos_4wl):
-    cycles = [[0, 1, 3], [0, 3, 2, 1]]
-    plotting.draw_cycles(G4wl, cycles[0])
-    plotting.draw_cycles(G4wl, cycles[1])
-    plotting.draw_cycles(G4wl, cycles[0], pos=pos_4wl)
-    plotting.draw_cycles(G4wl, cycles[0], pos=pos_4wl, cbt=True)
-    plotting.draw_cycles(G4wl, cycles, panel=True)
-    plotting.draw_cycles(G4wl, cycles, panel=True, cbt=True)
-    plotting.draw_cycles(G4wl, cycles, cbt=True)
-    cycles = 4 * cycles
-    plotting.draw_cycles(G4wl, cycles[:-1], panel=True, cbt=True)
+@pytest.mark.parametrize(
+    "params, use_pos, cycles",
+    [
+        ({}, False, [0, 1, 3]),
+        ({}, False, [0, 3, 2, 1]),
+        ({}, True, [0, 1, 3]),
+        ({"cbt": True}, True, [0, 1, 3]),
+        ({"cbt": True}, False, [[0, 1, 3], [0, 3, 2, 1]]),
+        ({"panel": True}, False, [[0, 1, 3], [0, 3, 2, 1]]),
+        ({"panel": True, "cbt": True}, False, [[0, 1, 3], [0, 3, 2, 1]]),
+        (
+            {"panel": True, "cbt": True},
+            False,
+            [
+                [0, 1, 3],
+                [0, 3, 2, 1],
+                [0, 1, 3],
+                [0, 3, 2, 1],
+                [0, 1, 3],
+                [0, 3, 2, 1],
+                [0, 1, 3],
+            ],
+        ),
+    ],
+)
+def test_draw_cycles(tmpdir, G4wl, pos_4wl, params, use_pos, cycles):
+    if use_pos:
+        pos = pos_4wl
+    else:
+        pos = None
+    with tmpdir.as_cwd():
+        path = os.getcwd()
+        plotting.draw_cycles(G4wl, cycles, pos=pos, path=path, label="test", **params)
 
 
-def test_plot_diagrams(G4wl, pos_4wl):
-    plotting.draw_diagrams(G4wl)
-    plotting.draw_diagrams(G4wl, pos=pos_4wl)
-    cycles = graph_utils.find_all_unique_cycles(G4wl)
+@pytest.mark.parametrize(
+    "use_pos, use_flux_diags, double_flux_diags, params",
+    [
+        (False, False, False, {}),
+        (True, False, False, {}),
+        (False, True, False, {}),
+        (True, True, False, {"cbt": True}),
+        (True, True, False, {"cbt": True, "panel": True}),
+        (True, True, False, {"panel": True, "rows": 2}),
+        (True, True, False, {"panel": True, "cols": 2}),
+        (True, True, True, {"panel": True}),
+    ],
+)
+def test_draw_diagrams(
+    tmpdir,
+    G4wl,
+    pos_4wl,
+    flux_diagrams_4wl,
+    use_pos,
+    use_flux_diags,
+    double_flux_diags,
+    params,
+):
+    if use_pos:
+        pos = pos_4wl
+    else:
+        pos = None
 
-    flux_diags = []
-    for cycle in cycles:
-        if not cycle is None:
-            flux_diags = diagrams.generate_flux_diagrams(G4wl, cycle)
-            if not flux_diags is None:
-                flux_diags.extend(flux_diags)
+    if use_flux_diags:
+        diagrams = flux_diagrams_4wl
+    else:
+        diagrams = G4wl
 
-    plotting.draw_diagrams(flux_diags)
-    plotting.draw_diagrams(flux_diags, pos=pos_4wl, cbt=True)
-    plotting.draw_diagrams(flux_diags, pos=pos_4wl, panel=True, cbt=True)
-    plotting.draw_diagrams(flux_diags, pos=pos_4wl, panel=True, cbt=False, rows=2)
-    plotting.draw_diagrams(flux_diags, pos=pos_4wl, panel=True, cbt=False, cols=2)
-    flux_diags = 2 * flux_diags
-    plotting.draw_diagrams(flux_diags[:-1], pos=pos_4wl, panel=True, cbt=False)
+    if double_flux_diags:
+        diagrams *= 2
+        diagrams = diagrams[:-1]
+
+    with tmpdir.as_cwd():
+        path = os.getcwd()
+        plotting.draw_diagrams(diagrams, pos=pos, path=path, label="test", **params)
 
 
-def test_plot_ODE_probs(results_4wl):
-    plotting.draw_ODE_results(results_4wl)
-    plotting.draw_ODE_results(results_4wl, bbox_coords=(0, 1))
+@pytest.mark.parametrize("params", [{}, {"bbox_coords": (0, 1)}])
+def test_draw_ode_results(tmpdir, results_4wl, params):
+    with tmpdir.as_cwd():
+        path = os.getcwd()
+        plotting.draw_ode_results(results_4wl, path=path, label="test", **params)
