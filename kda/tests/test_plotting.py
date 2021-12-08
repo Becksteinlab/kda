@@ -8,21 +8,20 @@ import os
 import pytest
 import numpy as np
 import networkx as nx
+import matplotlib.pyplot as plt
 
 from kda import plotting, graph_utils, diagrams, ode
 
 
 @pytest.fixture(scope="module")
 def G4wl():
-    k4wl = np.array(
-        [[0, 1, 0, 1], [1, 0, 1, 1], [0, 1, 0, 1], [1, 1, 1, 0]]
-    )
+    k4wl = np.array([[0, 1, 0, 1], [1, 0, 1, 1], [0, 1, 0, 1], [1, 1, 1, 0]])
     G4wl = nx.MultiDiGraph()
     graph_utils.generate_edges(G4wl, k4wl)
     return G4wl
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def flux_diagrams_4wl(G4wl):
     cycles = graph_utils.find_all_unique_cycles(G4wl)
 
@@ -48,9 +47,7 @@ def pos_4wl():
 
 @pytest.fixture(scope="module")
 def results_4wl():
-    k4wl = np.array(
-        [[0, 1, 0, 1], [1, 0, 1, 1], [0, 1, 0, 1], [1, 1, 1, 0]]
-    )
+    k4wl = np.array([[0, 1, 0, 1], [1, 0, 1, 1], [0, 1, 0, 1], [1, 1, 1, 0]])
     G4wl = nx.MultiDiGraph()
     graph_utils.generate_edges(G4wl, k4wl)
     p4wl = np.array([1, 0, 0, 0])
@@ -66,12 +63,12 @@ def results_4wl():
         ({}, False, [0, 1, 3]),
         ({}, False, [0, 3, 2, 1]),
         ({}, True, [0, 1, 3]),
-        ({"cbt": True}, True, [0, 1, 3]),
-        ({"cbt": True}, False, [[0, 1, 3], [0, 3, 2, 1]]),
+        ({"panel": False, "cbt": True}, True, [0, 1, 3]),
+        ({"panel": False, "cbt": True}, False, [[0, 1, 3], [0, 3, 2, 1]]),
         ({"panel": True}, False, [[0, 1, 3], [0, 3, 2, 1]]),
         ({"panel": True, "cbt": True}, False, [[0, 1, 3], [0, 3, 2, 1]]),
         (
-            {"panel": True, "cbt": True},
+            {"panel": True, "cbt": True, "curved_arrows": True},
             False,
             [
                 [0, 1, 3],
@@ -100,12 +97,12 @@ def test_draw_cycles(tmpdir, G4wl, pos_4wl, params, use_pos, cycles):
     [
         (False, False, False, {}),
         (True, False, False, {}),
-        (False, True, False, {}),
+        (False, True, False, {"panel": False}),
         (True, True, False, {"cbt": True}),
         (True, True, False, {"cbt": True, "panel": True}),
         (True, True, False, {"panel": True, "rows": 2}),
         (True, True, False, {"panel": True, "cols": 2}),
-        (True, True, True, {"panel": True}),
+        (True, True, True, {"panel": True, "curved_arrows": True}),
     ],
 )
 def test_draw_diagrams(
@@ -142,3 +139,12 @@ def test_draw_ode_results(tmpdir, results_4wl, params):
     with tmpdir.as_cwd():
         path = os.getcwd()
         plotting.draw_ode_results(results_4wl, path=path, label="test", **params)
+
+
+def test_plot_panel(tmpdir, flux_diagrams_4wl):
+    # test to flush the code path for the position
+    # generation for `plotting._plot_panel()`
+    with tmpdir.as_cwd():
+        path = os.getcwd()
+        plotting._plot_panel(diagrams=flux_diagrams_4wl, pos=None)
+        plt.close()
