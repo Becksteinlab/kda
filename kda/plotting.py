@@ -31,7 +31,14 @@ def _get_node_labels(node_list):
     Parameters
     ----------
     node_list : list
-        List of integers (i.e. [0, 2, 3, 1]) for which labels should be made.
+        List of node indices (i.e. [0, 2, 3, 1]) indicating
+        which node labels should be made.
+
+    Returns
+    -------
+    labels: dict
+        Dictionary where keys are the node index (index-zero) and the
+        keys are the node index string (index-one).
     """
     labels = {}
     for i in node_list:
@@ -43,6 +50,22 @@ def _get_node_colors(cbt, obj):
     """
     Returns a list of color values (either grey or coral) depending
     on whether color by target is turned on.
+
+    Parameters
+    ----------
+    cbt : bool
+        'Color by target' option that paints target nodes with a coral red
+        when true. Typically used for plotting directional partial and
+        flux diagrams.
+    obj: object
+        `NetworkX.Graph`, `NetworkX.MultiDiGraph`, or list of nodes to
+        return color values for. If a graph object is input, only nodes
+        with attribute `is_target=True` will be colored coral red.
+
+    Returns
+    -------
+    node_colors: list
+        List of strings of color values (i.e. `["0.8", "0.8",...]`).
     """
     base_color = "0.8"
     target_color = "#FF8080"
@@ -66,6 +89,19 @@ def _get_axis_limits(pos, scale_factor=1.4):
     """
     Retrieves the x/y limits based on the node positions. Values are scaled by
     a constant factor to compensate for the size of the nodes.
+
+    Parameters
+    ----------
+    pos : dict
+        Dictionary where keys are the indexed states (0, 1, 2, ..., N)
+        and the values are the x, y coordinates for each node.
+    scale_factor: float (optional)
+        Factor used to scale the x/y axis limits. Default is 1.4.
+
+    Returns
+    -------
+    Tuple of the form ``(xlims, ylims)``, where `xlims` and `ylims` are lists
+    containing the scaled minimum and maximum x and y values, respectively.
     """
     x = np.zeros(len(pos))
     y = np.zeros(len(pos))
@@ -77,13 +113,35 @@ def _get_axis_limits(pos, scale_factor=1.4):
     return xlims, ylims
 
 
-def _get_panel_dimensions(obj_list, rows=None, cols=None):
-    N = len(obj_list)
+def _get_panel_dimensions(n_diagrams, rows, cols=None):
+    """
+    Calculates the number of appropriate rows and columns based on the
+    number of diagrams. Generally returns the most square-like shape
+    that is feasible for a given number of diagrams. If rows are specified,
+    the columns will be adjusted.
+
+    Parameters
+    ----------
+    n_diagrams: int
+        Number of diagrams to plot in panel.
+    rows : int
+        Number of rows, typically based on the square
+        root of the number of diagrams to generate.
+    cols : int (optional)
+        Number of columns. Default is `None`, which results in the number
+        of rows being determined based on the number of diagrams input.
+
+    Returns
+    -------
+    Tuple of the form ``(rows, cols, excess_plots)``, where `rows` and `cols`
+    are the number of rows and columns in the panel, respectively, and
+    `excess_plots` is the number of extra graphs available in the panel.
+    """
     if rows is None:
-        rows = int(np.sqrt(N))
+        rows = int(np.sqrt(n_diagrams))
     if cols is None:
-        cols = int(np.ceil(N / rows))
-    excess_plots = rows * cols - N
+        cols = int(np.ceil(n_diagrams / rows))
+    excess_plots = rows * cols - n_diagrams
     return (rows, cols, excess_plots)
 
 
@@ -104,6 +162,55 @@ def _plot_single_diagram(
     ax=None,
     cbt=False,
 ):
+    """
+    Plots a single diagram.
+
+    Parameters
+    ----------
+    diagram : `NetworkX.MultiDiGraph` or `NetworkX.Graph()`
+        Diagram to be plotted.
+    pos : dict (optional)
+        Dictionary where keys are the indexed states (0, 1, 2, ..., N) and
+        the values are NumPy arrays of x, y coordinates for each node. Default
+        is None, nx.spring_layout() is used.
+    node_labels: dict (optional)
+        Dictionary where keys are the node index (index-zero) and the
+        keys are the node index string (index-one). If not specified labels
+        will be created for all nodes in the input diagram.
+    node_list : list (optional)
+        List of node indices (i.e. [0, 2, 3, 1]) indicating
+        which nodes to plot. If not specified, all nodes in the input
+        diagram will be plotted.
+    node_colors: list (optional)
+        List of strings of color values (i.e. `["0.8", "0.8",...]`) used
+        to color the nodes. If not specified, node colors will be found
+        based on the `cbt` parameter.
+    edge_list: list (optional)
+        List of edge tuples (i.e. `[(1, 0), (1, 2), ...]`) to plot. If not
+        specified, all edges will be plotted.
+    font_size : int (optional)
+        Sets the font size for the figure. Default is 12.
+    figsize: tuple (optional)
+        Tuple of the form `(x, y)`, where `x` and `y` are the x and y-axis
+        figure dimensions in inches. Default is `(3, 3)`.
+    node_size: int (optional)
+        Size of nodes used for `NetworkX` diagram. Default is 300.
+    arrow_width: float (optional)
+        Arrow width used for `NetworkX` diagram. Default is 1.5.
+    arrow_size: int (optional)
+        Arrow size used for `NetworkX` diagram. Default is 12.
+    arrow_style: str (optional)
+        Style of arrows used for `NetworkX` diagram. Default is "->".
+    connection_style: str (optional)
+        Style of arrow connections for `NetworkX` diagram. Default is "arc3".
+    ax: `matplotlib` axis object (optional)
+        Axis to place diagrams on. If not specified, a new figure
+        and axis will be created. Default is None.
+    cbt : bool (optional)
+        'Color by target' option that paints target nodes with a coral red.
+        Typically used for plotting directional partial and flux diagrams.
+        Default is False.
+    """
     if ax is None:
         fig = plt.figure(figsize=figsize, tight_layout=True)
         ax = fig.add_subplot(111)
@@ -156,8 +263,43 @@ def _plot_panel(
     cbt=False,
     curved_arrows=False,
 ):
+    """
+    Plots a panel of diagrams of shape `(rows, cols)`.
+
+    Parameters
+    ----------
+    diagrams : list cycles or NetworkX MultiDiGraph
+        List of diagrams or single diagram to be plotted.
+    rows : int (optional)
+        Number of rows. Default is `None`, which results in the number
+        of rows being determined based on the number of diagrams input.
+    cols : int (optional)
+        Number of columns. Default is `None`, which results in the number
+        of rows being determined based on the number of diagrams input.
+    pos : dict (optional)
+        Dictionary where keys are the indexed states (0, 1, 2, ..., N) and
+        the values are NumPy arrays of x, y coordinates for each node. Default
+        is None, `nx.spring_layout()` is used.
+    panel_scale : float (optional)
+        Parameter used to scale figure if panel=True. Linearly scales figure
+        height and width. Default is 1.
+    font_size : int (optional)
+        Sets the font size for the figure. Default is 12.
+    cbt : bool (optional)
+        'Color by target' option that paints target nodes with a coral red.
+        Typically used for plotting directional partial and flux diagrams.
+        Default is False.
+    curved_arrows: bool (optional)
+        Switches on arrows with a slight curvature to separate double arrows
+        for directional diagrams. Default is False.
+
+    Notes
+    -----
+    If number of diagrams is not a perfect square, extra
+    plots will be generated as empty coordinate axes.
+    """
     nrows, ncols, excess_plots = _get_panel_dimensions(
-        obj_list=diagrams, rows=rows, cols=cols
+        n_diagrams=len(diagrams), rows=rows, cols=cols
     )
     fig, ax = plt.subplots(nrows=nrows, ncols=ncols, tight_layout=True)
     fig.set_figheight(nrows * panel_scale)
@@ -246,6 +388,9 @@ def draw_diagrams(
     label : str (optional)
         Figure label, used to create unique figure label if a save path is
         given. Includes `.png` file extension. Default is None.
+    curved_arrows: bool (optional)
+        Switches on arrows with a slight curvature to separate double arrows
+        for directional diagrams. Default is False.
 
     Notes
     -----
@@ -334,7 +479,7 @@ def draw_cycles(
     Parameters
     ----------
     G : NetworkX MultiDiGraph
-        Input diagram
+        Input diagram used for plotting the cycles.
     cycles : list of lists of int
         List of cycles or individual cycle to be plotted, index zero. Order
         of node indices does not matter.
@@ -354,6 +499,9 @@ def draw_cycles(
     cbt : bool (optional)
         'Color by target' option that paints target nodes with a coral red to
         make them easier to spot. Default is False.
+    curved_arrows: bool (optional)
+        Switches on arrows with a slight curvature to separate double arrows
+        for directional diagrams. Default is False.
     path : str (optional)
         String of save path for figure. If path is given figure will be saved
         at the specified location. Default is None.
@@ -407,7 +555,7 @@ def draw_cycles(
         if panel:  # draw panel case
 
             nrows, ncols, excess_plots = _get_panel_dimensions(
-                obj_list=cycles, rows=rows, cols=cols
+                n_diagrams=len(cycles), rows=rows, cols=cols
             )
 
             fig, ax = plt.subplots(nrows=nrows, ncols=ncols, tight_layout=True)
