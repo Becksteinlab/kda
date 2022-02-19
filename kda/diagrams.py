@@ -248,11 +248,8 @@ def _append_reverse_edges(edge_list):
     new_edge_list : list of edge tuples
         List of edge tuples with both forward and reverse edges.
     """
-    new_edge_list = []
-    for edge in edge_list:
-        if not edge in new_edge_list:
-            new_edge_list.append(edge)
-            new_edge_list.append((edge[1], edge[0], edge[2]))
+    new_edge_list = [(e[1], e[0], e[2]) for e in edge_list]
+    new_edge_list.extend(edge_list)
     return new_edge_list
 
 
@@ -459,23 +456,15 @@ def generate_flux_diagrams(G, cycle):
             f"Cycle {cycle} contains all nodes in G. No flux diagrams generated."
         )
         return None
-    # create a base flux diagram from input
-    # diagram and remove all of the edges
-    base_graph = G.copy()
-    base_graph.remove_edges_from(G.edges)
     # get the edge tuples created by the input cycle
     cycle_edges = _construct_cycle_edges(cycle)
-    # add all cycle edges to base graph since
-    # all flux diagrams contain the cycle edges
-    for edge in cycle_edges:
-        base_graph.add_edge(edge[0], edge[1], 0)
-        base_graph.add_edge(edge[1], edge[0], 0)
+    cycle_edges = _append_reverse_edges(cycle_edges)
     # get all of the unique edges in the input diagram
     G_edges = _find_unique_edges(G)
     # get edges that are uncommon between cycle and G
     non_cycle_edges = _find_unique_uncommon_edges(G_edges, cycle)
     # number of non-cycle edges in flux diagram
-    n_non_cycle_edges = G.number_of_nodes() - len(cycle_edges)
+    n_non_cycle_edges = G.number_of_nodes() - len(cycle)
     # generate all combinations of valid edges
     # TODO: generates too many edge lists: some create cycles, some
     # use both forward and reverse edges
@@ -494,9 +483,11 @@ def generate_flux_diagrams(G, cycle):
                 # store the directional edges
                 dir_edges.extend(_get_directional_edges(cons))
         if _flux_edge_conditions(dir_edges, n_non_cycle_edges):
-            # make a copy of the base graph
-            flux_diag = base_graph.copy()
-            # add all directional edges to flux diagram
+            # initialize a graph object
+            flux_diag = nx.MultiDiGraph()
+            # add cycle edges to list of directional edges
+            dir_edges.extend(cycle_edges)
+            # add all edges to flux diagram
             flux_diag.add_edges_from(dir_edges)
             # collect all nodes in the potential flux
             # diagram from the diagram edges
