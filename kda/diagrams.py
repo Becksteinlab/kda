@@ -492,9 +492,7 @@ def generate_flux_diagrams(G, cycle):
             if cons:
                 # if there are directional connections, generate and
                 # store the directional edges
-                dir_edges.append(_get_directional_edges(cons))
-        # flatten the nested lists of edges
-        dir_edges = [edge for edges in dir_edges for edge in edges]
+                dir_edges.extend(_get_directional_edges(cons))
         if _flux_edge_conditions(dir_edges, n_non_cycle_edges):
             # make a copy of the base graph
             flux_diag = base_graph.copy()
