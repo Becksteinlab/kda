@@ -802,6 +802,105 @@ class Test_Flux_Calcs:
         )
         assert truth_value == expected_truth_value
 
+    @pytest.mark.parametrize(
+        "adj_matrix, expected_cycle_count, expected_flux_diag_count",
+        [
+            (
+                # simple 3-state model
+                [
+                    [0, 1, 1],
+                    [1, 0, 1],
+                    [1, 1, 0],
+                ],
+                # has no flux diagrams because there is only 1 cycle,
+                # and that cycle contains all of the nodes in the diagram
+                1,
+                0,
+            ),
+            (
+                # simple 4-state model
+                [
+                    [0, 1, 0, 1],
+                    [1, 0, 1, 0],
+                    [0, 1, 0, 1],
+                    [1, 0, 1, 0],
+                ],
+                # has no flux diagrams for the same reason as the
+                # 3-state model
+                1,
+                0,
+            ),
+            (
+                # 4-state model with leakage (simplified version of
+                # Hill's 5-state model below)
+                [
+                    [0, 1, 0, 1],
+                    [1, 0, 1, 1],
+                    [0, 1, 0, 1],
+                    [1, 1, 1, 0],
+                ],
+                # has 3 cycles, 2 of which are 3-state cycles which each
+                # have 2 flux diagrams associated with them
+                3,
+                4,
+            ),
+            (
+                # 5-state model with leakage, used extensively in T.L. Hill's
+                # "Free Energy Transduction and Biochemical Cycle Kinetics"
+                [
+                    [0, 1, 1, 0, 0],
+                    [1, 0, 1, 1, 0],
+                    [1, 1, 0, 0, 1],
+                    [0, 1, 0, 0, 1],
+                    [0, 0, 1, 1, 0],
+                ],
+                # has 3 cycles, where 2 cycles have corresponding flux diagrams:
+                # a 3-state cycle with 3 flux diagrams, and a 4-state cycle
+                # with 2 flux diagrams
+                3,
+                5,
+            ),
+            (
+                # 8-state model with leakage used for flux diagram example in
+                # T.L. Hill's "Free Energy Transduction and Biochemical Cycle Kinetics"
+                [
+                    [0, 1, 1, 0, 0, 0, 0, 0],
+                    [1, 0, 0, 1, 0, 0, 0, 0],
+                    [1, 0, 0, 1, 1, 0, 0, 0],
+                    [0, 1, 1, 0, 0, 1, 0, 0],
+                    [0, 0, 1, 0, 0, 1, 1, 0],
+                    [0, 0, 0, 1, 1, 0, 0, 1],
+                    [0, 0, 0, 0, 1, 0, 0, 1],
+                    [0, 0, 0, 0, 0, 1, 1, 0],
+                ],
+                # there are 6 cycles in this model, 5 of which contain many flux
+                # diagrams each. These are shown on page 51 of the above mentioned
+                # book, and total to 37 (not including the all-node cycle g)
+                6,
+                37,
+            ),
+        ],
+    )
+    def test_flux_diagram_counts(self, adj_matrix, expected_cycle_count, expected_flux_diag_count):
+        # generate flux diagrams for different models and verify
+        # the number of flux diagrams generated is correct
+
+        A = np.array(adj_matrix)
+        G = nx.MultiDiGraph()
+        graph_utils.generate_edges(G, A)
+
+        actual_flux_diag_count = 0
+        all_cycles = graph_utils.find_all_unique_cycles(G)
+        # check the number of cycles found is correct
+        assert len(all_cycles) == expected_cycle_count
+
+        for cycle in all_cycles:
+            flux_diagrams = diagrams.generate_flux_diagrams(G, cycle)
+            if flux_diagrams:
+                actual_flux_diag_count += len(flux_diagrams)
+
+        assert actual_flux_diag_count == expected_flux_diag_count
+
 
 class Test_Misc_Funcs:
     @settings(deadline=None)
