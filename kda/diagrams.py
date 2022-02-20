@@ -35,12 +35,11 @@ def _find_unique_edges(G):
     G : NetworkX MultiDiGraph
         Input diagram
     """
-    edges = list(G.edges)  # Get list of edges
-    sorted_edges = np.sort(edges)  # Sort list of edges
-    tuples = [
-        (sorted_edges[i, 1], sorted_edges[i, 2]) for i in range(len(sorted_edges))
-    ]  # Make list of edge tuples
-    return list(set(tuples))
+    # since non-directional graphs cannot contain forward/reverse edges,
+    # simply create a simple graph and collect its (unique) set of edges
+    G_temp = nx.Graph()
+    G_temp.add_edges_from(G.edges())
+    return list(G_temp.edges())
 
 
 def _combine(x, y):
