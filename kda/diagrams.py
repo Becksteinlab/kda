@@ -115,13 +115,7 @@ def _get_directional_edges(cons):
         List of edges (3-tuples) corresponding to a single directional partial
         diagram, [(1, 0, 0), (5, 0, 0), ...].
     """
-    values = []
-    for target in cons.keys():
-        for neighb in cons[target]:
-            edge_tuple = (neighb, target, 0)
-            if not edge_tuple in values:
-                values.append(edge_tuple)
-    return values
+    return [(nbr, tgt, 0) for tgt in cons for nbr in cons[tgt]]
 
 
 def _construct_cycle_edges(cycle):
@@ -145,60 +139,30 @@ def _construct_cycle_edges(cycle):
     return reverse_list
 
 
-def _find_node_edges(cycle, r=2):
+def _find_unique_uncommon_edges(G, cycle_edges):
     """
-    Function for generating all possible edges that contain 2 nodes. First finds
-    all combinations of pairs of nodes, then appends the reverse edges.
+    Collects the set of unique non-cycle edges for a cycle in the input diagram.
 
     Parameters
     ----------
-    cycle : list of int
-        List of node indices for cycle of interest, index zero. Order of node
-        indices does not matter.
-    r : int (optional)
-        Length of tuples to be generated, default is 2.
+    G : NetworkX MultiDiGraph
+        Input diagram
+    cycle_edges : list of tuples
+        List of edge tuples for a cycle of interest. Both forward and
+        reverse edges should be included (i.e. `(1, 0)` and `(0, 1)`).
 
     Returns
     -------
-    node_edges : list of tuples
-        List of all possible pairs of nodes, where node pairs are in tuple form.
-    """
-    node_edges = list(itertools.combinations(cycle, r))  # generate node edges
-    for edge in node_edges.copy():
-        node_edges.append((edge[1], edge[0]))  # append reverse edge
-    return node_edges
-
-
-def _find_unique_uncommon_edges(G_edges, cycle):
-    """
-    Function for removing cycle edges for flux diagram generation.
-
-    Parameters
-    ----------
-    G_edges : list of tuples
-        List of all edges in a diagram G. For general use, this list should have
-        only unique edges (not both forward and reverse).
-    cycle : list of int
-        Cycle to generate edge list from. Order of node indices does not matter.
-
-    Returns
-    -------
-    valid_non_cycle_edges : list of tuples
-        List of uncommon edges between input list "G_edges" and "cycle_edges".
+    edges : list of tuples
+        List of uncommon edges between G and "cycle_edges".
         Since these should be unique edges (no reverse edges), these are the
         unique uncommon edges between two diagrams (normal use case).
     """
-    cycle_edges = _construct_cycle_edges(cycle)
-    sorted_G_edges = [sorted(edge) for edge in G_edges]
-    sorted_cycle_edges = [sorted(edge) for edge in cycle_edges]
-    non_cycle_edges = [
-        tuple(edge) for edge in sorted_G_edges if not edge in sorted_cycle_edges
-    ]
-    node_edges = _find_node_edges(cycle)  # generate edges that only contain 2 nodes
-    valid_non_cycle_edges = [
-        edge for edge in non_cycle_edges if not edge in node_edges
-    ]  # remove node edges
-    return valid_non_cycle_edges
+    G_temp = nx.MultiDiGraph()
+    G_temp.add_edges_from(G.edges())
+    G_temp.remove_edges_from(cycle_edges)
+    edges = _find_unique_edges(G_temp)
+    return edges
 
 
 def _flux_edge_conditions(edge_list, n_flux_edges):
@@ -222,12 +186,9 @@ def _flux_edge_conditions(edge_list, n_flux_edges):
     # correct number of flux diagram edges
     if n_input_edges == n_flux_edges:
         # sort the list of edges into arrays of increasing order
-        sorted_edges = np.sort(edge_list)
-        tuples = [
-            (sorted_edges[i, 1], sorted_edges[i, 2]) for i in range(n_input_edges)
-        ]
+        sorted_edges = np.sort(edge_list)[:, 1:]
         # count how many of the sorted edges are unique
-        n_unique_edges = len(set(tuples))
+        n_unique_edges = len(set(map(tuple, sorted_edges)))
         if n_unique_edges == n_input_edges:
             # if there are no redundant edges, return True
             return True
@@ -456,10 +417,8 @@ def generate_flux_diagrams(G, cycle):
     # get the edge tuples created by the input cycle
     cycle_edges = _construct_cycle_edges(cycle)
     cycle_edges = _append_reverse_edges(cycle_edges)
-    # get all of the unique edges in the input diagram
-    G_edges = _find_unique_edges(G)
     # get edges that are uncommon between cycle and G
-    non_cycle_edges = _find_unique_uncommon_edges(G_edges, cycle)
+    non_cycle_edges = _find_unique_uncommon_edges(G, cycle_edges)
     # number of non-cycle edges in flux diagram
     n_non_cycle_edges = G.number_of_nodes() - len(cycle)
     # generate all combinations of valid edges
@@ -486,23 +445,13 @@ def generate_flux_diagrams(G, cycle):
             dir_edges.extend(cycle_edges)
             # add all edges to flux diagram
             flux_diag.add_edges_from(dir_edges)
-            # if the diagram contains all nodes it is still valid
-            if flux_diag.number_of_nodes() == G.number_of_nodes():
-                # count how many cycles are in the flux diagram by removing
-                # 2-node cycles
-                # NetworkX stores forward/reverse cycles, so if 2 remain there
-                # is 1 unique cycle for this flux diagram
-                contains_1_cycle = len([c for c in nx.simple_cycles(flux_diag) if len(c) > 2]) == 2
-                # if there is exactly 1 unique cycle in the
-                # generated diagram, it is valid
-                if contains_1_cycle:
-                    # set "is_target" to False for all nodes
-                    nx.set_node_attributes(flux_diag, False, "is_target")
-                    for target in cycle:
-                        # for nodes in cycle, mark True
-                        flux_diag.nodes[target]["is_target"] = True
-                    # append valid flux diagram to list
-                    flux_diagrams.append(flux_diag)
+            # set "is_target" to False for all nodes
+            nx.set_node_attributes(flux_diag, False, "is_target")
+            for target in cycle:
+                # for nodes in cycle, mark True
+                flux_diag.nodes[target]["is_target"] = True
+            # append valid flux diagram to list
+            flux_diagrams.append(flux_diag)
     return flux_diagrams
 
 
