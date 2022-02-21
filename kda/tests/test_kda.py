@@ -642,7 +642,7 @@ class Test_Probability_Calcs:
         assert_almost_equal(ode_probs, expected_probs, decimal=10)
 
 
-class Test_Flux_Calcs:
+class Test_Flux_Diagrams:
     def test_generate_all_flux_diags(self):
         # Test just to verify that generating all flux diagrams returns the
         # same result as generating them one at a time
@@ -878,6 +878,25 @@ class Test_Flux_Calcs:
                 # book, and total to 37 (not including the all-node cycle g)
                 6,
                 37,
+            ),
+            (
+                # 8-state model
+                [
+                    [0, 1, 1, 0, 0, 0, 1, 0],
+                    [1, 0, 0, 1, 0, 0, 0, 1],
+                    [1, 0, 0, 1, 1, 0, 0, 0],
+                    [0, 1, 1, 0, 0, 1, 0, 0],
+                    [0, 0, 1, 0, 0, 1, 1, 0],
+                    [0, 0, 0, 1, 1, 0, 0, 1],
+                    [1, 0, 0, 0, 1, 0, 0, 1],
+                    [0, 1, 0, 0, 0, 1, 1, 0],
+                ],
+                # model has 28 unique cycles with a total of 402 flux diagrams.
+                # this model is unique because it has many cycles that contain
+                # all nodes and thus do not have any flux diagrams associated
+                # with them.
+                28,
+                402,
             ),
         ],
     )

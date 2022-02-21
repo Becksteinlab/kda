@@ -397,7 +397,6 @@ def generate_directional_diagrams(G, return_edges=False):
     """
     partial_diagram_edges = generate_partial_diagrams(G, return_edges=True)
 
-    base_nodes = G.nodes()
     n_states = G.number_of_nodes()
     n_partials = len(partial_diagram_edges)
     n_dir_diags = n_states * n_partials
@@ -418,7 +417,6 @@ def generate_directional_diagrams(G, return_edges=False):
                 directional_diagrams[j + i*n_partials] = dir_edges
             else:
                 directional_diagram = nx.MultiDiGraph()
-                directional_diagram.add_nodes_from(base_nodes)
                 directional_diagram.add_edges_from(dir_edges)
                 # set "is_target" to False for all nodes
                 nx.set_node_attributes(directional_diagram, False, "is_target")
@@ -488,18 +486,13 @@ def generate_flux_diagrams(G, cycle):
             dir_edges.extend(cycle_edges)
             # add all edges to flux diagram
             flux_diag.add_edges_from(dir_edges)
-            # collect all nodes in the potential flux
-            # diagram from the diagram edges
-            included_nodes = np.unique(flux_diag.edges)
             # if the diagram contains all nodes it is still valid
-            if included_nodes.size == G.number_of_nodes():
+            if flux_diag.number_of_nodes() == G.number_of_nodes():
                 # count how many cycles are in the flux diagram by removing
                 # 2-node cycles
                 # NetworkX stores forward/reverse cycles, so if 2 remain there
                 # is 1 unique cycle for this flux diagram
-                contains_1_cycle = (
-                    len([c for c in nx.simple_cycles(flux_diag) if len(c) > 2]) == 2
-                )
+                contains_1_cycle = len([c for c in nx.simple_cycles(flux_diag) if len(c) > 2]) == 2
                 # if there is exactly 1 unique cycle in the
                 # generated diagram, it is valid
                 if contains_1_cycle:
