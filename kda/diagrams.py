@@ -52,20 +52,24 @@ def _combine(x, y):
     return x
 
 
-def _get_directional_connections(target, unique_edges):
+def _get_neighbor_dict(target, unique_edges):
     """
-    Recursively constructs dictionary of directional connections for a given
-    target state, {0: [1, 5], 1: [2], ...}. This allows for iterating through a
-    given partial diagram in _get_directional_edges() to construct the list of
-    directional edges for each directional partial diagram.
+    Recursively constructs dictionary containing neighbor connectivity
+    information for a set of target states in a diagram.
 
     Parameters
     ----------
     target : int
         Index of target state
     unique_edges : array
-        Array of edges (made from 2-tuples) that are unique to the diagram,
-        [[0, 1], [1, 2], ...].
+        Array of edges (made from 2-tuples) that are unique
+        to the diagram, (i.e. [[0, 1], [1, 2], ...]).
+
+    Returns
+    -------
+    Dictionary of directional connections, where node
+    indices are mapped to a list of their respective
+    neighbor node indices (i.e. {0: [1, 5], 1: [2], ...}).
     """
     # get the indices for each edge pair that contains the target state
     adj_idx = np.nonzero(unique_edges == target)[0]
@@ -90,7 +94,7 @@ def _get_directional_connections(target, unique_edges):
         con_dict = functools.reduce(
             _combine,
             [{target: neighbors}]
-            + [_get_directional_connections(i, nonadj_edges) for i in neighbors],
+            + [_get_neighbor_dict(i, nonadj_edges) for i in neighbors],
         )
         return con_dict
     else:
@@ -98,24 +102,27 @@ def _get_directional_connections(target, unique_edges):
         return {}
 
 
-def _get_directional_edges(cons):
+def _get_directional_path_edges(target, unique_edges):
     """
-    Iterates through a dictionary of connections to construct the list
-    of directional edges for each directional partial diagram.
+    Constructs edges for all paths leading to a target
+    state using input collection of unique edge tuples.
 
     Parameters
     ----------
-    cons : dict
-        Dictionary of directional connections for a given target state,
-        {0: [1, 5], 1: [2], ...}.
+    target : int
+        Target state.
+    unique_edges : array
+        Array of edges (made from 2-tuples) that are unique to the
+        diagram (i.e. `(1, 2)` and `(2, 1)` are considered the same).
 
     Returns
     -------
-    values : list
-        List of edges (3-tuples) corresponding to a single directional partial
-        diagram, [(1, 0, 0), (5, 0, 0), ...].
+    path_edges : list
+        List of edge tuples (i.e. [(0, 1, 0), (1, 2, 0), ...]).
     """
-    return [(nbr, tgt, 0) for tgt in cons for nbr in cons[tgt]]
+    neighbors = _get_neighbor_dict(target, unique_edges)
+    path_edges = [(nbr, tgt, 0) for tgt in neighbors for nbr in neighbors[tgt]]
+    return list(set(path_edges))
 
 
 def _construct_cycle_edges(cycle):
@@ -370,10 +377,8 @@ def generate_directional_diagrams(G, return_edges=False):
     targets = np.sort(list(G.nodes))
     for i, target in enumerate(targets):
         for j, partial_edges in enumerate(partial_diagram_edges):
-            # get dictionary of connections
-            cons = _get_directional_connections(target, partial_edges)
-            # get directional edges from connections
-            dir_edges = _get_directional_edges(cons)
+            # get directional edges from partial diagram edges
+            dir_edges = _get_directional_path_edges(target, partial_edges)
             if return_edges:
                 directional_diagrams[j + i*n_partials] = dir_edges
             else:
@@ -428,16 +433,12 @@ def generate_flux_diagrams(G, cycle):
     for edge_list in itertools.combinations(non_cycle_edges, r=n_non_cycle_edges):
         # convert each edge list into numpy array
         edge_list = np.asarray(edge_list, dtype=int)
-        # initialize empty list for storing uni-directional edges
+        # collect the directional edges
         dir_edges = []
         for target in cycle:
-            # for each node in the cycle, collect the directional
-            # connection dictionary
-            cons = _get_directional_connections(target, edge_list)
-            if cons:
-                # if there are directional connections, generate and
-                # store the directional edges
-                dir_edges.extend(_get_directional_edges(cons))
+            path_edges = _get_directional_path_edges(target, edge_list)
+            if path_edges:
+                dir_edges.extend(path_edges)
         if _flux_edge_conditions(dir_edges, n_non_cycle_edges):
             # initialize a graph object
             flux_diag = nx.MultiDiGraph()
