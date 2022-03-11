@@ -916,7 +916,19 @@ class Test_Flux_Diagrams:
         for cycle in all_cycles:
             flux_diagrams = diagrams.generate_flux_diagrams(G, cycle)
             if flux_diagrams:
-                actual_flux_diag_count += len(flux_diagrams)
+                for flux_diag in flux_diagrams:
+                    # check that flux diagrams have the same nodes
+                    # as the input diagram
+                    assert sorted(flux_diag.nodes()) == sorted(G.nodes())
+                    # collect the cycles in the flux diagram, excluding the
+                    # simplest 2-node cycles
+                    cycles = [c for c in nx.simple_cycles(flux_diag) if len(c) > 2]
+                    # check that there are only 2 cycles, which should be the
+                    # same cycle just in the forward/reverse directions
+                    assert len(cycles) == 2
+                    # check that the forward/reverse cycles are the same
+                    assert sorted(cycles[0]) == sorted(cycles[1])
+                    actual_flux_diag_count += 1
 
         assert actual_flux_diag_count == expected_flux_diag_count
 

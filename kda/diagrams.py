@@ -200,12 +200,14 @@ def _construct_cycle_edges(cycle):
 
     Returns
     -------
-    reverse_list : list of tuples
+    cycle_edges : list of tuples
         List of edge tuples corresponding to the input cycle.
     """
-    reverse_list = list(zip(cycle[:-1], cycle[1:], np.zeros(len(cycle), dtype=int)))
-    reverse_list.append((cycle[-1], cycle[0], 0))
-    return reverse_list
+    # slice cycle to generate edge tuples using consecutive nodes
+    cycle_edges = list(zip(cycle[:-1], cycle[1:], np.zeros(len(cycle), dtype=int)))
+    # append tuple connecting first/last nodes in input cycle
+    cycle_edges.append((cycle[-1], cycle[0], 0))
+    return cycle_edges
 
 
 def _find_unique_uncommon_edges(G, cycle_edges):
