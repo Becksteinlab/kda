@@ -102,7 +102,7 @@ def _get_neighbor_dict(target, unique_edges):
         return {}
 
 
-def _get_directional_path_edges(target, unique_edges):
+def _get_flux_path_edges(target, unique_edges):
     """
     Constructs edges for all paths leading to a target
     state using input collection of unique edge tuples.
@@ -123,6 +123,68 @@ def _get_directional_path_edges(target, unique_edges):
     neighbors = _get_neighbor_dict(target, unique_edges)
     path_edges = [(nbr, tgt, 0) for tgt in neighbors for nbr in neighbors[tgt]]
     return list(set(path_edges))
+
+
+def _collect_sources(G):
+    """
+    Finds all nodes in a diagram with a single neighbor. Used
+    to find the leaf nodes in a spanning tree (partial diagram).
+
+    Parameters
+    ----------
+    G : NetworkX MultiDiGraph
+        Partial diagram.
+
+    Returns
+    -------
+    sources: list of int
+        List of nodes with a single neighbor.
+
+    """
+    sources = []
+    for n in G.nodes:
+        if len(list(G.neighbors(n))) == 1:
+            # sources should only have a single neighbor, but
+            # this may not be true for more advanced cases
+            sources.append(n)
+    return sources
+
+
+def _get_directional_path_edges(G, target):
+    """
+    Collects edges for all paths leading to a
+    target state for an input partial diagram.
+
+    Parameters
+    ----------
+    G : NetworkX MultiDiGraph
+        Partial diagram.
+    target : int
+        Target state.
+
+    Returns
+    -------
+    path_edges : list
+        List of edge tuples (i.e. [(0, 1, 0), (1, 2, 0), ...]).
+
+    """
+    sources = _collect_sources(G)
+    # purge target from source list
+    sources = [n for n in sources if n != target]
+    # NetworkX function allows for multiple target states but not
+    # multiple sources. So instead of iterating over each available
+    # source, we can instead flip the direction of the paths to avoid
+    # a for loop
+    paths = list(nx.all_simple_edge_paths(G, source=target, target=sources))
+    # flatten the path edges and remove redundant edge tuples
+    path_edges = np.unique([edge for path in paths for edge in path], axis=0)
+    # flip edge tuples to account for our targets and sources being flipped
+    path_edges = np.fliplr(path_edges)
+    # add in the zero column for now
+    # TODO: change downstream functions so we
+    # don't have to keep these unnecessary zeros
+    path_edges = np.column_stack((path_edges, np.zeros(path_edges.shape[0])))
+    return path_edges
 
 
 def _construct_cycle_edges(cycle):
@@ -363,10 +425,10 @@ def generate_directional_diagrams(G, return_edges=False):
         Array of edges (made from 2-tuples) for valid directional partial
         diagrams.
     """
-    partial_diagram_edges = generate_partial_diagrams(G, return_edges=True)
+    partial_diagrams = generate_partial_diagrams(G, return_edges=False)
 
     n_states = G.number_of_nodes()
-    n_partials = len(partial_diagram_edges)
+    n_partials = len(partial_diagrams)
     n_dir_diags = n_states * n_partials
 
     if return_edges:
@@ -376,9 +438,9 @@ def generate_directional_diagrams(G, return_edges=False):
 
     targets = np.sort(list(G.nodes))
     for i, target in enumerate(targets):
-        for j, partial_edges in enumerate(partial_diagram_edges):
+        for j, partial_diagram in enumerate(partial_diagrams):
             # get directional edges from partial diagram edges
-            dir_edges = _get_directional_path_edges(target, partial_edges)
+            dir_edges = _get_directional_path_edges(partial_diagram, target)
             if return_edges:
                 directional_diagrams[j + i*n_partials] = dir_edges
             else:
@@ -436,9 +498,8 @@ def generate_flux_diagrams(G, cycle):
         # collect the directional edges
         dir_edges = []
         for target in cycle:
-            path_edges = _get_directional_path_edges(target, edge_list)
-            if path_edges:
-                dir_edges.extend(path_edges)
+            path_edges = _get_flux_path_edges(target, edge_list)
+            dir_edges.extend(path_edges)
         if _flux_edge_conditions(dir_edges, n_non_cycle_edges):
             # initialize a graph object
             flux_diag = nx.MultiDiGraph()
