@@ -642,7 +642,7 @@ class Test_Probability_Calcs:
         assert_almost_equal(ode_probs, expected_probs, decimal=10)
 
 
-class Test_Flux_Calcs:
+class Test_Flux_Diagrams:
     def test_generate_all_flux_diags(self):
         # Test just to verify that generating all flux diagrams returns the
         # same result as generating them one at a time
@@ -879,6 +879,25 @@ class Test_Flux_Calcs:
                 6,
                 37,
             ),
+            (
+                # 8-state model
+                [
+                    [0, 1, 1, 0, 0, 0, 1, 0],
+                    [1, 0, 0, 1, 0, 0, 0, 1],
+                    [1, 0, 0, 1, 1, 0, 0, 0],
+                    [0, 1, 1, 0, 0, 1, 0, 0],
+                    [0, 0, 1, 0, 0, 1, 1, 0],
+                    [0, 0, 0, 1, 1, 0, 0, 1],
+                    [1, 0, 0, 0, 1, 0, 0, 1],
+                    [0, 1, 0, 0, 0, 1, 1, 0],
+                ],
+                # model has 28 unique cycles with a total of 402 flux diagrams.
+                # this model is unique because it has many cycles that contain
+                # all nodes and thus do not have any flux diagrams associated
+                # with them.
+                28,
+                402,
+            ),
         ],
     )
     def test_flux_diagram_counts(self, adj_matrix, expected_cycle_count, expected_flux_diag_count):
@@ -897,7 +916,19 @@ class Test_Flux_Calcs:
         for cycle in all_cycles:
             flux_diagrams = diagrams.generate_flux_diagrams(G, cycle)
             if flux_diagrams:
-                actual_flux_diag_count += len(flux_diagrams)
+                for flux_diag in flux_diagrams:
+                    # check that flux diagrams have the same nodes
+                    # as the input diagram
+                    assert sorted(flux_diag.nodes()) == sorted(G.nodes())
+                    # collect the cycles in the flux diagram, excluding the
+                    # simplest 2-node cycles
+                    cycles = [c for c in nx.simple_cycles(flux_diag) if len(c) > 2]
+                    # check that there are only 2 cycles, which should be the
+                    # same cycle just in the forward/reverse directions
+                    assert len(cycles) == 2
+                    # check that the forward/reverse cycles are the same
+                    assert sorted(cycles[0]) == sorted(cycles[1])
+                    actual_flux_diag_count += 1
 
         assert actual_flux_diag_count == expected_flux_diag_count
 
