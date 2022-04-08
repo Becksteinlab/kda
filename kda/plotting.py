@@ -41,9 +41,7 @@ def _get_node_labels(node_list):
         keys are the node index string (index-one).
 
     """
-    labels = {}
-    for i in node_list:
-        labels[i] = r"${}$".format(i + 1)
+    labels = {n:r"${:.0f}$".format(n + 1) for n in node_list}
     return labels
 
 
@@ -321,8 +319,6 @@ def _plot_panel(
     fig.set_figheight(nrows * panel_scale)
     fig.set_figwidth(1.2 * ncols * panel_scale)
 
-    node_list = list(diagrams[0].nodes)
-    node_labels = _get_node_labels(node_list=node_list)
     node_size = 150 * panel_scale
 
     if pos is None:
@@ -339,8 +335,6 @@ def _plot_panel(
         _plot_single_diagram(
             diagram=diag,
             pos=pos,
-            node_list=node_list,
-            node_labels=node_labels,
             font_size=font_size,
             node_size=node_size,
             ax=ax[ix],
