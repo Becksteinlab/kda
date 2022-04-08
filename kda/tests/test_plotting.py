@@ -10,6 +10,8 @@ import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
 
+from numpy.testing import assert_equal
+
 from kda import plotting, graph_utils, diagrams, ode
 
 
@@ -148,3 +150,70 @@ def test_plot_panel(tmpdir, flux_diagrams_4wl):
         path = os.getcwd()
         plotting._plot_panel(diagrams=flux_diagrams_4wl, pos=None)
         plt.close()
+
+
+@pytest.mark.parametrize("input_mat", [
+    # 5-state with leakage model from kda-examples
+    np.array(
+        [
+            [0, 1, 1, 0, 0],
+            [1, 0, 1, 1, 0],
+            [1, 1, 0, 0, 1],
+            [0, 1, 0, 0, 1],
+            [0, 0, 1, 1, 0],
+        ]
+    ),
+    # 8-state with leakage model from kda-examples
+    np.array(
+        [
+            [0, 1, 1, 0, 0, 0, 0, 0],
+            [1, 0, 0, 1, 0, 0, 0, 0],
+            [1, 0, 0, 1, 1, 0, 0, 0],
+            [0, 1, 1, 0, 0, 1, 0, 0],
+            [0, 0, 1, 0, 0, 1, 1, 0],
+            [0, 0, 0, 1, 1, 0, 0, 1],
+            [0, 0, 0, 0, 1, 0, 0, 1],
+            [0, 0, 0, 0, 0, 1, 1, 0],
+        ],
+    ),
+])
+def test_color_by_target(input_mat):
+    # test to cover the "color by target" functionality in the plotting
+    # code. Double-checks that the flux diagrams are being generated
+    # with the correct "is_target" attributes and checks the outputs
+    # from `_get_node_colors()` for agreement.
+
+    # initialize an empty graph object
+    G = nx.MultiDiGraph()
+    # populate the edge data
+    graph_utils.generate_edges(G, input_mat)
+    # collect the cycles and number of nodes from the diagram
+    all_cycles = graph_utils.find_all_unique_cycles(G)
+    n_nodes = G.number_of_nodes()
+
+    for cycle in all_cycles:
+        if len(cycle) == n_nodes:
+            # skip any all-node cycles
+            continue
+        flux_diagrams = diagrams.generate_flux_diagrams(G, cycle)
+        for diagram in flux_diagrams:
+            # first we want to verify that the "is_target"
+            # attribute is being assigned appropriately
+            target_dict = nx.get_node_attributes(diagram, "is_target")
+            nodes = np.asarray(list(target_dict.keys()))
+            mask = np.asarray(list(target_dict.values()))
+            actual_cbt_nodes = np.sort(nodes[mask])
+            expected_cbt_nodes = np.sort(cycle)
+            assert_equal(actual_cbt_nodes, expected_cbt_nodes)
+            # if that's okay, let's check to see if the node colors
+            # that are generated correspond to the node list when
+            # using `_get_node_colors()`
+            actual_node_colors = plotting._get_node_colors(cbt=True, obj=diagram)
+
+            expected_node_colors = []
+            for n in diagram.nodes:
+                if n in cycle:
+                    expected_node_colors.append("#FF8080")
+                else:
+                    expected_node_colors.append("0.8")
+            assert_equal(actual_node_colors, expected_node_colors)
