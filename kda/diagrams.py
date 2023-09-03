@@ -303,7 +303,7 @@ def _get_cofactor_matrix(K_laplace):
     N = len(w)
     g = np.tile(w, N)
     g[:: (N + 1)] = 1
-    G = np.diag(-((-1) ** N) * np.product(np.reshape(g, (N, N)), 1))
+    G = np.diag(-((-1) ** N) * np.prod(np.reshape(g, (N, N)), 1))
     K_cof = U @ G @ Vt
     K_cof = np.asarray(np.round(K_cof, decimals=0), dtype=int)
     return K_cof
