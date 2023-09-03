@@ -1,0 +1,47 @@
+# -*- tab-width: 2; indent-tabs-mode: nil; coding: utf-8 -*-
+===============
+ KDA CHANGELOG
+===============
+
+Entries are listed in reverse-chronological order. Release
+numbers follow "Semantic Versioning" http://semver.org
+
+------------------------------------------------------------------------------
+
+
+09/02/23  nawtrey
+
+  * v0.2.0
+
+  Testing
+
+  * Add test `test_color_by_target` to check flux diagrams are appropriately
+    assigning target nodes. Also checks if `_get_node_colors()` is returning
+    the correct colors for each flux diagram (PR #66)
+  * Add 8-state model test case to `test_flux_diagram_counts()` (PR #60)
+  * Add test `test_flux_diagram_counts` which checks the cycle and flux
+    diagram counts for several models with known flux diagram counts (PR #59)
+
+  Changes
+
+  * Change `_get_node_labels()` to return integers for all cases (PR #66)
+  * Improve performance of `_find_unique_edges()` (PR #60)
+  * Simplify `_find_unique_uncommon_edges()` and change call
+    signature such that it takes a graph object and the list
+    of forward and reverse cycle edges (PR #60)
+  * Add functions `_collect_sources()` and `_get_directional_path_edges()`
+    to handle the spanning tree pathway finding for
+    `generate_directional_diagrams()` (PR #60)
+  * Change `generate_directional_diagrams()` to use diagram objects
+    to generate directional diagrams, and switch to the NetworkX 
+    path finding function `all_simple_edge_paths()` (PR #60)
+  * Improve performance of `generate_flux_diagrams()` via various algorithm
+    and code simplifications (PR #60)
+
+
+01/06/22  nawtrey
+
+  * v0.1.0 pre-release
+
+  Initial pre-release. Generates partial, directional and flux diagrams along
+  with their respective algebraic expressions.
