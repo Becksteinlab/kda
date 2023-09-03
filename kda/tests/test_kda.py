@@ -4,7 +4,6 @@
 #
 # Kinetic Diagram Analysis Testing
 
-import sys
 import pytest
 import numpy as np
 from numpy.testing import assert_almost_equal, assert_allclose, assert_array_equal
@@ -1191,7 +1190,10 @@ def test_get_ordered_cycle_all_node_cycles():
     G = nx.MultiDiGraph()
     graph_utils.generate_edges(G, K)
 
-    if sys.version_info < (3, 9):
+    nx_version = nx.__version__
+    major = int(nx_version[0])
+    minor = int(nx_version[2])
+    if (major, minor) < (3, 1):
         valid_cycle = [0, 4, 3, 2, 1]
         invalid_cycle = [0, 1, 2, 3, 4]
     else:
