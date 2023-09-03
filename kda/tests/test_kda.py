@@ -1189,14 +1189,27 @@ def test_get_ordered_cycle_all_node_cycles():
     # generate the diagram and edges
     G = nx.MultiDiGraph()
     graph_utils.generate_edges(G, K)
+
+    nx_version = nx.__version__
+    major = int(nx_version[0])
+    minor = int(nx_version[2])
+    if (major, minor) < (3, 1):
+        valid_cycle = [0, 4, 3, 2, 1]
+        invalid_cycle = [0, 1, 2, 3, 4]
+    else:
+        # order must be changed due to updates in
+        # `nx.simple_cycles()`. For more details
+        # see https://github.com/Becksteinlab/kda/issues/71
+        valid_cycle = [0, 1, 2, 3, 4]
+        invalid_cycle = [0, 4, 3, 2, 1]
     # run for a valid all-node cycle
-    calculations._get_ordered_cycle(G, [0, 4, 3, 2, 1])
+    calculations._get_ordered_cycle(G, valid_cycle)
     # run for case where there are more nodes than possible in a cycle
     with pytest.raises(CycleError):
         calculations._get_ordered_cycle(G, [0, 1, 2, 3, 4, 5])
     # run for an all-node case where the order is incorrect
     with pytest.raises(CycleError):
-        calculations._get_ordered_cycle(G, [0, 1, 2, 3, 4])
+        calculations._get_ordered_cycle(G, invalid_cycle)
 
 
 def test_function_inputs():
