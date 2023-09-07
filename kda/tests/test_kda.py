@@ -7,7 +7,7 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_almost_equal, assert_allclose, assert_array_equal
-from hypothesis import settings, given, strategies as st
+from hypothesis import settings, given, strategies as st, HealthCheck
 import networkx as nx
 
 from kda import calculations, diagrams, graph_utils, expressions, ode, svd
@@ -970,6 +970,7 @@ class Test_Misc_Funcs:
         assert sigma_K_func == expected_func
 
     @settings(deadline=None)
+    @settings(suppress_health_check=[HealthCheck.differing_executors])
     @given(
         k_vals=st.lists(
             st.floats(min_value=1, max_value=100), min_size=10, max_size=10
