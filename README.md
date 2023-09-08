@@ -1,7 +1,7 @@
 Kinetic Diagram Analysis
 ==============================
 [//]: # (Badges)
-![CI](https://github.com/Becksteinlab/kda/actions/workflows/test.yml/badge.svg)
+[![CI](https://github.com/Becksteinlab/kda/actions/workflows/test.yml/badge.svg)](https://github.com/Becksteinlab/kda/actions/workflows/test.yml)
 [![codecov](https://codecov.io/gh/Becksteinlab/kda/branch/master/graph/badge.svg)](https://codecov.io/gh/Becksteinlab/kda/branch/master)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.5826394.svg)](https://doi.org/10.5281/zenodo.5826394)
 
