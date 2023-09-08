@@ -969,8 +969,7 @@ class Test_Misc_Funcs:
         expected_func = "k32+k34"
         assert sigma_K_func == expected_func
 
-    @settings(deadline=None)
-    @settings(suppress_health_check=[HealthCheck.differing_executors])
+    @settings(deadline=None, suppress_health_check=[HealthCheck.differing_executors])
     @given(
         k_vals=st.lists(
             st.floats(min_value=1, max_value=100), min_size=10, max_size=10
