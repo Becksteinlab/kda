@@ -253,6 +253,7 @@ def _plot_single_diagram(
         width=arrow_width,
         arrowsize=arrow_size,
         arrowstyle=arrow_style,
+        arrows=True,
         connectionstyle=connection_style,
         ax=ax,
     )
@@ -426,10 +427,12 @@ def draw_diagrams(
             cbt=cbt,
             connection_style=connection_style,
         )
+        plt.close()
         if path:
             save_path = os.path.join(path, f"{label}.png")
             fig.savefig(save_path, dpi=300)
-            plt.close()
+        else:
+            return fig
 
     else:  # array of diagrams case
         if pos is None:
@@ -445,15 +448,18 @@ def draw_diagrams(
                 cbt=cbt,
                 curved_arrows=curved_arrows,
             )
+            plt.close()
             if path:
                 save_path = os.path.join(path, f"{label}.png")
                 fig.savefig(save_path, dpi=300)
-                plt.close()
+            else:
+                return fig
 
         else:  # individual plots case
             node_list = list(diagrams[0].nodes)
             node_labels = _get_node_labels(node_list=node_list)
 
+            fig_list = []
             for i, diag in enumerate(diagrams):
                 fig = _plot_single_diagram(
                     diagram=diag,
@@ -464,10 +470,13 @@ def draw_diagrams(
                     cbt=cbt,
                     connection_style=connection_style,
                 )
+                fig_list.append(fig)
+                plt.close()
                 if path:
                     save_path = os.path.join(path, f"{label}_{i+1}.png")
                     fig.savefig(save_path, dpi=300)
-                    plt.close()
+            if not path:
+                return fig_list
 
 
 def draw_cycles(
@@ -556,11 +565,12 @@ def draw_cycles(
             cbt=False,
             connection_style=connection_style,
         )
-
+        plt.close()
         if path:
             save_path = os.path.join(path, f"{label}.png")
             fig.savefig(save_path, dpi=300)
-            plt.close()
+        else:
+            return fig
 
     else:  # multiple cycles case
         if pos is None:
@@ -607,12 +617,15 @@ def draw_cycles(
             for j in range(excess_plots):
                 ax.flat[-j - 1].set_visible(False)
 
+            plt.close()
             if path:
                 save_path = os.path.join(path, f"{label}.png")
                 fig.savefig(save_path, dpi=300)
-                plt.close()
+            else:
+                return fig
 
         else:  # draw individual plots case
+            fig_list = []
             for i, cycle in enumerate(cycles):
                 node_labels = _get_node_labels(node_list=cycle)
                 node_colors = _get_node_colors(cbt=cbt, obj=cycle)
@@ -631,10 +644,13 @@ def draw_cycles(
                     cbt=False,
                     connection_style=connection_style,
                 )
+                fig_list.append(fig)
+                plt.close()
                 if path:
                     save_path = os.path.join(path, f"{label}_{i+1}.png")
                     fig.savefig(save_path, dpi=300)
-                    plt.close()
+            if not path:
+                return fig_list
 
 
 def draw_ode_results(
@@ -684,7 +700,9 @@ def draw_ode_results(
         ax.legend(loc=legendloc)
     else:
         ax.legend(loc=legendloc, bbox_to_anchor=bbox_coords)
+    plt.close()
     if path:
         save_path = os.path.join(path, f"{label}.png")
         fig.savefig(save_path, dpi=300)
-        plt.close()
+    else:
+        return fig
