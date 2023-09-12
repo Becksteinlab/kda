@@ -219,6 +219,16 @@ def _plot_single_diagram(
         The plotted diagram.
 
     """
+    if nx.is_directed(diagram):
+        arrows = True
+    else:
+        # if graph is undirected, use default parameters
+        # for `nx.draw_networkx_edges()`
+        # see https://github.com/Becksteinlab/kda/issues/80
+        arrows = False
+        arrow_size = 10
+        arrow_style = None
+        connection_style = "arc3"
     if ax is None:
         fig = plt.figure(figsize=figsize, tight_layout=True)
         ax = fig.add_subplot(111)
@@ -253,7 +263,7 @@ def _plot_single_diagram(
         width=arrow_width,
         arrowsize=arrow_size,
         arrowstyle=arrow_style,
-        arrows=True,
+        arrows=arrows,
         connectionstyle=connection_style,
         ax=ax,
     )
