@@ -99,7 +99,7 @@ class KineticModel(object):
 		Net transition flux: J_ij = j_ij - j_ji
 		"""
 		if i == j:
-			msg = "Input indices must not be unique (i.e. i != j)."
+			msg = "Input indices must be unique (i.e. i != j)."
 			raise ValueError(msg)
 
 		if self.probabilities is None:
@@ -110,9 +110,9 @@ class KineticModel(object):
 			# requested transition flux type (numeric vs symbolic)
 			is_symbolic = isinstance(self.probabilities[0], Mul)
 			if symbolic != is_symbolic:
-				msg = f"""`KineticModel.probabilities` are the incorrect
-				type for the requested transition flux type. Regenerate
-				probabilities with `symbolic={symbolic}` before continuing."""
+				msg = f"`KineticModel.probabilities` are the incorrect type for the"
+					f" requested transition flux type. Regenerate probabilities"
+					f" with `symbolic={symbolic}` before continuing."
 				raise TypeError(msg)
 
 		if symbolic:
