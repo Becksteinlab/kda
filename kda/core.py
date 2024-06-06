@@ -110,9 +110,11 @@ class KineticModel(object):
 			# requested transition flux type (numeric vs symbolic)
 			is_symbolic = isinstance(self.probabilities[0], Mul)
 			if symbolic != is_symbolic:
-				msg = f"`KineticModel.probabilities` are the incorrect type for the"
+				msg = (
+					f"`KineticModel.probabilities` are the incorrect type for the"
 					f" requested transition flux type. Regenerate probabilities"
 					f" with `symbolic={symbolic}` before continuing."
+				)
 				raise TypeError(msg)
 
 		if symbolic:
