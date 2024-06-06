@@ -24,72 +24,31 @@ import networkx as nx
 from kda.exceptions import CycleError
 
 
-def generate_K_string_matrix(N_states):
+def generate_edges(G, K):
     """
-    Creates the string variant of the K-matrix based on the number of states
-    in a diagram.
-
-    Parameters
-    ==========
-    N_states : int
-        The number of states in a diagram used to create a `NxN` matrix of
-        strings.
-
-    Returns
-    =======
-    K_string : NumPy array
-        An `NxN` array of strings where `N` is the number of states in a
-        diagram and the diaganol values of the array are zeros.
-    """
-    K_string = []
-    for i in range(N_states):
-        for j in range(N_states):
-            K_string.append(f"k{i+1}{j+1}")
-    K_string = np.array(K_string).reshape((N_states, N_states))
-    np.fill_diagonal(K_string, val=0)
-    return K_string
-
-
-def generate_edges(G, vals, names=None, val_key="val", name_key="name"):
-    """
-    Generate edges with attributes 'val' and 'name'.
+    Generates weighted edges for an input MultiDiGraph where the edge
+    weights are stored under the edge attribute 'weight'.
 
     Parameters
     ----------
     G : NetworkX MultiDiGraph
         Input diagram
-    vals : array
-        'NxN' array where 'N' is the number of nodes in the diagram G. Contains
-        the values associated with the attribute names in 'names'. For example,
-        assuming k12 and k21 had already been assigned values, for a 2 state
-        diagram 'vals' = [[0, k12], [k21, 0]].
-    names : array (optional)
-        'NxN' array where 'N' is the number of nodes in the diagram G. Contains
-        the names of all of the attributes corresponding to the values in
-        'vals' as strings, i.e. [[0, "k12"], ["k21", 0]].
-    val_key : str (optional)
-        Key used to retrieve variable values in 'vals'. Default is 'val'.
-    name_key : str (optional)
-        Key used to retrieve variable names in 'names'. Default is 'name'.
+    K : array
+        'NxN' array where 'N' is the number of nodes in the diagram G.
+        Adjacency matrix for G where each element kij is the edge weight
+        (i.e. transition rate constant). For example, for a 2-state model
+        with `k12=3` and `k21=4`, `K=[[0, 3], [4, 0]]`.
+
     """
-    if names is None:
-        names = generate_K_string_matrix(vals.shape[0])
-    if isinstance(vals[0, 0], str):
-        raise TypeError(
-            "Values entered for 'vals' must be integers or floats, not strings."
-        )
-    if not isinstance(names[0, 0], str):
-        raise TypeError("Labels entered for 'names' must be strings.")
-    np.fill_diagonal(vals, 0)  # Make sure diagonal elements are set to zero
+    np.fill_diagonal(K, 0)  # Make sure diagonal elements are set to zero
 
-    for i, row in enumerate(vals):
+    for i, row in enumerate(K):
         for j, elem in enumerate(row):
-            if not elem == 0:
-                attrs = {name_key: names[i, j], val_key: elem}
-                G.add_edge(i, j, **attrs)
+            if elem != 0:
+                G.add_edge(i, j, weight=elem)
 
 
-def retrieve_rate_matrix(G, key="val"):
+def retrieve_rate_matrix(G):
     """
     Retrieves rate matrix from edge data stored in input diagram G.
 
@@ -97,24 +56,18 @@ def retrieve_rate_matrix(G, key="val"):
     ----------
     G : NetworkX MultiDiGraph
         Input diagram
-    val : str (optional)
-        Key used to retrieve values from edges. Default is 'val'.
 
     Returns
     -------
     rate_matrix : array
-        'NxN' array where 'N' is the number of nodes/states in the diagram G.
-        Contains the values/rates for each edge.
+        'NxN' array where 'N' is the number of nodes in the diagram G.
+        Adjacency matrix for G where each element kij is the edge weight
+        (i.e. transition rate constant). For example, for a 2-state model
+        with `k12=3` and `k21=4`, `K=[[0, 3], [4, 0]]`.
     """
-    # get the number of states
-    n_states = G.number_of_nodes()
-    # create `n_states x n_states` zero-array
-    rate_matrix = np.zeros(shape=(n_states, n_states), dtype=float)
-    # iterate over edges
-    for edge in G.edges(data=True):
-        i, j, data = edge
-        # use edge indices and edge values to construct rate matrix
-        rate_matrix[i, j] = data[key]
+    # sort the nodes in increasing order
+    nodelist = sorted(G.nodes())
+    rate_matrix = nx.to_numpy_array(G, nodelist=nodelist)
     return rate_matrix
 
 
