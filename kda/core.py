@@ -26,12 +26,10 @@ class KineticModel(object):
 			if K is not None:
 				# if only K is input create the diagram
 				G = nx.MultiDiGraph()
-				# TODO: remove the need for the val/name keys (see issue #56)
-				graph_utils.generate_edges(G, vals=K, names=None, val_key="val")
+				graph_utils.generate_edges(G=G, K=K)
 			elif G is not None:
 				# if only G is input create the kinetic rate matrix
-				# TODO: remove the need for the val/name keys (see issue #56)
-				K = graph_utils.retrieve_rate_matrix(G, key="val")
+				K = graph_utils.retrieve_rate_matrix(G)
 			else:
 				msg = "To create a `KineticModel`, K or G must be input."
 				raise RuntimeError(msg)
@@ -83,14 +81,10 @@ class KineticModel(object):
 
 
 	def build_state_probabilities(self, symbolic=True):
-		if symbolic:
-			key = "name"
-		else:
-			key = "val"
 		# TODO: may be able to leverage `calc_state_probs_from_diags()`
 		# here, but it would require the user has already generated the
 		# directional diagrams as edges, which is probably atypical
-		self.probabilities = calculations.calc_state_probs(self.G, key=key, output_strings=symbolic)
+		self.probabilities = calculations.calc_state_probs(self.G, output_strings=symbolic)
 
 
 	def transition_flux(self, i, j, net=True, symbolic=True):
