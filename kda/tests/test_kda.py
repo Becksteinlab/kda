@@ -7,9 +7,11 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_almost_equal, assert_allclose, assert_array_equal
+from sympy import symbols
 from hypothesis import settings, given, strategies as st, HealthCheck
 import networkx as nx
 
+import kda
 from kda import calculations, diagrams, graph_utils, expressions, ode, svd
 from kda.exceptions import CycleError
 
@@ -26,6 +28,221 @@ from kda.exceptions import CycleError
     "state_probs_6_state",
     "symbolic_state_probs_6_state",
     )
+class StateProbs3:
+    def __init__(self, k_vals):
+        self.k_vals = k_vals
+
+    def return_probs(self, k12, k21, k23, k32, k13, k31):
+        P1 = k23 * k31 + k32 * k21 + k31 * k21
+        P2 = k13 * k32 + k32 * k12 + k31 * k12
+        P3 = k13 * k23 + k12 * k23 + k21 * k13
+        Sigma = P1 + P2 + P3  # Normalization factor
+        return np.array([P1, P2, P3]) / Sigma
+
+    def get_prob_expressions():
+        p_funcs = [
+            "k23 * k31 + k32 * k21 + k31 * k21",
+            "k13 * k32 + k32 * k12 + k31 * k12",
+            "k13 * k23 + k12 * k23 + k21 * k13",
+        ]
+        Sigma = "+".join(p_funcs)
+        exprs = expressions.construct_sympy_prob_funcs(p_funcs, Sigma)
+        return exprs
+
+
+class StateProbs4:
+    def __init__(self, k_vals):
+        self.k_vals = k_vals
+
+    def return_probs(self, k12, k21, k23, k32, k34, k43, k41, k14):
+        P1 = k43 * k32 * k21 + k23 * k34 * k41 + k21 * k34 * k41 + k41 * k32 * k21
+        P2 = k12 * k43 * k32 + k14 * k43 * k32 + k34 * k41 * k12 + k32 * k41 * k12
+        P3 = k43 * k12 * k23 + k23 * k14 * k43 + k21 * k14 * k43 + k41 * k12 * k23
+        P4 = k12 * k23 * k34 + k14 * k23 * k34 + k34 * k21 * k14 + k32 * k21 * k14
+        Sigma = P1 + P2 + P3 + P4  # Normalization factor
+        return np.array([P1, P2, P3, P4]) / Sigma
+
+
+class StateProbs4WL:
+    def __init__(self, k_vals):
+        self.k_vals = k_vals
+
+    def return_probs(self, k12, k21, k23, k32, k34, k43, k41, k14, k24, k42):
+        P1 = (
+            k43 * k32 * k21
+            + k23 * k34 * k41
+            + k21 * k34 * k41
+            + k41 * k32 * k21
+            + k32 * k42 * k21
+            + k24 * k34 * k41
+            + k34 * k42 * k21
+            + k32 * k24 * k41
+        )
+        P2 = (
+            k12 * k43 * k32
+            + k14 * k43 * k32
+            + k34 * k41 * k12
+            + k32 * k41 * k12
+            + k32 * k42 * k12
+            + k34 * k14 * k42
+            + k12 * k34 * k42
+            + k32 * k14 * k42
+        )
+        P3 = (
+            k43 * k12 * k23
+            + k23 * k14 * k43
+            + k21 * k14 * k43
+            + k41 * k12 * k23
+            + k12 * k42 * k23
+            + k14 * k24 * k43
+            + k12 * k24 * k43
+            + k14 * k42 * k23
+        )
+        P4 = (
+            k12 * k23 * k34
+            + k14 * k23 * k34
+            + k34 * k21 * k14
+            + k32 * k21 * k14
+            + k32 * k12 * k24
+            + k14 * k24 * k34
+            + k34 * k12 * k24
+            + k14 * k32 * k24
+        )
+        Sigma = P1 + P2 + P3 + P4  # Normalization factor
+        return np.array([P1, P2, P3, P4]) / Sigma
+
+
+class StateProbs5WL:
+    def __init__(self, k_vals):
+        self.k_vals = k_vals
+
+    def return_probs(self, k12, k21, k23, k32, k13, k31, k24, k42, k35, k53, k45, k54):
+        P1 = (
+            k35 * k54 * k42 * k21
+            + k24 * k45 * k53 * k31
+            + k21 * k45 * k53 * k31
+            + k42 * k21 * k53 * k31
+            + k54 * k42 * k21 * k31
+            + k54 * k42 * k32 * k21
+            + k45 * k53 * k23 * k31
+            + k53 * k32 * k42 * k21
+            + k42 * k23 * k53 * k31
+            + k54 * k42 * k23 * k31
+            + k45 * k53 * k32 * k21
+        )
+        P2 = (
+            k12 * k35 * k54 * k42
+            + k13 * k35 * k54 * k42
+            + k45 * k53 * k31 * k12
+            + k42 * k53 * k31 * k12
+            + k31 * k12 * k54 * k42
+            + k54 * k42 * k32 * k12
+            + k45 * k53 * k13 * k32
+            + k53 * k32 * k42 * k12
+            + k53 * k13 * k32 * k42
+            + k54 * k42 * k13 * k32
+            + k45 * k53 * k32 * k12
+        )
+        P3 = (
+            k12 * k24 * k45 * k53
+            + k13 * k24 * k45 * k53
+            + k21 * k13 * k45 * k53
+            + k42 * k21 * k13 * k53
+            + k54 * k42 * k21 * k13
+            + k54 * k42 * k12 * k23
+            + k45 * k53 * k23 * k13
+            + k42 * k12 * k23 * k53
+            + k42 * k23 * k13 * k53
+            + k54 * k42 * k23 * k13
+            + k45 * k53 * k12 * k23
+        )
+        P4 = (
+            k12 * k24 * k35 * k54
+            + k24 * k13 * k35 * k54
+            + k21 * k13 * k35 * k54
+            + k53 * k31 * k12 * k24
+            + k54 * k31 * k12 * k24
+            + k12 * k32 * k24 * k54
+            + k13 * k23 * k35 * k54
+            + k53 * k32 * k12 * k24
+            + k13 * k53 * k32 * k24
+            + k13 * k32 * k24 * k54
+            + k12 * k23 * k35 * k54
+        )
+        P5 = (
+            k35 * k12 * k24 * k45
+            + k13 * k35 * k24 * k45
+            + k45 * k21 * k13 * k35
+            + k42 * k21 * k13 * k35
+            + k31 * k12 * k24 * k45
+            + k12 * k32 * k24 * k45
+            + k13 * k23 * k35 * k45
+            + k12 * k42 * k23 * k35
+            + k42 * k23 * k13 * k35
+            + k13 * k32 * k24 * k45
+            + k12 * k23 * k35 * k45
+        )
+        Sigma = P1 + P2 + P3 + P4 + P5  # Normalization factor
+        return np.array([P1, P2, P3, P4, P5]) / Sigma
+
+
+class StateProbs6:
+    def __init__(self, k_vals):
+        self.k_vals = k_vals
+
+    def return_probs(self, k12, k21, k23, k32, k34, k43, k45, k54, k56, k65, k61, k16):
+        P1 = (
+            k65 * k54 * k43 * k32 * k21
+            + k61 * k54 * k43 * k32 * k21
+            + k56 * k61 * k43 * k32 * k21
+            + k45 * k56 * k61 * k32 * k21
+            + k34 * k45 * k56 * k61 * k21
+            + k23 * k34 * k45 * k56 * k61
+        )
+        P2 = (
+            k12 * k65 * k54 * k43 * k32
+            + k61 * k12 * k54 * k43 * k32
+            + k56 * k61 * k12 * k43 * k32
+            + k45 * k56 * k61 * k32 * k12
+            + k34 * k45 * k56 * k61 * k12
+            + k16 * k65 * k54 * k43 * k32
+        )
+        P3 = (
+            k12 * k23 * k65 * k54 * k43
+            + k61 * k12 * k23 * k54 * k43
+            + k56 * k61 * k12 * k23 * k43
+            + k45 * k56 * k61 * k12 * k23
+            + k21 * k16 * k65 * k54 * k43
+            + k23 * k16 * k65 * k54 * k43
+        )
+        P4 = (
+            k65 * k54 * k12 * k23 * k34
+            + k54 * k61 * k12 * k23 * k34
+            + k56 * k61 * k12 * k23 * k34
+            + k32 * k21 * k16 * k65 * k54
+            + k21 * k16 * k65 * k54 * k34
+            + k16 * k65 * k54 * k23 * k34
+        )
+        P5 = (
+            k65 * k12 * k23 * k34 * k45
+            + k61 * k12 * k23 * k34 * k45
+            + k43 * k32 * k21 * k16 * k65
+            + k45 * k32 * k21 * k16 * k65
+            + k34 * k45 * k21 * k16 * k65
+            + k23 * k34 * k45 * k16 * k65
+        )
+        P6 = (
+            k12 * k23 * k34 * k45 * k56
+            + k54 * k43 * k32 * k21 * k16
+            + k56 * k43 * k32 * k21 * k16
+            + k45 * k56 * k32 * k21 * k16
+            + k34 * k45 * k56 * k21 * k16
+            + k16 * k23 * k34 * k45 * k56
+        )
+        Sigma = P1 + P2 + P3 + P4 + P5 + P6  # Normalization factor
+        return np.array([P1, P2, P3, P4, P5, P6]) / Sigma
+
+
 class Test_Probability_Calcs:
 
     @settings(deadline=None)
@@ -38,14 +255,13 @@ class Test_Probability_Calcs:
         expected_probs = state_probs_3_state(k12, k21, k23, k32, k13, k31)
 
         K = np.array([[0, k12, k13], [k21, 0, k23], [k31, k32, 0]])
-        # generate the diagram and edges
-        G = nx.MultiDiGraph()
-        graph_utils.generate_edges(G, K)
+        # create the kinetic model from the rate matrix
+        model = kda.KineticModel(K=K, G=None)
 
         # calculate the state probabilities using KDA
-        kda_probs = calculations.calc_state_probs(G, key="val", output_strings=False)
+        model.build_state_probabilities(symbolic=False)
+        kda_probs = model.probabilities
 
-        # generate the sympy functions for the state probabilities
         rate_names = ["k12", "k21", "k23", "k32", "k13", "k31"]
         sympy_prob_funcs = expressions.construct_lambda_funcs(
             sympy_funcs=symbolic_state_probs_3_state, rate_names=rate_names
@@ -412,27 +628,26 @@ class Test_Flux_Diagrams:
             [[0, k12, 0, k14], [k21, 0, k23, k24], [0, k32, 0, k34], [k41, k42, k43, 0]]
         )
         # create the graph from the rate matrix
-        G = nx.MultiDiGraph()
-        graph_utils.generate_edges(G, K)
+        model = kda.KineticModel(K=K, G=None)
         # get all the cycles in G
-        all_cycles = graph_utils.find_all_unique_cycles(G)
+        model.build_cycles()
         # make sure only 3 cycles are found
-        assert len(all_cycles) == 3
+        assert len(model.cycles) == 3
         # for each cycle in the diagram, get the flux diagrams
         flux_diags = []
-        for cycle in all_cycles:
-            flux_diags.append(diagrams.generate_flux_diagrams(G, cycle))
+        for cycle in model.cycles:
+            flux_diags.append(diagrams.generate_flux_diagrams(model.G, cycle))
         # make sure first case returns None (for all-node cycle)
         assert flux_diags[0] == None
         # make sure we get 2 flux diagrams for each 3-node cycle
         assert len(flux_diags[1]) == 2
         assert len(flux_diags[2]) == 2
         # use the KDA built-in function to generate all flux diagrams for G
-        all_flux_diags = diagrams.generate_all_flux_diagrams(G)
+        model.build_flux_diagrams()
         # flatten the lists of diagrams and skip the None case for method 1
         all_diags_method_1 = [diag for diags in flux_diags[1:] for diag in diags]
         all_diags_method_2 = []
-        for diags in all_flux_diags:
+        for diags in model.flux_diagrams:
             if diags is not None:
                 for diag in diags:
                     all_diags_method_2.append(diag)
@@ -659,21 +874,20 @@ class Test_Flux_Diagrams:
         # the number of flux diagrams generated is correct
 
         A = np.array(adj_matrix)
-        G = nx.MultiDiGraph()
-        graph_utils.generate_edges(G, A)
+        model = kda.KineticModel(K=A, G=None)
+        model.build_cycles()
 
         actual_flux_diag_count = 0
-        all_cycles = graph_utils.find_all_unique_cycles(G)
         # check the number of cycles found is correct
-        assert len(all_cycles) == expected_cycle_count
+        assert len(model.cycles) == expected_cycle_count
 
-        for cycle in all_cycles:
-            flux_diagrams = diagrams.generate_flux_diagrams(G, cycle)
+        for cycle in model.cycles:
+            flux_diagrams = model.get_flux_diagrams(cycle=cycle)
             if flux_diagrams:
                 for flux_diag in flux_diagrams:
                     # check that flux diagrams have the same nodes
                     # as the input diagram
-                    assert sorted(flux_diag.nodes()) == sorted(G.nodes())
+                    assert sorted(flux_diag.nodes()) == sorted(model.G.nodes())
                     # collect the cycles in the flux diagram, excluding the
                     # simplest 2-node cycles
                     cycles = [c for c in nx.simple_cycles(flux_diag) if len(c) > 2]
@@ -805,20 +1019,23 @@ class Test_Diagram_Generation:
         ],
     )
     def test_diagram_counts(self, K, expected_pars, expected_dirpars):
-        # generate the diagram and edges
-        G = nx.MultiDiGraph()
-        graph_utils.generate_edges(G, K)
+        # create the model from the rate matrix
+        model = kda.KineticModel(K=K, G=None)
         # generate the partial diagrams and verify
         # they agree with the expected value
-        partials = diagrams.generate_partial_diagrams(G, return_edges=False)
-        assert len(partials) == expected_pars
+        assert model.get_partial_diagram_count() == expected_pars
+        # test a second time after building the partial diagrams
+        model.build_partial_diagrams()
+        assert model.get_partial_diagram_count() == expected_pars
         # generate the directional partial diagrams and verify
         # they agree with the expected value
-        dirpars = diagrams.generate_directional_diagrams(G, return_edges=False)
-        assert len(dirpars) == expected_dirpars
+        assert model.get_directional_diagram_count() == expected_dirpars
+        # test a second time after building the directional diagrams
+        model.build_directional_diagrams()
+        assert model.get_directional_diagram_count() == expected_dirpars
         # count the number of partial diagrams
         # and verify they agree with the expected value
-        n_pars = diagrams.enumerate_partial_diagrams(G)
+        n_pars = diagrams.enumerate_partial_diagrams(model.G)
         assert n_pars == expected_pars
 
     @pytest.mark.parametrize(
@@ -1127,3 +1344,135 @@ def test_ccw():
 
     with pytest.raises(CycleError):
         graph_utils.get_ccw_cycle(cycles[0], [4, 5, 6])
+
+
+class TestTransitionFluxes:
+
+    @pytest.fixture(scope="class")
+    def Model_3_State(k_vals):
+        return StateProbs3(k_vals)
+
+
+    @pytest.mark.parametrize(
+        "i, j",
+        [
+            (1, 2),
+            (2, 3),
+            (1, 3),
+        ],
+    )
+    def test_3_state_model_symbolic(self, i, j):
+        # verify the symbolic results of KineticModel.transition_flux
+
+        # use rate matrix for a 3-state model
+        K = np.array([
+            [0, 1, 1],
+            [1, 0, 1],
+            [1, 1, 0],
+        ])
+        # create the transition flux using KDA
+        model = kda.KineticModel(K=K, G=None)
+        j_ij_actual = model.transition_flux(i=i, j=j, net=False, symbolic=True)
+        j_ji_actual = model.transition_flux(i=j, j=i, net=False, symbolic=True)
+        J_ij_actual = model.transition_flux(i=i, j=j, net=True, symbolic=True)
+        J_ji_actual = model.transition_flux(i=j, j=i, net=True, symbolic=True)
+
+        # create the transition flux using the known
+        # solutions for the probability expressions
+        prob_exprs = StateProbs3.get_prob_expressions()
+        # One-way transition flux: j_ij = k_ij * p_i
+        j_ij_expected = symbols(f"k{i}{j}") * prob_exprs[i-1]
+        j_ji_expected = symbols(f"k{j}{i}") * prob_exprs[j-1]
+        J_ij_expected = j_ij_expected - j_ji_expected
+        J_ji_expected = j_ji_expected - j_ij_expected
+
+        # verify expressions are algebraically equivalent
+        assert (j_ij_actual - j_ij_expected).simplify() == 0
+        assert (j_ji_actual - j_ji_expected).simplify() == 0
+        assert (J_ij_actual - J_ij_expected).simplify() == 0
+        assert (J_ji_actual - J_ji_expected).simplify() == 0
+
+
+    @pytest.mark.parametrize(
+        "i, j",
+        [
+            (1, 2),
+            (2, 3),
+            (1, 3),
+        ],
+    )
+    def test_3_state_model_numeric(self, i, j, Model_3_State):
+        # verify the numeric results of KineticModel.transition_flux
+
+        # use rate matrix for a 3-state model
+        K = np.array([
+            [0, 4, 1],
+            [4, 0, 2],
+            [1, 2, 0],
+        ])
+        # calcuate the transition flux using KDA
+        model = kda.KineticModel(K=K, G=None)
+        j_ij_actual = model.transition_flux(i=i, j=j, net=False, symbolic=False)
+        j_ji_actual = model.transition_flux(i=j, j=i, net=False, symbolic=False)
+        J_ij_actual = model.transition_flux(i=i, j=j, net=True, symbolic=False)
+        J_ji_actual = model.transition_flux(i=j, j=i, net=True, symbolic=False)
+
+        # calculate the transition flux using the known
+        # solutions for the probability expressions
+        probs = Model_3_State.return_probs(
+            k12=K[0, 1], k21=K[1, 0], k23=K[1, 2],
+            k32=K[2, 1], k13=K[0, 2], k31=K[2, 0],
+        )
+        # One-way transition flux: j_ij = k_ij * p_i
+        j_ij_expected = K[i-1, j-1] * probs[i-1]
+        j_ji_expected = K[j-1, i-1] * probs[j-1]
+        # Net transition flux: J_ij = j_ij - j_ji
+        J_ij_expected = j_ij_expected - j_ji_expected
+        J_ji_expected = -J_ij_expected
+
+        # verify values are numerically indistinguishable
+        assert_almost_equal(j_ij_actual, j_ij_expected, decimal=16)
+        assert_almost_equal(j_ji_actual, j_ji_expected, decimal=16)
+        assert_almost_equal(J_ij_actual, J_ij_expected, decimal=16)
+        assert_almost_equal(J_ji_actual, J_ji_expected, decimal=16)
+
+
+    def test_transition_flux_matching_indices(self):
+        # verifies a ValueError is raised when matching
+        # indices are input to KineticModel.transition_flux
+
+        # use rate matrix for the simple 3-state model
+        K = np.array([
+            [0, 1, 1],
+            [1, 0, 1],
+            [1, 1, 0],
+        ])
+        # create model from a diagram object
+        G = nx.MultiDiGraph()
+        graph_utils.generate_edges(G, K)
+        model = kda.KineticModel(K=None, G=G)
+
+        with pytest.raises(ValueError):
+            model.transition_flux(i=1, j=1)
+
+
+    def test_transition_flux_mismatched_symbolic(self):
+        # verifies a TypeError is raised when transition
+        # fluxes are requested for a different type (either
+        # symbolic or numeric) than the probabilities
+        # that are currently stored in the model
+
+        # use rate matrix for the simple 3-state model
+        K = np.array([
+            [0, 1, 1],
+            [1, 0, 1],
+            [1, 1, 0],
+        ])
+        model = kda.KineticModel(K=K)
+        # build the numeric probabilities
+        model.build_state_probabilities(symbolic=False)
+
+        with pytest.raises(TypeError):
+            # attempt to build the symbolic transition
+            # flux expressions
+            model.transition_flux(i=1, j=2, symbolic=True)
