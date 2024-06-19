@@ -5,7 +5,7 @@
 #
 """
 Kinetic Diagram Analysis: Core
-=========================================================================
+======================================================================
 The :class:`~kda.core.KineticModel` class contains all the information
 for a kinetic model.
 """
@@ -17,10 +17,11 @@ from kda import graph_utils, diagrams, calculations
 
 
 class KineticModel(object):
-	"""
-	Core `kda` object that constructs the kinetic diagram,
-	generates the intermediate graphs, and builds the algebraic
-	expressions for steady-state probabilities and fluxes.
+	"""The KDA KineticModel contains all the information describing the system.
+
+	Includes methods to construct the kinetic diagram, generate the
+	intermediate graphs, and build the algebraic expressions for
+	steady-state probabilities and fluxes.
 
 	Attributes
 	==========
@@ -77,8 +78,7 @@ class KineticModel(object):
 
 		self.K = K
 		self.G = G
-
-		# assign None for future attributes
+		# assign future attributes
 		self.cycles = None
 		self.partial_diagrams = None
 		self.directional_diagrams = None
@@ -93,12 +93,14 @@ class KineticModel(object):
 
 	def build_partial_diagrams(self):
 		"""Builds the partial diagrams for the kinetic diagram."""
-		self.partial_diagrams = diagrams.generate_partial_diagrams(self.G, return_edges=False)
+		self.partial_diagrams = diagrams.generate_partial_diagrams(
+			self.G, return_edges=False)
 
 
 	def build_directional_diagrams(self):
 		"""Builds the directional diagrams for the kinetic diagram."""
-		self.directional_diagrams = diagrams.generate_directional_diagrams(self.G, return_edges=False)
+		self.directional_diagrams = diagrams.generate_directional_diagrams(
+			self.G, return_edges=False)
 
 
 	def build_flux_diagrams(self):
@@ -172,18 +174,18 @@ class KineticModel(object):
 			self.G, output_strings=symbolic)
 
 
-	def transition_flux(self, i, j, net=True, symbolic=True):
+	def get_transition_flux(self, state_i, state_j, net=True, symbolic=True):
 		"""
-		Creates the one-way or net transition fluxes.
+		Creates the one-way or net transition fluxes between two states.
+		Net transition fluxes are calculated `J_ij = j_ij - j_ji`, where
+		`j_ij = k_ij * p_i` and `j_ji = k_ji * p_j`.
 
 		Parameters
 		==========
-		i : integer
-			The index of the initial state for calculating
-			transition fluxes.
-		j : integer
-			The index of the final state for calculating
-			transition fluxes.
+		state_i : integer
+			The index (index 1) of the initial state.
+		state_j : integer
+			The index (index 1) of the final state.
 		net : bool (optional)
 			Used to determine whether one-way transition fluxes
 			or net transition fluxes will be returned. Default
@@ -206,12 +208,14 @@ class KineticModel(object):
 	    	is a differnt type than the requested transition
 	    	flux type.
 		"""
-		if i == j:
+		if state_i == state_j:
 			msg = "Input indices must be unique (i.e. i != j)."
 			raise ValueError(msg)
 
 		if self.probabilities is None:
-			print(f"No probabilities found, generating state probabilities with symbolic={symbolic}")
+			print(
+				f"No probabilities found, generating state"
+				f" probabilities with symbolic={symbolic}")
 			self.build_state_probabilities(symbolic=symbolic)
 		else:
 			# check if stored probability data type matches the
@@ -219,29 +223,28 @@ class KineticModel(object):
 			is_symbolic = isinstance(self.probabilities[0], Mul)
 			if symbolic != is_symbolic:
 				msg = (
-					f"`KineticModel.probabilities` are the incorrect type for the"
-					f" requested transition flux type. Regenerate probabilities"
-					f" with `symbolic={symbolic}` before continuing."
+					f"`KineticModel.probabilities` are the incorrect"
+					f" type for the requested transition flux type."
+					f" Regenerate probabilities with `symbolic={symbolic}`"
+					f" before continuing."
 				)
 				raise TypeError(msg)
 
 		if symbolic:
-			# symbolic case
-			# One-way transition flux: j_ij = k_ij * p_i
-			j_ij = symbols(f"k{i}{j}") * self.probabilities[i-1]
-			if not net:
-				return j_ij.cancel()
-			else:
-				# Net transition flux: J_ij = j_ij - j_ji
-				j_ji = symbols(f"k{j}{i}") * self.probabilities[j-1]
+			# NOTE: symbols are index 1, probabilities are index 0
+			j_ij = symbols(f"k{state_i}{state_j}") * self.probabilities[state_i-1]
+			if net:
+				j_ji = symbols(f"k{state_j}{state_i}") * self.probabilities[state_j-1]
 				return (j_ij - j_ji).cancel()
+			else:
+				return j_ij.cancel()
+
 		else:
 			# numerical case
-			# One-way transition flux: j_ij = k_ij * p_i
-			j_ij = self.K[i-1][j-1] * self.probabilities[i-1]
-			if not net:
-				return j_ij
-			else:
-				# Net transition flux: J_ij = j_ij - j_ji
-				j_ji = self.K[j-1][i-1] * self.probabilities[j-1]
+			j_ij = self.K[state_i-1][state_j-1] * self.probabilities[state_i-1]
+			if net:
+				j_ji = self.K[state_j-1][state_i-1] * self.probabilities[state_j-1]
 				return j_ij - j_ji
+			else:
+				return j_ij
+

@@ -1362,7 +1362,7 @@ class TestTransitionFluxes:
         ],
     )
     def test_3_state_model_symbolic(self, i, j):
-        # verify the symbolic results of KineticModel.transition_flux
+        # verify the symbolic results of KineticModel.get_transition_flux
 
         # use rate matrix for a 3-state model
         K = np.array([
@@ -1372,10 +1372,14 @@ class TestTransitionFluxes:
         ])
         # create the transition flux using KDA
         model = kda.KineticModel(K=K, G=None)
-        j_ij_actual = model.transition_flux(i=i, j=j, net=False, symbolic=True)
-        j_ji_actual = model.transition_flux(i=j, j=i, net=False, symbolic=True)
-        J_ij_actual = model.transition_flux(i=i, j=j, net=True, symbolic=True)
-        J_ji_actual = model.transition_flux(i=j, j=i, net=True, symbolic=True)
+        j_ij_actual = model.get_transition_flux(
+            state_i=i, state_j=j, net=False, symbolic=True)
+        j_ji_actual = model.get_transition_flux(
+            state_i=j, state_j=i, net=False, symbolic=True)
+        J_ij_actual = model.get_transition_flux(
+            state_i=i, state_j=j, net=True, symbolic=True)
+        J_ji_actual = model.get_transition_flux(
+            state_i=j, state_j=i, net=True, symbolic=True)
 
         # create the transition flux using the known
         # solutions for the probability expressions
@@ -1402,7 +1406,7 @@ class TestTransitionFluxes:
         ],
     )
     def test_3_state_model_numeric(self, i, j, Model_3_State):
-        # verify the numeric results of KineticModel.transition_flux
+        # verify the numeric results of KineticModel.get_transition_flux
 
         # use rate matrix for a 3-state model
         K = np.array([
@@ -1412,10 +1416,14 @@ class TestTransitionFluxes:
         ])
         # calcuate the transition flux using KDA
         model = kda.KineticModel(K=K, G=None)
-        j_ij_actual = model.transition_flux(i=i, j=j, net=False, symbolic=False)
-        j_ji_actual = model.transition_flux(i=j, j=i, net=False, symbolic=False)
-        J_ij_actual = model.transition_flux(i=i, j=j, net=True, symbolic=False)
-        J_ji_actual = model.transition_flux(i=j, j=i, net=True, symbolic=False)
+        j_ij_actual = model.get_transition_flux(
+            state_i=i, state_j=j, net=False, symbolic=False)
+        j_ji_actual = model.get_transition_flux(
+            state_i=j, state_j=i, net=False, symbolic=False)
+        J_ij_actual = model.get_transition_flux(
+            state_i=i, state_j=j, net=True, symbolic=False)
+        J_ji_actual = model.get_transition_flux(
+            state_i=j, state_j=i, net=True, symbolic=False)
 
         # calculate the transition flux using the known
         # solutions for the probability expressions
@@ -1428,7 +1436,7 @@ class TestTransitionFluxes:
         j_ji_expected = K[j-1, i-1] * probs[j-1]
         # Net transition flux: J_ij = j_ij - j_ji
         J_ij_expected = j_ij_expected - j_ji_expected
-        J_ji_expected = -J_ij_expected
+        J_ji_expected = j_ji_expected - j_ij_expected
 
         # verify values are numerically indistinguishable
         assert_almost_equal(j_ij_actual, j_ij_expected, decimal=16)
@@ -1439,7 +1447,7 @@ class TestTransitionFluxes:
 
     def test_transition_flux_matching_indices(self):
         # verifies a ValueError is raised when matching
-        # indices are input to KineticModel.transition_flux
+        # indices are input to KineticModel.get_transition_flux
 
         # use rate matrix for the simple 3-state model
         K = np.array([
@@ -1453,7 +1461,7 @@ class TestTransitionFluxes:
         model = kda.KineticModel(K=None, G=G)
 
         with pytest.raises(ValueError):
-            model.transition_flux(i=1, j=1)
+            model.get_transition_flux(state_i=1, state_j=1)
 
 
     def test_transition_flux_mismatched_symbolic(self):
@@ -1475,4 +1483,4 @@ class TestTransitionFluxes:
         with pytest.raises(TypeError):
             # attempt to build the symbolic transition
             # flux expressions
-            model.transition_flux(i=1, j=2, symbolic=True)
+            model.get_transition_flux(state_i=1, state_j=2, symbolic=True)
