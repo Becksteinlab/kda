@@ -255,10 +255,10 @@ class Test_Probability_Calcs:
         graph_utils.generate_edges(G, K)
 
         # calculate the state probabilities using KDA
-        kda_probs = calculations.calc_state_probs(G)
+        kda_probs = calculations.calc_state_probs(G, key="val")
 
         # generate the sympy functions for the state probabilities
-        sympy_funcs = calculations.calc_state_probs(G, output_strings=True)
+        sympy_funcs = calculations.calc_state_probs(G, key="name", output_strings=True)
         rate_names = ["k12", "k21", "k23", "k32", "k13", "k31"]
         sympy_prob_funcs = expressions.construct_lambda_funcs(
             sympy_funcs=sympy_funcs, rate_names=rate_names
@@ -313,10 +313,10 @@ class Test_Probability_Calcs:
         graph_utils.generate_edges(G, K)
 
         # calculate the state probabilities using KDA
-        kda_probs = calculations.calc_state_probs(G)
+        kda_probs = calculations.calc_state_probs(G, key="val")
 
         # generate the sympy functions for the state probabilities
-        sympy_funcs = calculations.calc_state_probs(G, output_strings=True)
+        sympy_funcs = calculations.calc_state_probs(G, key="name", output_strings=True)
         rate_names = ["k12", "k21", "k23", "k32", "k34", "k43", "k41", "k14"]
         sympy_prob_funcs = expressions.construct_lambda_funcs(
             sympy_funcs=sympy_funcs, rate_names=rate_names
@@ -373,10 +373,10 @@ class Test_Probability_Calcs:
         graph_utils.generate_edges(G, K)
 
         # calculate the state probabilities using KDA
-        kda_probs = calculations.calc_state_probs(G)
+        kda_probs = calculations.calc_state_probs(G, key="val")
 
         # generate the sympy functions for the state probabilities
-        sympy_funcs = calculations.calc_state_probs(G, output_strings=True)
+        sympy_funcs = calculations.calc_state_probs(G, key="name", output_strings=True)
         rate_names = [
             "k12",
             "k21",
@@ -452,10 +452,10 @@ class Test_Probability_Calcs:
         graph_utils.generate_edges(G, K)
 
         # calculate the state probabilities using KDA
-        kda_probs = calculations.calc_state_probs(G)
+        kda_probs = calculations.calc_state_probs(G, key="val")
 
         # generate the sympy functions for the state probabilities
-        sympy_funcs = calculations.calc_state_probs(G, output_strings=True)
+        sympy_funcs = calculations.calc_state_probs(G, key="name", output_strings=True)
         rate_names = [
             "k12",
             "k21",
@@ -532,7 +532,7 @@ class Test_Probability_Calcs:
         graph_utils.generate_edges(G, K)
 
         # calculate the state probabilities using KDA
-        kda_probs = calculations.calc_state_probs(G)
+        kda_probs = calculations.calc_state_probs(G, key="val")
 
         # use the ODE integrator to calculate the state probabilities
         probability_guess = np.array([1, 1, 1, 1, 1]) / 5
@@ -585,10 +585,10 @@ class Test_Probability_Calcs:
         graph_utils.generate_edges(G, K)
 
         # calculate the state probabilities using KDA
-        kda_probs = calculations.calc_state_probs(G)
+        kda_probs = calculations.calc_state_probs(G, key="val")
 
         # generate the sympy functions for the state probabilities
-        sympy_funcs = calculations.calc_state_probs(G, output_strings=True)
+        sympy_funcs = calculations.calc_state_probs(G, key="name", output_strings=True)
         rate_names = [
             "k12",
             "k21",
@@ -717,6 +717,7 @@ class Test_Flux_Diagrams:
             dirpar_edges=dirpar_edges,
             cycle=cycle,
             order=order,
+            key="val",
             output_strings=False,
         )
         # generate the net cycle flux function
@@ -725,6 +726,7 @@ class Test_Flux_Diagrams:
             dirpar_edges=dirpar_edges,
             cycle=cycle,
             order=order,
+            key="name",
             output_strings=True,
         )
         # convert sympy function into lambda function
@@ -766,11 +768,11 @@ class Test_Flux_Diagrams:
         order = [0, 1]
         # calculate the net cycle flux
         net_cycle_flux = calculations.calc_net_cycle_flux(
-            G, cycle=cycle, order=order, output_strings=False
+            G, cycle=cycle, order=order, key="val", output_strings=False
         )
         # generate the sympy net cycle flux function
         sympy_net_cycle_flux_func = calculations.calc_net_cycle_flux(
-            G, cycle=cycle, order=order, output_strings=True
+            G, cycle=cycle, order=order, key="name", output_strings=True
         )
         # make sure the sympy function agrees with the known solution
         expected_func = "(k12*k23*k31 - k13*k21*k32)/(k12*k23 + k12*k31 + k12*k32 + k13*k21 + k13*k23 + k13*k32 + k21*k31 + k21*k32 + k23*k31)"
@@ -954,7 +956,7 @@ class Test_Misc_Funcs:
 
         # calculate sigma_K value
         sigma_K_val = calculations.calc_sigma_K(
-            G, cycle, flux_diagrams, output_strings=False
+            G, cycle, flux_diagrams, key="val", output_strings=False
         )
         # check that the sigma_K value agrees with the known solution
         expected_value = k32 + k34
@@ -962,7 +964,7 @@ class Test_Misc_Funcs:
 
         # check that the sigma_K function agrees with the known solution
         sigma_K_func = calculations.calc_sigma_K(
-            G, cycle, flux_diagrams, output_strings=True
+            G, cycle, flux_diagrams, key="name", output_strings=True
         )
         expected_func = "k32+k34"
         assert sigma_K_func == expected_func
@@ -993,7 +995,7 @@ class Test_Misc_Funcs:
 
         # calculate the thermodynamic force
         thermo_force_val = calculations.calc_thermo_force(
-            G, cycle, cycle_order, output_strings=False
+            G, cycle, cycle_order, key="val", output_strings=False
         )
         if cycle == [0, 3, 2, 1]:
             expected_value = np.log(k12 * k23 * k34 * k41 / (k14 * k21 * k32 * k43))
@@ -1006,7 +1008,7 @@ class Test_Misc_Funcs:
         assert_allclose(thermo_force_val, expected_value, atol=1e-14, rtol=1e-14)
         # generate the equation for the thermodynamic force
         thermo_force_func = calculations.calc_thermo_force(
-            G, cycle, cycle_order, output_strings=True
+            G, cycle, cycle_order, key="name", output_strings=True
         )
         # check that the generated expression agrees with the expected function
         assert str(thermo_force_func) == str(thermo_force_func)
@@ -1210,6 +1212,65 @@ def test_get_ordered_cycle_all_node_cycles():
         calculations._get_ordered_cycle(G, invalid_cycle)
 
 
+def test_function_inputs():
+    # Tests the KDA API to make sure the appropriate errors are raised when
+    # users input incompatible combinations of parameters.
+
+    # create an adjacency matrix for a 4-state model with leakage
+    K = np.array([[0, 1, 0, 1], [1, 0, 1, 1], [0, 1, 0, 1], [1, 1, 1, 0]])
+    # generate the diagram and edges
+    G = nx.MultiDiGraph()
+    graph_utils.generate_edges(G, K)
+    # generate the directional partial diagrams
+    dirpar_edges = diagrams.generate_directional_diagrams(G, return_edges=True)
+
+    # test both cases for calc_sigma()
+    with pytest.raises(TypeError):
+        calculations.calc_sigma(G, dirpar_edges, key="name", output_strings=False)
+    with pytest.raises(TypeError):
+        calculations.calc_sigma(G, dirpar_edges, key="val", output_strings=True)
+
+    # pick one of the 3-node cycles and generate the flux diagrams for it
+    cycle = [0, 1, 3]
+    flux_diags = diagrams.generate_flux_diagrams(G, cycle)
+
+    # test both cases for calc_sigma_K
+    with pytest.raises(TypeError):
+        calculations.calc_sigma_K(
+            G, cycle, flux_diags, key="name", output_strings=False
+        )
+    with pytest.raises(TypeError):
+        calculations.calc_sigma_K(G, cycle, flux_diags, key="val", output_strings=True)
+
+    # pick the CCW direction
+    order = [0, 1]
+    # test both cases for calc_pi_difference()
+    with pytest.raises(TypeError):
+        calculations.calc_pi_difference(
+            G, cycle, order, key="name", output_strings=False
+        )
+    with pytest.raises(TypeError):
+        calculations.calc_pi_difference(G, cycle, order, key="val", output_strings=True)
+
+    # test both cases for calc_thermo_force()
+    with pytest.raises(TypeError):
+        calculations.calc_thermo_force(
+            G, cycle, order, key="name", output_strings=False
+        )
+    with pytest.raises(TypeError):
+        calculations.calc_thermo_force(G, cycle, order, key="val", output_strings=True)
+
+    # test both cases for calc_state_probs_from_diags()
+    with pytest.raises(TypeError):
+        calculations.calc_state_probs_from_diags(
+            G, dirpar_edges, key="name", output_strings=False
+        )
+    with pytest.raises(TypeError):
+        calculations.calc_state_probs_from_diags(
+            G, dirpar_edges, key="val", output_strings=True
+        )
+
+
 def test_retrieve_rate_matrix():
     # regression test for `graph_utils.retrieve_rate_matrix()`
     # checks that input and output rate matrices are the same
@@ -1250,7 +1311,7 @@ def test_add_attributes():
     graph_utils.generate_edges(G, K)
 
     # calculate the state probabilities using KDA
-    kda_probs = calculations.calc_state_probs(G)
+    kda_probs = calculations.calc_state_probs(G, key="val")
 
     node_data = kda_probs
     node_label = "probability"
@@ -1262,6 +1323,25 @@ def test_add_attributes():
     graph_label = "Graph rate matrix"
     graph_utils.add_graph_attribute(G, data=graph_data, label=graph_label)
     assert np.all(G.graph[graph_label] == K)
+
+
+def test_generate_edges_errors():
+    k_vals = np.array([[0, 1, 2], [5, 0, 6], [9, 10, 0],])
+    k_names = np.array(
+        [["k11", "k12", "k13"], ["k21", "k22", "k23"], ["k31", "k32", "k33"],]
+    )
+
+    # initialize graph object
+    G = nx.MultiDiGraph()
+    graph_utils.generate_edges(G, vals=k_vals, names=k_names)
+
+    G = nx.MultiDiGraph()
+    with pytest.raises(TypeError):
+        graph_utils.generate_edges(G, vals=k_names, names=k_names)
+
+    G = nx.MultiDiGraph()
+    with pytest.raises(TypeError):
+        graph_utils.generate_edges(G, vals=k_vals, names=k_vals)
 
 
 def test_ccw():

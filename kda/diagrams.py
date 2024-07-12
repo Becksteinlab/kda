@@ -329,7 +329,7 @@ def enumerate_partial_diagrams(G):
         generated from a graph represented by the input rate matrix.
     """
     # get the adjacency matrix for K
-    K_adj = nx.to_numpy_array(G, weight=None)
+    K_adj = nx.to_numpy_array(G)
     # use the adjacency matrix to generate the Laplacian matrix
     # multiply through by -1
     K_laplace = -1 * K_adj
