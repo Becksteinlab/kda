@@ -96,7 +96,7 @@ def _get_ordered_cycle(G, input_cycle):
             )
 
 
-def calc_sigma(G, dirpar_edges, output_strings=False):
+def calc_sigma(G, dirpar_edges, key, output_strings=False):
     """
     Calculates sigma, the normalization factor for calculating state
     probabilities and cycle fluxes for a given diagram G.
@@ -107,9 +107,16 @@ def calc_sigma(G, dirpar_edges, output_strings=False):
         Input diagram
     dirpar_edges : list
         List of all directional partial diagrams for the input diagram G.
+    key : str
+        Definition of key in NetworkX diagram edges, used to call edge rate
+        values or names. This needs to match the key used for the rate
+        constants names or values in the input diagram G.
     output_strings : bool (optional)
-        Used to determine whether raw values or strings of variables
-        will be returned. Default is False.
+        Used to denote whether values or strings will be combined. Default
+        is False, which tells the function to calculate the normalization factor
+        using numbers. If True, this will assume the input
+        'key' will return strings of variable names to join into the
+        analytic cycle flux function.
     Returns
     -------
     sigma : float
@@ -121,32 +128,41 @@ def calc_sigma(G, dirpar_edges, output_strings=False):
     # Number of nodes/states
     n_states = G.number_of_nodes()
     n_dirpars = dirpar_edges.shape[0]
+    edge_value = G.edges[list(G.edges)[0]][key]
 
     if not output_strings:
+        if isinstance(edge_value, str):
+            raise TypeError(
+                "To enter variable strings set parameter output_strings=True."
+            )
         dirpar_rate_products = np.ones(n_dirpars, dtype=float)
         # iterate over the directional partial diagrams
         for i, edge_list in enumerate(dirpar_edges):
             # iterate over the edges in the given directional partial diagram i
             for edge in edge_list:
                 # multiply the rate of each edge in edge_list
-                dirpar_rate_products[i] *= G.edges[edge]["weight"]
+                dirpar_rate_products[i] *= G.edges[edge][key]
         sigma = math.fsum(dirpar_rate_products)
         return sigma
     elif output_strings:
+        if not isinstance(edge_value, str):
+            raise TypeError(
+                "To enter variable values set parameter output_strings=False."
+            )
         dirpar_rate_products = np.empty(shape=(n_dirpars,), dtype=object)
         # iterate over the directional partial diagrams
         for i, edge_list in enumerate(dirpar_edges):
             rate_product_vals = []
             for edge in edge_list:
-                # append index-1 rate constant name from dir_par to list
-                rate_product_vals.append(f"k{edge[0]+1}{edge[1]+1}")
+                # append rate constant names from dir_par to list
+                rate_product_vals.append(G.edges[edge][key])
             dirpar_rate_products[i] = "*".join(rate_product_vals)
         # sum all terms to get normalization factor
         sigma_str = "+".join(dirpar_rate_products)
         return sigma_str
 
 
-def calc_sigma_K(G, cycle, flux_diags, output_strings=False):
+def calc_sigma_K(G, cycle, flux_diags, key, output_strings=False):
     """
     Calculates sigma_K, the sum of all directional flux diagrams.
 
@@ -159,9 +175,16 @@ def calc_sigma_K(G, cycle, flux_diags, output_strings=False):
         indices does not matter but should not contain all nodes.
     flux_diags : list
         List of relevant directional flux diagrams for input cycle.
+    key : str
+        Definition of key in NetworkX diagram edges, used to call edge rate
+        values or names. This needs to match the key used for the rate
+        constants names or values in the input diagram G.
     output_strings : bool (optional)
-        Used to determine whether raw values or strings of variables
-        will be returned. Default is False.
+        Used to denote whether values or strings will be combined. Default
+        is False, which tells the function to calculate the sum of all
+        directional flux diagrams using numbers. If True, this will assume the
+        input 'key' will return strings of variable names to join into the
+        analytic function.
 
     Returns
     -------
@@ -182,6 +205,13 @@ def calc_sigma_K(G, cycle, flux_diags, output_strings=False):
         ordered_cycle = _get_ordered_cycle(G, cycle)
         cycle_edges = diagrams._construct_cycle_edges(ordered_cycle)
         if output_strings == False:
+            if isinstance(
+                G.edges[cycle_edges[0][0], cycle_edges[0][1], cycle_edges[0][2]][key],
+                str,
+            ):
+                raise TypeError(
+                    "To enter variable strings set parameter output_strings=True."
+                )
             rate_products = []
             for diagram in flux_diags:
                 diag = diagram.copy()
@@ -190,11 +220,18 @@ def calc_sigma_K(G, cycle, flux_diags, output_strings=False):
                     diag.remove_edge(edge[1], edge[0], edge[2])
                 vals = 1
                 for edge in diag.edges:
-                    vals *= G.edges[edge[0], edge[1], edge[2]]["weight"]
+                    vals *= G.edges[edge[0], edge[1], edge[2]][key]
                 rate_products.append(vals)
             sigma_K = math.fsum(rate_products)
             return sigma_K
         elif output_strings == True:
+            if not isinstance(
+                G.edges[cycle_edges[0][0], cycle_edges[0][1], cycle_edges[0][2]][key],
+                str,
+            ):
+                raise TypeError(
+                    "To enter variable values set parameter output_strings=False."
+                )
             rate_products = []
             for diagram in flux_diags:
                 diag = diagram.copy()
@@ -203,13 +240,13 @@ def calc_sigma_K(G, cycle, flux_diags, output_strings=False):
                     diag.remove_edge(edge[1], edge[0], edge[2])
                 rates = []
                 for edge in diag.edges:
-                    rates.append(f"k{edge[0]+1}{edge[1]+1}")
+                    rates.append(G.edges[edge[0], edge[1], edge[2]][key])
                 rate_products.append("*".join(rates))
             sigma_K_str = "+".join(rate_products)
             return sigma_K_str
 
 
-def calc_pi_difference(G, cycle, order, output_strings=False):
+def calc_pi_difference(G, cycle, order, key, output_strings=False):
     """
     Calculates the difference of the forward and reverse rate products for a
     given cycle, where forward rates are defined as counter clockwise.
@@ -225,9 +262,15 @@ def calc_pi_difference(G, cycle, order, output_strings=False):
         List of integers of length 2, where the integers must be nodes in the
         input cycle. This pair of nodes is used to determine which direction is
         CCW.
+    key : str
+        Definition of key in NetworkX diagram edges, used to call edge rate
+        values or names. This needs to match the key used for the rate
+        constants names or values in the input diagram G.
     output_strings : bool (optional)
-        Used to determine whether raw values or strings of variables
-        will be returned. Default is False.
+        Used to denote whether values or strings will be combined. Default
+        is False, which tells the function to calculate the difference using
+        numbers. If True, this will assume the input 'key' will return strings
+        of variable names to join into the analytic function.
 
     Returns
     -------
@@ -243,24 +286,36 @@ def calc_pi_difference(G, cycle, order, output_strings=False):
     CCW_cycle = graph_utils.get_ccw_cycle(ordered_cycle, order)
     cycle_edges = diagrams._construct_cycle_edges(CCW_cycle)
     if output_strings == False:
+        if isinstance(
+            G.edges[cycle_edges[0][0], cycle_edges[0][1], cycle_edges[0][2]][key], str
+        ):
+            raise TypeError(
+                "To enter variable strings set parameter output_strings=True."
+            )
         ccw_rates = 1
         cw_rates = 1
         for edge in cycle_edges:
-            ccw_rates *= G.edges[edge[0], edge[1], edge[2]]["weight"]
-            cw_rates *= G.edges[edge[1], edge[0], edge[2]]["weight"]
+            ccw_rates *= G.edges[edge[0], edge[1], edge[2]][key]
+            cw_rates *= G.edges[edge[1], edge[0], edge[2]][key]
         pi_difference = ccw_rates - cw_rates
         return pi_difference
     elif output_strings == True:
+        if not isinstance(
+            G.edges[cycle_edges[0][0], cycle_edges[0][1], cycle_edges[0][2]][key], str
+        ):
+            raise TypeError(
+                "To enter variable values set parameter output_strings=False."
+            )
         ccw_rates = []
         cw_rates = []
         for edge in cycle_edges:
-            ccw_rates.append(f"k{edge[0]+1}{edge[1]+1}")
-            cw_rates.append(f"k{edge[1]+1}{edge[0]+1}")
+            ccw_rates.append(G.edges[edge[0], edge[1], edge[2]][key])
+            cw_rates.append(G.edges[edge[1], edge[0], edge[2]][key])
         pi_difference = "-".join(["*".join(ccw_rates), "*".join(cw_rates)])
         return pi_difference
 
 
-def calc_thermo_force(G, cycle, order, output_strings=False):
+def calc_thermo_force(G, cycle, order, key, output_strings=False):
     """
     Calculates the thermodynamic driving force for a given cycle in diagram G.
     The driving force is calculated as the natural log of the ratio of the
@@ -280,9 +335,16 @@ def calc_thermo_force(G, cycle, order, output_strings=False):
         List of integers of length 2, where the integers must be nodes in the
         input cycle. This pair of nodes is used to determine which direction is
         CCW.
+    key : str
+        Definition of key in NetworkX diagram edges, used to call edge rate
+        values or names. This needs to match the key used for the rate
+        constants names or values in the input diagram G.
     output_strings : bool (optional)
-        Used to determine whether raw values or strings of variables
-        will be returned. Default is False.
+        Used to denote whether values or strings will be combined. Default
+        is False, which tells the function to calculate the thermodynamic force
+        using numbers. If True, this will assume the input
+        'key' will return strings of variable names to join into the
+        analytic function.
 
     Returns
     -------
@@ -298,19 +360,31 @@ def calc_thermo_force(G, cycle, order, output_strings=False):
     CCW_cycle = graph_utils.get_ccw_cycle(ordered_cycle, order)
     cycle_edges = diagrams._construct_cycle_edges(CCW_cycle)
     if output_strings == False:
+        if isinstance(
+            G.edges[cycle_edges[0][0], cycle_edges[0][1], cycle_edges[0][2]][key], str
+        ):
+            raise TypeError(
+                "To enter variable strings set parameter output_strings=True."
+            )
         ccw_rates = 1
         cw_rates = 1
         for edge in cycle_edges:
-            ccw_rates *= G.edges[edge[0], edge[1], edge[2]]["weight"]
-            cw_rates *= G.edges[edge[1], edge[0], edge[2]]["weight"]
+            ccw_rates *= G.edges[edge[0], edge[1], edge[2]][key]
+            cw_rates *= G.edges[edge[1], edge[0], edge[2]][key]
         thermo_force = np.log(ccw_rates / cw_rates)
         return thermo_force
     elif output_strings == True:
+        if not isinstance(
+            G.edges[cycle_edges[0][0], cycle_edges[0][1], cycle_edges[0][2]][key], str
+        ):
+            raise TypeError(
+                "To enter variable values set parameter output_strings=False."
+            )
         ccw_rates = []
         cw_rates = []
         for edge in cycle_edges:
-            ccw_rates.append(f"k{edge[0]+1}{edge[1]+1}")
-            cw_rates.append(f"k{edge[1]+1}{edge[0]+1}")
+            ccw_rates.append(G.edges[edge[0], edge[1], edge[2]][key])
+            cw_rates.append(G.edges[edge[1], edge[0], edge[2]][key])
         thermo_force_str = (
             "ln(" + "*".join(ccw_rates) + ") - ln(" + "*".join(cw_rates) + ")"
         )
@@ -318,7 +392,7 @@ def calc_thermo_force(G, cycle, order, output_strings=False):
         return parsed_thermo_force_str
 
 
-def calc_state_probs(G, output_strings=False):
+def calc_state_probs(G, key, output_strings=False):
     """
     Calculates state probabilities directly.
 
@@ -326,9 +400,16 @@ def calc_state_probs(G, output_strings=False):
     ----------
     G : NetworkX MultiDiGraph Object
         Input diagram
+    key : str
+        Definition of key in NetworkX diagram edges, used to call edge rate
+        values or names. This needs to match the key used for the rate
+        constants names or values in the input diagram G.
     output_strings : bool (optional)
-        Used to determine whether raw values or strings of variables
-        will be returned. Default is False.
+        Used to denote whether values or strings will be combined. Default
+        is False, which tells the function to calculate the state
+        probabilities using numbers. If True, this will assume the input
+        'key' will return strings of variable names to join into the
+        analytic state multplicity and normalization function.
 
     Returns
     -------
@@ -340,18 +421,18 @@ def calc_state_probs(G, output_strings=False):
     dirpar_edges = diagrams.generate_directional_diagrams(G, return_edges=True)
     if output_strings == False:
         state_probs = calc_state_probs_from_diags(
-            G, dirpar_edges, output_strings=output_strings
+            G, dirpar_edges, key, output_strings=output_strings
         )
         return state_probs
     if output_strings == True:
         state_mults, norm = calc_state_probs_from_diags(
-            G, dirpar_edges, output_strings=output_strings
+            G, dirpar_edges, key, output_strings=output_strings
         )
         state_probs_sympy = expressions.construct_sympy_prob_funcs(state_mults, norm)
         return state_probs_sympy
 
 
-def calc_net_cycle_flux(G, cycle, order, output_strings=False):
+def calc_net_cycle_flux(G, cycle, order, key, output_strings=False):
     """
     Calculates net cycle flux for a given cycle in diagram G.
 
@@ -362,9 +443,15 @@ def calc_net_cycle_flux(G, cycle, order, output_strings=False):
     cycle : list of int
         List of node indices for cycle of interest, index zero. Order of node
         indices does not matter.
+    key : str
+        Definition of key in NetworkX diagram edges, used to call edge rate
+        values or names. This needs to match the key used for the rate
+        constants names or values in the input diagram G.
     output_strings : bool (optional)
-        Used to determine whether raw values or strings of variables
-        will be returned. Default is False.
+        Used to denote whether values or strings will be combined. Default
+        is False, which tells the function to calculate the cycle flux using
+        numbers. If True, this will assume the input 'key' will return strings
+        of variable names to join into the analytic cycle flux function.
 
     Returns
     -------
@@ -377,27 +464,27 @@ def calc_net_cycle_flux(G, cycle, order, output_strings=False):
     flux_diags = diagrams.generate_flux_diagrams(G, cycle)
     if output_strings == False:
         pi_diff = calc_pi_difference(
-            G, cycle, order, output_strings=output_strings
+            G, cycle, order, key, output_strings=output_strings
         )
-        sigma_K = calc_sigma_K(G, cycle, flux_diags, output_strings=output_strings)
-        sigma = calc_sigma(G, dirpar_edges, output_strings=output_strings)
+        sigma_K = calc_sigma_K(G, cycle, flux_diags, key, output_strings=output_strings)
+        sigma = calc_sigma(G, dirpar_edges, key, output_strings=output_strings)
         net_cycle_flux = pi_diff * sigma_K / sigma
         return net_cycle_flux
     if output_strings == True:
         pi_diff_str = calc_pi_difference(
-            G, cycle, order, output_strings=output_strings
+            G, cycle, order, key, output_strings=output_strings
         )
         sigma_K_str = calc_sigma_K(
-            G, cycle, flux_diags, output_strings=output_strings
+            G, cycle, flux_diags, key, output_strings=output_strings
         )
-        sigma_str = calc_sigma(G, dirpar_edges, output_strings=output_strings)
+        sigma_str = calc_sigma(G, dirpar_edges, key, output_strings=output_strings)
         sympy_net_cycle_flux_func = expressions.construct_sympy_net_cycle_flux_func(
             pi_diff_str, sigma_K_str, sigma_str
         )
         return sympy_net_cycle_flux_func
 
 
-def calc_state_probs_from_diags(G, dirpar_edges, output_strings=False):
+def calc_state_probs_from_diags(G, dirpar_edges, key, output_strings=False):
     """
     Calculates state probabilities and generates analytic function strings from
     input diagram and directional partial diagrams. If directional partial
@@ -410,9 +497,16 @@ def calc_state_probs_from_diags(G, dirpar_edges, output_strings=False):
         Input diagram
     dirpar_edges : array
         Array of all directional partial diagram edges (made from 2-tuples).
+    key : str
+        Definition of key in NetworkX diagram edges, used to call edge rate
+        values or names. This needs to match the key used for the rate
+        constants names or values in the input diagram G.
     output_strings : bool (optional)
-        Used to determine whether raw values or strings of variables
-        will be returned. Default is False.
+        Used to denote whether values or strings will be combined. Default
+        is False, which tells the function to calculate the state
+        probabilities using numbers. If True, this will assume the input
+        'key' will return strings of variable names to join into the
+        analytic state multplicity and normalization functions.
 
     Returns
     -------
@@ -433,7 +527,12 @@ def calc_state_probs_from_diags(G, dirpar_edges, output_strings=False):
     # retrieve the rate matrix from G
     Kij = graph_utils.retrieve_rate_matrix(G)
 
+    edge_value = G.edges[list(G.edges)[0]][key]
     if not output_strings:
+        if isinstance(edge_value, str):
+            raise TypeError(
+                "To enter variable strings set parameter output_strings=True."
+            )
         # create array of ones for storing rate products
         dirpar_rate_products = np.ones(n_dirpars, dtype=float)
         # iterate over the directional partial diagrams
@@ -453,11 +552,15 @@ def calc_state_probs_from_diags(G, dirpar_edges, output_strings=False):
             )
         return state_probs
     elif output_strings:
+        if not isinstance(edge_value, str):
+            raise TypeError(
+                "To enter variable values set parameter output_strings=False."
+            )
         dirpar_rate_products = np.empty(shape=(n_dirpars,), dtype=object)
         for i, edge_list in enumerate(dirpar_edges):
             rate_product_vals = []
             for edge in edge_list:
-                rate_product_vals.append(f"k{edge[0]+1}{edge[1]+1}")
+                rate_product_vals.append(G.edges[edge][key])
             dirpar_rate_products[i] = "*".join(rate_product_vals)
 
         state_mults = np.empty(shape=(n_states,), dtype=object)
@@ -470,7 +573,7 @@ def calc_state_probs_from_diags(G, dirpar_edges, output_strings=False):
 
 
 def calc_net_cycle_flux_from_diags(
-    G, dirpar_edges, cycle, order, output_strings=False
+    G, dirpar_edges, cycle, order, key, output_strings=False
 ):
     """
     Calculates net cycle flux and generates analytic function strings from
@@ -487,9 +590,15 @@ def calc_net_cycle_flux_from_diags(
     cycle : list of int
         List of node indices for cycle of interest, index zero. Order of node
         indices does not matter.
+    key : str
+        Definition of key in NetworkX diagram edges, used to call edge rate
+        values or names. This needs to match the key used for the rate
+        constants names or values in the input diagram G.
     output_strings : bool (optional)
-        Used to determine whether raw values or strings of variables
-        will be returned. Default is False.
+        Used to denote whether values or strings will be combined. Default
+        is False, which tells the function to calculate the cycle flux using
+        numbers. If True, this will assume the input 'key' will return strings
+        of variable names to join into the analytic cycle flux function.
 
     Returns
     -------
@@ -501,20 +610,20 @@ def calc_net_cycle_flux_from_diags(
     flux_diags = diagrams.generate_flux_diagrams(G, cycle)
     if output_strings == False:
         pi_diff = calc_pi_difference(
-            G, cycle, order, output_strings=output_strings
+            G, cycle, order, key, output_strings=output_strings
         )
-        sigma_K = calc_sigma_K(G, cycle, flux_diags, output_strings=output_strings)
-        sigma = calc_sigma(G, dirpar_edges, output_strings=output_strings)
+        sigma_K = calc_sigma_K(G, cycle, flux_diags, key, output_strings=output_strings)
+        sigma = calc_sigma(G, dirpar_edges, key, output_strings=output_strings)
         net_cycle_flux = pi_diff * sigma_K / sigma
         return net_cycle_flux
     if output_strings == True:
         pi_diff_str = calc_pi_difference(
-            G, cycle, order, output_strings=output_strings
+            G, cycle, order, key, output_strings=output_strings
         )
         sigma_K_str = calc_sigma_K(
-            G, cycle, flux_diags, output_strings=output_strings
+            G, cycle, flux_diags, key, output_strings=output_strings
         )
-        sigma_str = calc_sigma(G, dirpar_edges, output_strings=output_strings)
+        sigma_str = calc_sigma(G, dirpar_edges, key, output_strings=output_strings)
         sympy_net_cycle_flux_func = expressions.construct_sympy_net_cycle_flux_func(
             pi_diff_str, sigma_K_str, sigma_str
         )
