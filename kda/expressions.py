@@ -19,7 +19,7 @@ from sympy import lambdify, Mul
 from sympy.parsing.sympy_parser import parse_expr
 
 
-def construct_sympy_prob_funcs(state_mult_funcs, norm_func):
+def construct_sympy_prob_funcs(state_mult_funcs):
     """
     Constructs analytic state probability SymPy functions
 
@@ -37,12 +37,14 @@ def construct_sympy_prob_funcs(state_mult_funcs, norm_func):
     sympy_funcs : list
         List of analytic state probability SymPy functions.
     """
-    sympy_funcs = []  # create empty list to fill with state probability functions
-    for func in state_mult_funcs:
-        # convert strings into SymPy functions, normalize
-        prob_func = parse_expr(func) / parse_expr(norm_func)
-        sympy_funcs.append(prob_func)
-    return sympy_funcs
+    # convert the state multiplicity strings into sympy expressions
+    parsed_mult_funcs = [parse_expr(e) for e in state_mult_funcs]
+    # create the normalization expression
+    parsed_sigma = sum(parsed_mult_funcs)
+    # normalize the multiplicity expressions
+    prob_funcs = [e/parsed_sigma for e in parsed_mult_funcs]
+    return prob_funcs
+
 
 
 def construct_sympy_net_cycle_flux_func(pi_diff_str, sigma_K_str, sigma_str):

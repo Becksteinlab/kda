@@ -419,17 +419,12 @@ def calc_state_probs(G, key="name", output_strings=True):
         List of analytic SymPy state probability functions.
     """
     dirpar_edges = diagrams.generate_directional_diagrams(G, return_edges=True)
-    if output_strings == False:
-        state_probs = calc_state_probs_from_diags(
-            G, dirpar_edges, key, output_strings=output_strings
-        )
-        return state_probs
-    if output_strings == True:
-        state_mults, norm = calc_state_probs_from_diags(
-            G, dirpar_edges, key, output_strings=output_strings
-        )
-        state_probs_sympy = expressions.construct_sympy_prob_funcs(state_mults, norm)
-        return state_probs_sympy
+    state_probs = calc_state_probs_from_diags(
+        G, dirpar_edges=dirpar_edges, key=key, output_strings=output_strings,
+    )
+    if output_strings:
+        state_probs = expressions.construct_sympy_prob_funcs(state_mult_funcs=state_probs)
+    return state_probs
 
 
 def calc_net_cycle_flux(G, cycle, order, key="name", output_strings=True):
@@ -567,9 +562,7 @@ def calc_state_probs_from_diags(G, dirpar_edges, key="name", output_strings=True
         dirpar_rate_products = dirpar_rate_products.reshape(n_states, n_partials)
         for i, arr in enumerate(dirpar_rate_products):
             state_mults[i] = "+".join(arr)
-        # sum all terms to get normalization factor
-        norm = "+".join(state_mults)
-        return state_mults, norm
+        return state_mults
 
 
 def calc_net_cycle_flux_from_diags(
