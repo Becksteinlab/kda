@@ -255,7 +255,7 @@ class Test_Probability_Calcs:
         graph_utils.generate_edges(G, K)
 
         # calculate the state probabilities using KDA
-        kda_probs = calculations.calc_state_probs(G, key="val")
+        kda_probs = calculations.calc_state_probs(G, key="val", output_strings=False)
 
         # generate the sympy functions for the state probabilities
         sympy_funcs = calculations.calc_state_probs(G, key="name", output_strings=True)
@@ -313,7 +313,7 @@ class Test_Probability_Calcs:
         graph_utils.generate_edges(G, K)
 
         # calculate the state probabilities using KDA
-        kda_probs = calculations.calc_state_probs(G, key="val")
+        kda_probs = calculations.calc_state_probs(G, key="val", output_strings=False)
 
         # generate the sympy functions for the state probabilities
         sympy_funcs = calculations.calc_state_probs(G, key="name", output_strings=True)
@@ -373,7 +373,7 @@ class Test_Probability_Calcs:
         graph_utils.generate_edges(G, K)
 
         # calculate the state probabilities using KDA
-        kda_probs = calculations.calc_state_probs(G, key="val")
+        kda_probs = calculations.calc_state_probs(G, key="val", output_strings=False)
 
         # generate the sympy functions for the state probabilities
         sympy_funcs = calculations.calc_state_probs(G, key="name", output_strings=True)
@@ -452,7 +452,7 @@ class Test_Probability_Calcs:
         graph_utils.generate_edges(G, K)
 
         # calculate the state probabilities using KDA
-        kda_probs = calculations.calc_state_probs(G, key="val")
+        kda_probs = calculations.calc_state_probs(G, key="val", output_strings=False)
 
         # generate the sympy functions for the state probabilities
         sympy_funcs = calculations.calc_state_probs(G, key="name", output_strings=True)
@@ -532,7 +532,7 @@ class Test_Probability_Calcs:
         graph_utils.generate_edges(G, K)
 
         # calculate the state probabilities using KDA
-        kda_probs = calculations.calc_state_probs(G, key="val")
+        kda_probs = calculations.calc_state_probs(G, key="val", output_strings=False)
 
         # use the ODE integrator to calculate the state probabilities
         probability_guess = np.array([1, 1, 1, 1, 1]) / 5
@@ -585,7 +585,7 @@ class Test_Probability_Calcs:
         graph_utils.generate_edges(G, K)
 
         # calculate the state probabilities using KDA
-        kda_probs = calculations.calc_state_probs(G, key="val")
+        kda_probs = calculations.calc_state_probs(G, key="val", output_strings=False)
 
         # generate the sympy functions for the state probabilities
         sympy_funcs = calculations.calc_state_probs(G, key="name", output_strings=True)
@@ -1311,7 +1311,7 @@ def test_add_attributes():
     graph_utils.generate_edges(G, K)
 
     # calculate the state probabilities using KDA
-    kda_probs = calculations.calc_state_probs(G, key="val")
+    kda_probs = calculations.calc_state_probs(G, key="val", output_strings=False)
 
     node_data = kda_probs
     node_label = "probability"

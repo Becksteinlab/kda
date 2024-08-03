@@ -96,7 +96,7 @@ def _get_ordered_cycle(G, input_cycle):
             )
 
 
-def calc_sigma(G, dirpar_edges, key, output_strings=False):
+def calc_sigma(G, dirpar_edges, key="name", output_strings=True):
     """
     Calculates sigma, the normalization factor for calculating state
     probabilities and cycle fluxes for a given diagram G.
@@ -162,7 +162,7 @@ def calc_sigma(G, dirpar_edges, key, output_strings=False):
         return sigma_str
 
 
-def calc_sigma_K(G, cycle, flux_diags, key, output_strings=False):
+def calc_sigma_K(G, cycle, flux_diags, key="name", output_strings=True):
     """
     Calculates sigma_K, the sum of all directional flux diagrams.
 
@@ -246,7 +246,7 @@ def calc_sigma_K(G, cycle, flux_diags, key, output_strings=False):
             return sigma_K_str
 
 
-def calc_pi_difference(G, cycle, order, key, output_strings=False):
+def calc_pi_difference(G, cycle, order, key="name", output_strings=True):
     """
     Calculates the difference of the forward and reverse rate products for a
     given cycle, where forward rates are defined as counter clockwise.
@@ -315,7 +315,7 @@ def calc_pi_difference(G, cycle, order, key, output_strings=False):
         return pi_difference
 
 
-def calc_thermo_force(G, cycle, order, key, output_strings=False):
+def calc_thermo_force(G, cycle, order, key="name", output_strings=True):
     """
     Calculates the thermodynamic driving force for a given cycle in diagram G.
     The driving force is calculated as the natural log of the ratio of the
@@ -392,7 +392,7 @@ def calc_thermo_force(G, cycle, order, key, output_strings=False):
         return parsed_thermo_force_str
 
 
-def calc_state_probs(G, key, output_strings=False):
+def calc_state_probs(G, key="name", output_strings=True):
     """
     Calculates state probabilities directly.
 
@@ -432,7 +432,7 @@ def calc_state_probs(G, key, output_strings=False):
         return state_probs_sympy
 
 
-def calc_net_cycle_flux(G, cycle, order, key, output_strings=False):
+def calc_net_cycle_flux(G, cycle, order, key="name", output_strings=True):
     """
     Calculates net cycle flux for a given cycle in diagram G.
 
@@ -484,7 +484,7 @@ def calc_net_cycle_flux(G, cycle, order, key, output_strings=False):
         return sympy_net_cycle_flux_func
 
 
-def calc_state_probs_from_diags(G, dirpar_edges, key, output_strings=False):
+def calc_state_probs_from_diags(G, dirpar_edges, key="name", output_strings=True):
     """
     Calculates state probabilities and generates analytic function strings from
     input diagram and directional partial diagrams. If directional partial
@@ -573,7 +573,7 @@ def calc_state_probs_from_diags(G, dirpar_edges, key, output_strings=False):
 
 
 def calc_net_cycle_flux_from_diags(
-    G, dirpar_edges, cycle, order, key, output_strings=False
+    G, dirpar_edges, cycle, order, key="name", output_strings=True
 ):
     """
     Calculates net cycle flux and generates analytic function strings from
