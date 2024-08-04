@@ -421,10 +421,10 @@ def generate_directional_diagrams(G, return_edges=False):
     Returns
     -------
     directional_partial_diagrams : list
-        List of all directional partial diagrams for a given set of partial
+        List of all directional diagrams for a given set of partial
         diagrams.
     directional_partial_diagram_edges : array
-        Array of edges (made from 2-tuples) for valid directional partial
+        Array of edges (made from 2-tuples) for valid directional
         diagrams.
     """
     partial_diagrams = generate_partial_diagrams(G, return_edges=False)
@@ -452,7 +452,7 @@ def generate_directional_diagrams(G, return_edges=False):
                 nx.set_node_attributes(directional_diagram, False, "is_target")
                 # set target node to True
                 directional_diagram.nodes[target]["is_target"] = True
-                # add to array of directional partial diagrams
+                # add to array of directional diagrams
                 directional_diagrams[j + i*n_partials] = directional_diagram
 
     return directional_diagrams
