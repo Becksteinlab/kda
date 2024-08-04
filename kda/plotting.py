@@ -210,7 +210,7 @@ def _plot_single_diagram(
         and axis will be created. Default is `None`.
     cbt : bool (optional)
         'Color by target' option that paints target nodes with a coral red.
-        Typically used for plotting directional partial and flux diagrams.
+        Typically used for plotting directional and flux diagrams.
         Default is `False`.
 
     Returns

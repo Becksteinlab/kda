@@ -60,7 +60,7 @@ def construct_sympy_net_cycle_flux_func(pi_diff_str, sigma_K_str, sigma_str):
         Sum of rate products of directional flux diagram edges pointing to
         input cycle in string form.
     sigma_str : str
-        Sum of rate products of all directional partial diagrams for input
+        Sum of rate products of all directional diagrams for input
         diagram G, in string form.
 
     Returns

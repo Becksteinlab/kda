@@ -106,7 +106,7 @@ def calc_sigma(G, dirpar_edges, key="name", output_strings=True):
     G : NetworkX MultiDiGraph Object
         Input diagram
     dirpar_edges : list
-        List of all directional partial diagrams for the input diagram G.
+        List of all directional diagrams for the input diagram G.
     key : str
         Definition of key in NetworkX diagram edges, used to call edge rate
         values or names. This needs to match the key used for the rate
@@ -122,7 +122,7 @@ def calc_sigma(G, dirpar_edges, key="name", output_strings=True):
     sigma : float
         Normalization factor for state probabilities.
     sigma_str : str
-        Sum of rate products of all directional partial diagrams for input
+        Sum of rate products of all directional diagrams for input
         diagram G, in string form.
     """
     # Number of nodes/states
@@ -136,9 +136,9 @@ def calc_sigma(G, dirpar_edges, key="name", output_strings=True):
                 "To enter variable strings set parameter output_strings=True."
             )
         dirpar_rate_products = np.ones(n_dirpars, dtype=float)
-        # iterate over the directional partial diagrams
+        # iterate over the directional diagrams
         for i, edge_list in enumerate(dirpar_edges):
-            # iterate over the edges in the given directional partial diagram i
+            # iterate over the edges in the given directional diagram i
             for edge in edge_list:
                 # multiply the rate of each edge in edge_list
                 dirpar_rate_products[i] *= G.edges[edge][key]
@@ -150,7 +150,7 @@ def calc_sigma(G, dirpar_edges, key="name", output_strings=True):
                 "To enter variable values set parameter output_strings=False."
             )
         dirpar_rate_products = np.empty(shape=(n_dirpars,), dtype=object)
-        # iterate over the directional partial diagrams
+        # iterate over the directional diagrams
         for i, edge_list in enumerate(dirpar_edges):
             rate_product_vals = []
             for edge in edge_list:
@@ -482,7 +482,7 @@ def calc_net_cycle_flux(G, cycle, order, key="name", output_strings=True):
 def calc_state_probs_from_diags(G, dirpar_edges, key="name", output_strings=True):
     """
     Calculates state probabilities and generates analytic function strings from
-    input diagram and directional partial diagrams. If directional partial
+    input diagram and directional diagrams. If directional
     diagrams are already generated, this offers faster calculation than
     `calc_state_probs`.
 
@@ -491,7 +491,7 @@ def calc_state_probs_from_diags(G, dirpar_edges, key="name", output_strings=True
     G : NetworkX MultiDiGraph
         Input diagram
     dirpar_edges : array
-        Array of all directional partial diagram edges (made from 2-tuples).
+        Array of all directional diagram edges (made from 2-tuples).
     key : str
         Definition of key in NetworkX diagram edges, used to call edge rate
         values or names. This needs to match the key used for the rate
@@ -515,7 +515,7 @@ def calc_state_probs_from_diags(G, dirpar_edges, key="name", output_strings=True
     """
     # get the number of nodes/states
     n_states = G.number_of_nodes()
-    # get the number of directional partial diagrams
+    # get the number of directional diagrams
     n_dirpars = dirpar_edges.shape[0]
     # get the number of partial diagrams
     n_partials = int(n_dirpars / n_states)
@@ -530,7 +530,7 @@ def calc_state_probs_from_diags(G, dirpar_edges, key="name", output_strings=True
             )
         # create array of ones for storing rate products
         dirpar_rate_products = np.ones(n_dirpars, dtype=float)
-        # iterate over the directional partial diagrams
+        # iterate over the directional diagrams
         for i, edge_list in enumerate(dirpar_edges):
             # for each edge list, retrieve an array of the ith and jth indices,
             # retrieve the values associated with each (i, j) pair, and
@@ -570,7 +570,7 @@ def calc_net_cycle_flux_from_diags(
 ):
     """
     Calculates net cycle flux and generates analytic function strings from
-    input diagram and directional partial diagrams. If directional partial
+    input diagram and directional diagrams. If directional
     diagrams are already generated, this offers faster calculation than
     `calc_net_cycle_flux`.
 
@@ -579,7 +579,7 @@ def calc_net_cycle_flux_from_diags(
     G : NetworkX MultiDiGraph Object
         Input diagram.
     dirpar_edges : array
-        Array of all directional partial diagram edges (made from 2-tuples).
+        Array of all directional diagram edges (made from 2-tuples).
     cycle : list of int
         List of node indices for cycle of interest, index zero. Order of node
         indices does not matter.
