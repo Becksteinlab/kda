@@ -16,10 +16,15 @@ from kda.exceptions import CycleError
 
 @pytest.mark.usefixtures(
     "state_probs_3_state",
+    "symbolic_state_probs_3_state",
     "state_probs_4_state",
+    "symbolic_state_probs_4_state",
     "state_probs_4wl",
+    "symbolic_state_probs_4wl",
     "state_probs_5wl",
+    "symbolic_state_probs_5wl",
     "state_probs_6_state",
+    "symbolic_state_probs_6_state",
     )
 class Test_Probability_Calcs:
 
@@ -27,7 +32,7 @@ class Test_Probability_Calcs:
     @given(
         k_vals=st.lists(st.floats(min_value=1, max_value=10), min_size=6, max_size=6),
     )
-    def test_3_state_probs(self, k_vals, state_probs_3_state):
+    def test_3_state_probs(self, k_vals, state_probs_3_state, symbolic_state_probs_3_state):
         # assign the rates accordingly
         k12, k21, k23, k32, k13, k31 = k_vals
         expected_probs = state_probs_3_state(k12, k21, k23, k32, k13, k31)
@@ -41,10 +46,9 @@ class Test_Probability_Calcs:
         kda_probs = calculations.calc_state_probs(G, key="val", output_strings=False)
 
         # generate the sympy functions for the state probabilities
-        sympy_funcs = calculations.calc_state_probs(G, key="name", output_strings=True)
         rate_names = ["k12", "k21", "k23", "k32", "k13", "k31"]
         sympy_prob_funcs = expressions.construct_lambda_funcs(
-            sympy_funcs=sympy_funcs, rate_names=rate_names
+            sympy_funcs=symbolic_state_probs_3_state, rate_names=rate_names
         )
 
         # use the functions to calculate the state probabilities
@@ -83,7 +87,7 @@ class Test_Probability_Calcs:
     @given(
         k_vals=st.lists(st.floats(min_value=1, max_value=10), min_size=8, max_size=8),
     )
-    def test_4_state_probs(self, k_vals, state_probs_4_state):
+    def test_4_state_probs(self, k_vals, state_probs_4_state, symbolic_state_probs_4_state):
         # assign the rates accordingly
         k12, k21, k23, k32, k34, k43, k41, k14 = k_vals
         expected_probs = state_probs_4_state(k12, k21, k23, k32, k34, k43, k41, k14)
@@ -99,10 +103,9 @@ class Test_Probability_Calcs:
         kda_probs = calculations.calc_state_probs(G, key="val", output_strings=False)
 
         # generate the sympy functions for the state probabilities
-        sympy_funcs = calculations.calc_state_probs(G, key="name", output_strings=True)
         rate_names = ["k12", "k21", "k23", "k32", "k34", "k43", "k41", "k14"]
         sympy_prob_funcs = expressions.construct_lambda_funcs(
-            sympy_funcs=sympy_funcs, rate_names=rate_names
+            sympy_funcs=symbolic_state_probs_4_state, rate_names=rate_names
         )
 
         # use the functions to calculate the state probabilities
@@ -141,7 +144,7 @@ class Test_Probability_Calcs:
     @given(
         k_vals=st.lists(st.floats(min_value=1, max_value=10), min_size=10, max_size=10),
     )
-    def test_4_state_probs_with_leakage(self, k_vals, state_probs_4wl):
+    def test_4_state_probs_with_leakage(self, k_vals, state_probs_4wl, symbolic_state_probs_4wl):
         # assign the rates accordingly
         (k12, k21, k23, k32, k34, k43, k41, k14, k24, k42) = k_vals
         expected_probs = state_probs_4wl(
@@ -159,21 +162,11 @@ class Test_Probability_Calcs:
         kda_probs = calculations.calc_state_probs(G, key="val", output_strings=False)
 
         # generate the sympy functions for the state probabilities
-        sympy_funcs = calculations.calc_state_probs(G, key="name", output_strings=True)
         rate_names = [
-            "k12",
-            "k21",
-            "k23",
-            "k32",
-            "k34",
-            "k43",
-            "k41",
-            "k14",
-            "k24",
-            "k42",
-        ]
+            "k12", "k21", "k23", "k32", "k34", "k43", "k41", "k14", "k24", "k42",
+            ]
         sympy_prob_funcs = expressions.construct_lambda_funcs(
-            sympy_funcs=sympy_funcs, rate_names=rate_names
+            sympy_funcs=symbolic_state_probs_4wl, rate_names=rate_names
         )
 
         # use the functions to calculate the state probabilities
@@ -214,7 +207,7 @@ class Test_Probability_Calcs:
     @given(
         k_vals=st.lists(st.floats(min_value=1, max_value=10), min_size=12, max_size=12),
     )
-    def test_5_state_probs_with_leakage(self, k_vals, state_probs_5wl):
+    def test_5_state_probs_with_leakage(self, k_vals, state_probs_5wl, symbolic_state_probs_5wl):
         # assign the rates accordingly
         (k12, k21, k23, k32, k13, k31, k24, k42, k35, k53, k45, k54) = k_vals
         expected_probs = state_probs_5wl(
@@ -238,23 +231,12 @@ class Test_Probability_Calcs:
         kda_probs = calculations.calc_state_probs(G, key="val", output_strings=False)
 
         # generate the sympy functions for the state probabilities
-        sympy_funcs = calculations.calc_state_probs(G, key="name", output_strings=True)
         rate_names = [
-            "k12",
-            "k21",
-            "k23",
-            "k32",
-            "k13",
-            "k31",
-            "k24",
-            "k42",
-            "k35",
-            "k53",
-            "k45",
-            "k54",
+            "k12", "k21", "k23", "k32", "k13", "k31",
+            "k24", "k42", "k35", "k53", "k45", "k54",
         ]
         sympy_prob_funcs = expressions.construct_lambda_funcs(
-            sympy_funcs=sympy_funcs, rate_names=rate_names
+            sympy_funcs=symbolic_state_probs_5wl, rate_names=rate_names
         )
 
         # use the functions to calculate the state probabilities
@@ -346,7 +328,7 @@ class Test_Probability_Calcs:
     @given(
         k_vals=st.lists(st.floats(min_value=1, max_value=10), min_size=12, max_size=12),
     )
-    def test_6_state_probs(self, k_vals, state_probs_6_state):
+    def test_6_state_probs(self, k_vals, state_probs_6_state, symbolic_state_probs_6_state):
         # assign the rates accordingly
         (k12, k21, k23, k32, k34, k43, k45, k54, k56, k65, k61, k16) = k_vals
         expected_probs = state_probs_6_state(
@@ -371,23 +353,12 @@ class Test_Probability_Calcs:
         kda_probs = calculations.calc_state_probs(G, key="val", output_strings=False)
 
         # generate the sympy functions for the state probabilities
-        sympy_funcs = calculations.calc_state_probs(G, key="name", output_strings=True)
         rate_names = [
-            "k12",
-            "k21",
-            "k23",
-            "k32",
-            "k34",
-            "k43",
-            "k45",
-            "k54",
-            "k56",
-            "k65",
-            "k61",
-            "k16",
+            "k12", "k21", "k23", "k32", "k34", "k43",
+            "k45", "k54", "k56", "k65", "k61", "k16",
         ]
         sympy_prob_funcs = expressions.construct_lambda_funcs(
-            sympy_funcs=sympy_funcs, rate_names=rate_names
+            sympy_funcs=symbolic_state_probs_6_state, rate_names=rate_names
         )
 
         # use the functions to calculate the state probabilities

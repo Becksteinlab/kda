@@ -7,6 +7,9 @@
 
 import pytest
 import numpy as np
+import networkx as nx
+
+from kda import graph_utils, calculations
 
 
 @pytest.fixture(scope="class")
@@ -21,6 +24,15 @@ def state_probs_3_state():
 
 
 @pytest.fixture(scope="class")
+def symbolic_state_probs_3_state():
+	K = np.array([[0, 1, 1], [1, 0, 1], [1, 1, 0]])
+	G = nx.MultiDiGraph()
+	graph_utils.generate_edges(G, K)
+	sympy_funcs = calculations.calc_state_probs(G, key="name", output_strings=True)
+	return sympy_funcs
+
+
+@pytest.fixture(scope="class")
 def state_probs_4_state():
 	def _state_probs(k12, k21, k23, k32, k34, k43, k41, k14):
 	    P1 = k43 * k32 * k21 + k23 * k34 * k41 + k21 * k34 * k41 + k41 * k32 * k21
@@ -30,6 +42,20 @@ def state_probs_4_state():
 	    Sigma = P1 + P2 + P3 + P4  # Normalization factor
 	    return np.array([P1, P2, P3, P4]) / Sigma
 	return _state_probs
+
+
+@pytest.fixture(scope="class")
+def symbolic_state_probs_4_state():
+	K = np.array([
+		[0, 1, 0, 1],
+		[1, 0, 1, 0],
+		[0, 1, 0, 1],
+		[1, 0, 1, 0],
+	])
+	G = nx.MultiDiGraph()
+	graph_utils.generate_edges(G, K)
+	sympy_funcs = calculations.calc_state_probs(G, key="name", output_strings=True)
+	return sympy_funcs
 
 
 @pytest.fixture(scope="class")
@@ -78,6 +104,20 @@ def state_probs_4wl():
 		Sigma = P1 + P2 + P3 + P4  # Normalization factor
 		return np.array([P1, P2, P3, P4]) / Sigma
 	return _state_probs
+
+
+@pytest.fixture(scope="class")
+def symbolic_state_probs_4wl():
+	K = np.array([
+		[0, 1, 0, 1],
+		[1, 0, 1, 1],
+		[0, 1, 0, 1],
+		[1, 1, 1, 0],
+	])
+	G = nx.MultiDiGraph()
+	graph_utils.generate_edges(G, K)
+	sympy_funcs = calculations.calc_state_probs(G, key="name", output_strings=True)
+	return sympy_funcs
 
 
 @pytest.fixture(scope="class")
@@ -154,6 +194,21 @@ def state_probs_5wl():
 
 
 @pytest.fixture(scope="class")
+def symbolic_state_probs_5wl():
+	K = np.array([
+		[0, 1, 1, 0, 0],
+		[1, 0, 1, 1, 0],
+		[1, 1, 0, 0, 1],
+		[0, 1, 0, 0, 1],
+		[0, 0, 1, 1, 0],
+	])
+	G = nx.MultiDiGraph()
+	graph_utils.generate_edges(G, K)
+	sympy_funcs = calculations.calc_state_probs(G, key="name", output_strings=True)
+	return sympy_funcs
+
+
+@pytest.fixture(scope="class")
 def state_probs_6_state():
 	def _state_probs(k12, k21, k23, k32, k34, k43, k45, k54, k56, k65, k61, k16):
 		P1 = (
@@ -207,3 +262,19 @@ def state_probs_6_state():
 		Sigma = P1 + P2 + P3 + P4 + P5 + P6  # Normalization factor
 		return np.array([P1, P2, P3, P4, P5, P6]) / Sigma
 	return _state_probs
+
+
+@pytest.fixture(scope="class")
+def symbolic_state_probs_6_state():
+	K = np.array([
+		[0, 1, 0, 0, 0, 1],
+		[1, 0, 1, 0, 0, 0],
+		[0, 1, 0, 1, 0, 0],
+		[0, 0, 1, 0, 1, 0],
+		[0, 0, 0, 1, 0, 1],
+		[1, 0, 0, 0, 1, 0],
+	])
+	G = nx.MultiDiGraph()
+	graph_utils.generate_edges(G, K)
+	sympy_funcs = calculations.calc_state_probs(G, key="name", output_strings=True)
+	return sympy_funcs
