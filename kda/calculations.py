@@ -98,8 +98,9 @@ def _get_ordered_cycle(G, input_cycle):
 
 def calc_sigma(G, dirpar_edges, key="name", output_strings=True):
     """
-    Calculates sigma, the normalization factor for calculating state
-    probabilities and cycle fluxes for a given diagram G.
+    Generates the normalization factor expression for state
+    probabilities and cycle fluxes, which is the sum of directional
+    diagrams for the kinetic diagram `G` [Hill1989]_.
 
     Parameters
     ----------
@@ -117,6 +118,7 @@ def calc_sigma(G, dirpar_edges, key="name", output_strings=True):
         using numbers. If True, this will assume the input
         'key' will return strings of variable names to join into the
         analytic cycle flux function.
+
     Returns
     -------
     sigma : float
@@ -124,6 +126,36 @@ def calc_sigma(G, dirpar_edges, key="name", output_strings=True):
     sigma_str : str
         Sum of rate products of all directional diagrams for input
         diagram G, in string form.
+
+    Notes
+    -----
+    The expression generated here is important for normalizing
+    both state probabilities and net cycle fluxes.
+    State probabilities are defined [Hill1989]_,
+
+    .. math::
+
+        p_i = \Omega_{i} / \Sigma,
+
+    where :math:`\Omega_{i}` is the state multiplicity for state
+    :math:`i` (the sum of directional diagrams for state :math:`i`)
+    and :math:`\Sigma` is the sum of all directional diagrams.
+
+    Additionally `Sigma` is used when calculating the net
+    cycle flux for some cycle :math:`k` [Hill1989]_,
+
+    .. math::
+
+        J_{k} = (\Pi_{+} - \Pi_{-}) \Sigma_{k} / \Sigma,
+
+    where :math:`(\Pi_{+} - \Pi_{-}) \Sigma_{k}` is the sum of all
+    flux diagrams for cycle :math:`k` and :math:`\Sigma` is the sum
+    of all directional diagrams for the kinetic diagram.
+
+    References
+    ----------
+    .. [Hill1989] T. L. Hill (1989). "Free Energy Transduction
+        and Biochemical Cycle Kinetics." Springer-Verlag.
     """
     # Number of nodes/states
     n_states = G.number_of_nodes()
@@ -164,7 +196,10 @@ def calc_sigma(G, dirpar_edges, key="name", output_strings=True):
 
 def calc_sigma_K(G, cycle, flux_diags, key="name", output_strings=True):
     """
-    Calculates sigma_K, the sum of all directional flux diagrams.
+    Generates the expression for the path-based componenet of the
+    sum of flux diagrams for some `cycle` in kinetic diagram `G`.
+    The sum of flux diagrams is used in calculating net
+    cycle fluxes [Hill1989]_.
 
     Parameters
     ----------
@@ -194,6 +229,27 @@ def calc_sigma_K(G, cycle, flux_diags, key="name", output_strings=True):
     sigma_K_str : str
         Sum of rate products of directional flux diagram edges pointing to
         input cycle in string form.
+
+    Notes
+    -----
+    The expression generated here is important for generating
+    the net cycle flux expressions. The net cycle flux for some
+    cycle :math:`k` is [Hill1989]_,
+
+    .. math::
+
+        J_{k} = (\Pi_{+} - \Pi_{-}) \Sigma_{k} / \Sigma,
+
+    where :math:`(\Pi_{+} - \Pi_{-}) \Sigma_{k}` is the sum of all
+    flux diagrams for cycle :math:`k` and :math:`\Sigma` is the sum
+    of all directional diagrams for the kinetic diagram.
+    :math:`\Sigma_{k}` is the path-based component of the flux diagram
+    sum. For cycles with no flux diagrams, :math:`\Sigma_{k} = 1`.
+
+    References
+    ----------
+    .. [Hill1989] T. L. Hill (1989). "Free Energy Transduction
+        and Biochemical Cycle Kinetics." Springer-Verlag.
     """
     if isinstance(flux_diags, list) == False:
         print(
@@ -248,8 +304,10 @@ def calc_sigma_K(G, cycle, flux_diags, key="name", output_strings=True):
 
 def calc_pi_difference(G, cycle, order, key="name", output_strings=True):
     """
-    Calculates the difference of the forward and reverse rate products for a
-    given cycle, where forward rates are defined as counter clockwise.
+    Generates the expression for the cycle-based componenet of the
+    sum of flux diagrams for some `cycle` in kinetic diagram `G`.
+    The sum of flux diagrams is used in calculating net
+    cycle fluxes [Hill1989]_.
 
     Parameters
     ----------
@@ -280,6 +338,29 @@ def calc_pi_difference(G, cycle, order, key="name", output_strings=True):
     pi_diff_str : str
         String of difference of product of counter clockwise cycle rates and
         clockwise cycle rates.
+
+    Notes
+    -----
+    The expression generated here is important for generating
+    the net cycle flux expressions. The net cycle flux for some
+    cycle :math:`k` is [Hill1989]_,
+
+    .. math::
+
+        J_{k} = (\Pi_{+} - \Pi_{-}) \Sigma_{k} / \Sigma,
+
+    where :math:`(\Pi_{+} - \Pi_{-}) \Sigma_{k}` is the sum of all
+    flux diagrams for cycle :math:`k` and :math:`\Sigma` is the sum
+    of all directional diagrams for the kinetic diagram.
+    :math:`\Pi_{+} - \Pi_{-}` is the cycle-based component of the flux
+    diagram sum, where :math:`\Pi_{+}` and :math:`\Pi_{-}` are the
+    forward and reverse rate-products along cycle :math:`k` and
+    the forward (i.e. positive) direction is counter-clockwise (CCW).
+
+    References
+    ----------
+    .. [Hill1989] T. L. Hill (1989). "Free Energy Transduction
+        and Biochemical Cycle Kinetics." Springer-Verlag.
     """
     # check that the input cycle is in the correct order
     ordered_cycle = _get_ordered_cycle(G, cycle)
@@ -317,12 +398,8 @@ def calc_pi_difference(G, cycle, order, key="name", output_strings=True):
 
 def calc_thermo_force(G, cycle, order, key="name", output_strings=True):
     """
-    Calculates the thermodynamic driving force for a given cycle in diagram G.
-    The driving force is calculated as the natural log of the ratio of the
-    forward rate product and the reverse rate product in the cycle, where the
-    forward direction is defined as counter clockwise. The value returned should
-    be multiplied by 'kT' to obtain the actual thermodynamic force, in units of
-    energy.
+    Generates the expression for the thermodynamic driving force
+    for some `cycle` in the kinetic diagram `G`.
 
     Parameters
     ----------
@@ -354,6 +431,28 @@ def calc_thermo_force(G, cycle, order, key="name", output_strings=True):
     parsed_thermo_force_str : SymPy function
         The thermodynamic force equation in SymPy function form. Should be
         multiplied by 'kT' to get actual thermodynamic force.
+
+    Notes
+    -----
+    The expression generated here is used to calculate the thermodynamic
+    driving force. The thermodynamic driving force for some cycle
+    :math:`k` is [Hill1989]_,
+
+    .. math::
+
+        \chi_{k} = kT \ln \left( \frac{\Pi_{+}}{\Pi_{-}} \right),
+
+    where :math:`\Pi_{+}` and :math:`\Pi_{-}` are the forward
+    and reverse rate-products along cycle :math:`k` and the forward
+    (i.e. positive) direction is counter-clockwise (CCW). The
+    returned expression does not include :math:`kT`. At equilibrium
+    the thermodynamic driving force for any cycle is zero
+    (i.e. :math:`\chi_{k} = 0`).
+
+    References
+    ----------
+    .. [Hill1989] T. L. Hill (1989). "Free Energy Transduction
+        and Biochemical Cycle Kinetics." Springer-Verlag.
     """
     # check that the input cycle is in the correct order
     ordered_cycle = _get_ordered_cycle(G, cycle)
@@ -394,7 +493,8 @@ def calc_thermo_force(G, cycle, order, key="name", output_strings=True):
 
 def calc_state_probs(G, key="name", output_strings=True):
     """
-    Calculates state probabilities directly.
+    Generates the state probability expressions using the diagram method
+    developed by King and Altman [King1956]_ and Hill [Hill1989]_.
 
     Parameters
     ----------
@@ -417,6 +517,36 @@ def calc_state_probs(G, key="name", output_strings=True):
         Array of state probabilities for N states, [p1, p2, p3, ..., pN].
     state_probs_sympy : SymPy object
         List of analytic SymPy state probability functions.
+
+    Notes
+    -----
+    The algebraic expressions for the state probabilities (at steady-state)
+    are created directly from the directional diagrams. Subsets of the
+    directional diagrams are summed based on a common target state. For some
+    state :math:`i` the sum of directional diagrams (i.e., rate-products)
+    with target state :math:`i` yields the unnormalized state probability
+    expression [Hill1989]_,
+
+    .. math::
+
+        \Omega_{i} = \sum \text{directional diagrams for state }i.
+
+    The state probabilities are
+
+    .. math::
+
+        p_{i} = \frac{\Omega_i}{\Sigma},
+
+    where :math:`\Sigma` is the sum of all directional diagrams (i.e. all
+    :math:`\Omega_i`s) for the kinetic diagram.
+
+    References
+    ----------
+    .. [King1956] E. L. King, C. Altman (1956). "A Schematic Method of Deriving
+        the Rate Laws for Enzyme-Catalyzed Reactions." The Journal of Physical
+        Chemistry 1956, 60, 1375–1378.
+    .. [Hill1989] T. L. Hill (1989). "Free Energy Transduction
+        and Biochemical Cycle Kinetics." Springer-Verlag.
     """
     dirpar_edges = diagrams.generate_directional_diagrams(G, return_edges=True)
     state_probs = calc_state_probs_from_diags(
@@ -429,7 +559,8 @@ def calc_state_probs(G, key="name", output_strings=True):
 
 def calc_net_cycle_flux(G, cycle, order, key="name", output_strings=True):
     """
-    Calculates net cycle flux for a given cycle in diagram G.
+    Generates the expression for the net cycle flux for some `cycle`
+    in kinetic diagram `G`.
 
     Parameters
     ----------
@@ -454,6 +585,26 @@ def calc_net_cycle_flux(G, cycle, order, key="name", output_strings=True):
         Net cycle flux for input cycle.
     net_cycle_flux_func : SymPy object
         Analytic net cycle flux SymPy function.
+
+    Notes
+    -----
+    The net cycle flux for some cycle :math:`k` is [Hill1989]_,
+
+    .. math::
+
+        J_{k} = (\Pi_{+} - \Pi_{-}) \Sigma_{k} / \Sigma,
+
+    where :math:`(\Pi_{+} - \Pi_{-}) \Sigma_{k}` is the sum of all
+    flux diagrams for cycle :math:`k` and :math:`\Sigma` is the sum
+    of all directional diagrams for the kinetic diagram.
+    :math:`\Pi_{+}` and :math:`\Pi_{-}` are the forward and reverse
+    rate-products along cycle :math:`k` where the forward
+    (i.e. positive) direction is counter-clockwise (CCW).
+
+    References
+    ----------
+    .. [Hill1989] T. L. Hill (1989). "Free Energy Transduction
+        and Biochemical Cycle Kinetics." Springer-Verlag.
     """
     dirpar_edges = diagrams.generate_directional_diagrams(G, return_edges=True)
     flux_diags = diagrams.generate_flux_diagrams(G, cycle)
@@ -481,10 +632,10 @@ def calc_net_cycle_flux(G, cycle, order, key="name", output_strings=True):
 
 def calc_state_probs_from_diags(G, dirpar_edges, key="name", output_strings=True):
     """
-    Calculates state probabilities and generates analytic function strings from
-    input diagram and directional diagrams. If directional
-    diagrams are already generated, this offers faster calculation than
-    `calc_state_probs`.
+    Generates the state probability expressions using the diagram method
+    developed by King and Altman [King1956]_ and Hill [Hill1989]_. If
+    directional diagram edges are already generated this offers better
+    performance than :func:`calc_state_probs`.
 
     Parameters
     ----------
@@ -512,6 +663,14 @@ def calc_state_probs_from_diags(G, dirpar_edges, key="name", output_strings=True
     norm : str
         Analytic state multiplicity function normalization function in
         string form. This is the sum of all multiplicty functions.
+
+    References
+    ----------
+    .. [King1956] E. L. King, C. Altman (1956). "A Schematic Method of Deriving
+        the Rate Laws for Enzyme-Catalyzed Reactions." The Journal of Physical
+        Chemistry 1956, 60, 1375–1378.
+    .. [Hill1989] T. L. Hill (1989). "Free Energy Transduction
+        and Biochemical Cycle Kinetics." Springer-Verlag.
     """
     # get the number of nodes/states
     n_states = G.number_of_nodes()
@@ -569,10 +728,9 @@ def calc_net_cycle_flux_from_diags(
     G, dirpar_edges, cycle, order, key="name", output_strings=True
 ):
     """
-    Calculates net cycle flux and generates analytic function strings from
-    input diagram and directional diagrams. If directional
-    diagrams are already generated, this offers faster calculation than
-    `calc_net_cycle_flux`.
+    Generates the expression for the net cycle flux for some `cycle`
+    in kinetic diagram `G`. If directional diagram edges are already
+    generated this offers better performance than :func:`calc_net_cycle_flux`.
 
     Parameters
     ----------

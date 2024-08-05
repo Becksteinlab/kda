@@ -290,12 +290,12 @@ def _get_cofactor_matrix(K_laplace):
     decomposition to get the cofactor matrix for the input Laplacian matrix.
 
     Parameters
-    ==========
+    ----------
     K_laplace : array
         `NxN` Laplacian matrix, where 'N' is the number of nodes.
 
     Returns
-    =======
+    -------
     K_cof : array
         Cofactor matrix for the input Laplacian matrix.
     """
@@ -311,22 +311,47 @@ def _get_cofactor_matrix(K_laplace):
 
 def enumerate_partial_diagrams(G):
     """
-    Quantifies the number of partial diagrams/spanning trees that can be
-    generated from an input graph. This implements Kirchhoff's theroem by
-    generating the adjacency matrix from the input matrix, generating the
-    Laplacian matrix from the adjacency matrix, then getting the cofactor
-    matrix of the Laplacian matrix.
+    Quantifies the number of partial diagrams (undirected spanning
+    trees) that can be generated from an input kinetic diagram `G`.
 
     Parameters
-    ==========
+    ----------
     G : NetworkX MultiDiGraph
         Input diagram
 
     Returns
-    =======
+    -------
     n_partials : int
         The number of unique partial diagrams (spanning trees) that can be
         generated from a graph represented by the input rate matrix.
+
+    Notes
+    -----
+    This implements Kirchhoff's theroem [1]_ (also known as the
+    Matrix-Tree theorem [2]_) by generating the adjacency matrix
+    from the input diagram, generating the Laplacian matrix from
+    the adjacency matrix, then getting the cofactor matrix of the
+    Laplacian matrix. All cofactors are equal and equal to the
+    number of undirected spanning trees.
+
+    A more sophistocated version of this function is available in
+    the `NetworkX` library [3]_, (i.e. `number_of_spanning_trees`).
+
+    References
+    ----------
+    .. [1] Wikipedia
+       "Kirchhoff's theorem."
+       https://en.wikipedia.org/wiki/Kirchhoff%27s_theorem
+    .. [2] Kirchhoff, G. R.
+        Über die Auflösung der Gleichungen, auf welche man
+        bei der Untersuchung der linearen Vertheilung
+        Galvanischer Ströme geführt wird
+        Annalen der Physik und Chemie, vol. 72, pp. 497-508, 1847.
+    .. [3] Aric A. Hagberg, Daniel A. Schult and Pieter J. Swart,
+        “Exploring network structure, dynamics, and function using
+        NetworkX”, in Proceedings of the 7th Python in Science
+        Conference (SciPy2008), Gäel Varoquaux, Travis Vaught, and
+        Jarrod Millman (Eds), (Pasadena, CA USA), pp. 11–15, Aug 2008
     """
     # get the adjacency matrix for K
     K_adj = nx.to_numpy_array(G)
@@ -351,7 +376,8 @@ def enumerate_partial_diagrams(G):
 
 def generate_partial_diagrams(G, return_edges=False):
     """
-    Generates all partial diagrams for input diagram G.
+    Generates all partial diagrams (undirected spanning trees)
+    for kinetic diagram `G`.
 
     Parameters
     ----------
@@ -406,7 +432,7 @@ def generate_partial_diagrams(G, return_edges=False):
 
 def generate_directional_diagrams(G, return_edges=False):
     """
-    Generates all directional diagrams for input diagram G.
+    Generates all directional diagrams for kinetic diagram `G`.
 
     Parameters
     ----------
@@ -460,8 +486,7 @@ def generate_directional_diagrams(G, return_edges=False):
 
 def generate_flux_diagrams(G, cycle):
     """
-    Creates all of the directional flux diagrams for the given cycle in the
-    diagram G.
+    Generates all flux diagrams for `cycle` in the kinetic diagram `G`.
 
     Parameters
     ----------
@@ -474,9 +499,9 @@ def generate_flux_diagrams(G, cycle):
     Returns
     -------
     flux_diagrams : list of NetworkX MultiDiGraph objects
-        List of directional flux diagrams. Diagrams contain the input cycle
-        where remaining edges follow path pointing to cycle. Cycle nodes are
-        labeled by attribute 'is_target'.
+        List of flux diagrams. Diagrams contain the input cycle
+        where remaining edges follow path pointing to cycle.
+        Cycle nodes are labeled by attribute 'is_target'.
     """
     if sorted(cycle) == sorted(G.nodes):
         print(
@@ -521,7 +546,7 @@ def generate_flux_diagrams(G, cycle):
 
 def generate_all_flux_diagrams(G):
     """
-    Creates all of the directional flux diagrams for the diagram G.
+    Generates all flux diagrams for the kinetic diagram `G`.
 
     Parameters
     ----------
