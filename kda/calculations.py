@@ -141,7 +141,7 @@ def calc_sigma(G, dirpar_edges, key="name", output_strings=True):
     :math:`i` (the sum of directional diagrams for state :math:`i`)
     and :math:`\Sigma` is the sum of all directional diagrams.
 
-    Additionally `Sigma` is used when calculating the net
+    Additionally :math:`\Sigma` is used when calculating the net
     cycle flux for some cycle :math:`k` [Hill1989]_,
 
     .. math::
