@@ -1,17 +1,16 @@
-.. kda documentation master file, created by
-   sphinx-quickstart on Thu Mar 15 13:55:56 2018.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
 Kinetic Diagram Analysis Documentation
 ======================================
 
-.. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+Python package used for the analysis of kinetic diagrams using the diagram
+method developed by King and Altman :footcite:`king_schematic_1956` and
+Hill :footcite:`hill_studies_1966`.
 
-   api
+The following are kinetic diagrams from the
+`KDA examples <https://github.com/Becksteinlab/kda-examples>`_ repository.
 
+|img_3_input| |img_4wl|
+
+|img_5wl| |img_6wl|
 
 Getting involved
 ================
@@ -19,31 +18,15 @@ Getting involved
 Please report **bugs** or **enhancement requests** through the `Issue
 Tracker <https://github.com/Becksteinlab/kda/issues>`_.
 
-Installing Kinetic Diagram Analysis
-===================================
+.. toctree::
+   :maxdepth: 2
+   :caption: Contents:
 
-The easiest approach to install is to use pip_.
-
-Installation with `pip <https://pip.pypa.io/en/latest/>`_ and a
-*minimal set of dependencies*:
-
-.. code-block:: bash
-
-  pip install kda
-
-Source Code
-===========
-
-**Source code** is available from
-https://github.com/Becksteinlab/kda under the `GNU General Public License,
-Version 3 <https://www.gnu.org/licenses/gpl-3.0.en.html>`_. Obtain the sources
-with `git <https://git-scm.com/>`_:
-
-.. code-block:: bash
-
-   git clone https://github.com/Becksteinlab/kda.git
-
-Indices and tables
-==================
+   usage
+   api
 
 * :ref:`genindex`
+
+References
+==========
+.. footbibliography::

@@ -4,7 +4,7 @@
 # Author: Nikolaus C. Awtrey
 #
 """
-Kinetic Diagram Analysis: Differential Equations
+Differential Equation Solvers
 =========================================================================
 This file contains a host of functions aimed at the analysis of biochemical
 kinetic diagrams via differential equations.

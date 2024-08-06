@@ -4,14 +4,17 @@
 # Author: Nikolaus C. Awtrey
 #
 """
-Kinetic Diagram Analysis: Algebraic Expressions
+Algebraic Expressions
 =========================================================================
 This file contains a host of functions aimed at creating SymPy/Python
 functions from algebraic expressions in string form.
 
+Functions
+=========
 .. autofunction:: construct_sympy_prob_funcs
 .. autofunction:: construct_sympy_net_cycle_flux_func
 .. autofunction:: construct_lambda_funcs
+
 """
 
 

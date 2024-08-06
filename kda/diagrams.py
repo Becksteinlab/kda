@@ -4,16 +4,26 @@
 # Author: Nikolaus C. Awtrey
 #
 """
-Kinetic Diagram Analysis: Diagram Generation
+Diagram Generation
 =========================================================================
-This file contains a host of functions aimed at the analysis of biochemical
-kinetic diagrams, using the methods of Hill.
+This file contains functions for generating partial diagrams (undirected
+spanning trees), directional diagrams, and flux diagrams using the
+diagram method developed by King and Altman :footcite:`king_schematic_1956`
+and Hill :footcite:`hill_studies_1966`.
 
+
+Functions
+=========
 .. autofunction:: enumerate_partial_diagrams
 .. autofunction:: generate_partial_diagrams
 .. autofunction:: generate_directional_diagrams
 .. autofunction:: generate_flux_diagrams
 .. autofunction:: generate_all_flux_diagrams
+
+References
+==========
+.. footbibliography::
+
 """
 
 import functools
@@ -327,31 +337,19 @@ def enumerate_partial_diagrams(G):
 
     Notes
     -----
-    This implements Kirchhoff's theroem [1]_ (also known as the
-    Matrix-Tree theorem [2]_) by generating the adjacency matrix
-    from the input diagram, generating the Laplacian matrix from
-    the adjacency matrix, then getting the cofactor matrix of the
-    Laplacian matrix. All cofactors are equal and equal to the
+    This implements Kirchhoff's matrix theroem
+    :footcite:`chakraborty_algorithms_2019` by generating the adjacency
+    matrix from the input diagram, generating the Laplacian matrix
+    from the adjacency matrix, then getting the cofactor matrix of
+    the Laplacian matrix. All cofactors are equal and equal to the
     number of undirected spanning trees.
 
     A more sophistocated version of this function is available in
-    the `NetworkX` library [3]_, (i.e. `number_of_spanning_trees`).
+    the `NetworkX` library :footcite:`hagberg_exploring_2008`
+    (see `here <https://networkx.org/documentation/stable/reference/
+    algorithms/generated/networkx.algorithms.tree.mst.
+    number_of_spanning_trees.html>`_).
 
-    References
-    ----------
-    .. [1] Wikipedia
-       "Kirchhoff's theorem."
-       https://en.wikipedia.org/wiki/Kirchhoff%27s_theorem
-    .. [2] Kirchhoff, G. R.
-        Über die Auflösung der Gleichungen, auf welche man
-        bei der Untersuchung der linearen Vertheilung
-        Galvanischer Ströme geführt wird
-        Annalen der Physik und Chemie, vol. 72, pp. 497-508, 1847.
-    .. [3] Aric A. Hagberg, Daniel A. Schult and Pieter J. Swart,
-        “Exploring network structure, dynamics, and function using
-        NetworkX”, in Proceedings of the 7th Python in Science
-        Conference (SciPy2008), Gäel Varoquaux, Travis Vaught, and
-        Jarrod Millman (Eds), (Pasadena, CA USA), pp. 11–15, Aug 2008
     """
     # get the adjacency matrix for K
     K_adj = nx.to_numpy_array(G)

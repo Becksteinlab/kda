@@ -19,6 +19,7 @@
       generate_K_string_matrix
       generate_edges
       get_ccw_cycle
+      retrieve_rate_matrix
    
    
 
