@@ -13,6 +13,7 @@
 
    .. autosummary::
    
+      matrix_solver
       svd_solver
    
    

@@ -4,17 +4,20 @@
 # Author: Nikolaus C. Awtrey
 #
 """
-Kinetic Diagram Analysis: Graph Utilities
+Graph Utilities
 =========================================================================
 This file contains a host of utility functions for NetworkX graphs.
 
-.. autofunction:: generate_K_string_matrix
+Functions
+=========
 .. autofunction:: generate_edges
+.. autofunction:: find_all_unique_cycles
+.. autofunction:: generate_K_string_matrix
 .. autofunction:: retrieve_rate_matrix
 .. autofunction:: add_node_attribute
 .. autofunction:: add_graph_attribute
-.. autofunction:: find_all_unique_cycles
 .. autofunction:: get_ccw_cycle
+
 """
 
 

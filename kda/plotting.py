@@ -4,12 +4,14 @@
 # Author: Nikolaus C. Awtrey
 #
 """
-Kinetic Diagram Analysis: Diagram Plotting
+Diagram Plotting
 =========================================================================
 This file contains a host of functions used for plotting various diagrams, such
 as partial, directional, and flux diagrams. Also contains a function to plot
 results from `ode.ode_solver`.
 
+Functions
+=========
 .. autofunction:: draw_diagrams
 .. autofunction:: draw_cycles
 .. autofunction:: draw_ode_results

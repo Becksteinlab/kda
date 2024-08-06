@@ -13,9 +13,9 @@
 
    .. autosummary::
    
-      draw_ODE_results
       draw_cycles
       draw_diagrams
+      draw_ode_results
    
    
 

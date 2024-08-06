@@ -19,18 +19,20 @@ sys.path.insert(0, os.path.abspath('..'))
 
 import kda
 
-
 # -- Project information -----------------------------------------------------
 
 project = 'Kinetic Diagram Analysis'
 copyright = ("2020, Nikolaus Awtrey. Project structure based on the "
              "Computational Molecular Science Python Cookiecutter version 1.2")
-author = 'Nikolaus Awtrey'
+author = 'Nikolaus C. Awtrey'
 
-# The short X.Y version
-version = ''
-# The full version, including alpha/beta/rc tags
-release = ''
+# Dynamically calculate the version
+packageversion = __import__('kda').__version__
+# The short X.Y version.
+version = '.'.join(packageversion.split('.')[:2])
+# version = packageversion  # needed for right sitemap.xml URLs
+# The full version, including alpha/beta/rc tags.
+release = packageversion
 
 
 # -- General configuration ---------------------------------------------------
@@ -43,14 +45,18 @@ release = ''
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.autosummary',
     'sphinx.ext.autodoc',
+    'sphinx.ext.intersphinx',
     'sphinx.ext.mathjax',
     'sphinx.ext.viewcode',
     'sphinx.ext.napoleon',
-    'sphinx.ext.intersphinx',
+    'sphinx.ext.autosummary',
     'sphinx.ext.extlinks',
+    'sphinxcontrib.bibtex',
 ]
+
+bibtex_bibfiles = ['references.bib']
+
 
 autosummary_generate = True
 napoleon_google_docstring = False
@@ -74,7 +80,7 @@ master_doc = 'index'
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+# language = None
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -172,3 +178,49 @@ texinfo_documents = [
 
 
 # -- Extension configuration -------------------------------------------------
+
+
+# -- External Image Definitions ----------------------------------------------
+
+# Example entry:
+# .. |pic2| image:: http://my.url.com/my-picture2.png
+#     :alt: my-picture2
+#     :width: 300px
+#
+# To embed the images simply call their tag (i.e. |pic2|) or you can likely
+# just use the raw html --
+# .. raw:: html
+#
+#    <p style="height:22px">
+#      <a href="https://travis-ci.org/aio-libs/aiozmq" >
+#        <img src="https://travis-ci.org/aio-libs/aiozmq.svg?branch=master"/>
+#      </a>
+#    </p>
+
+url_base = "https://github.com/Becksteinlab/kda-examples/blob/master/kda_examples/"
+
+# A string of reStructuredText that will be included at the end of every source
+# file that is read.
+rst_epilog = """
+
+.. |img_3_input| image:: {url_base}test_model_3_state/diagrams/input.png?raw=true
+    :alt: 3-state model input diagram
+    :width: 300px
+
+.. |img_3_directional| image:: {url_base}test_model_3_state/diagrams/directional.png?raw=true
+    :alt: 3-state model directional diagrams
+    :width: 600px
+
+.. |img_4wl| image:: {url_base}test_model_4_state_leakage/diagrams/input.png?raw=true
+    :alt: 4-state model with leakage input diagram
+    :width: 300px
+
+.. |img_5wl| image:: {url_base}test_model_5_state_leakage/diagrams/input.png?raw=true
+    :alt: 5-state model with leakage input diagram
+    :width: 300px
+
+.. |img_6wl| image:: {url_base}test_model_6_state_leakage/diagrams/input.png?raw=true
+    :alt: 6-state model with leakage input diagram
+    :width: 300px
+
+""".format(url_base=url_base)

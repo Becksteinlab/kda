@@ -7,7 +7,7 @@ API Documentation
    kda.calculations
    kda.diagrams
    kda.expressions
-   kda.graph_utils
+   kda.plotting
    kda.ode
    kda.svd
-   kda.plotting
+   kda.graph_utils
