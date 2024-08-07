@@ -19,6 +19,11 @@ sys.path.insert(0, os.path.abspath('..'))
 
 import kda
 
+# debugging things to be removed
+print(os.getcwd())
+from kda.calculations import calc_state_probs
+
+
 # -- Project information -----------------------------------------------------
 
 project = 'Kinetic Diagram Analysis'
