@@ -1133,11 +1133,6 @@ def test_ccw():
 
 class TestTransitionFluxes:
 
-    @pytest.fixture(scope="class")
-    def Model_3_State(k_vals):
-        return StateProbs3(k_vals)
-
-
     @pytest.mark.parametrize(
         "i, j",
         [
@@ -1268,3 +1263,10 @@ class TestTransitionFluxes:
             # attempt to build the symbolic transition
             # flux expressions
             model.get_transition_flux(state_i=1, state_j=2, symbolic=True)
+
+
+class TestKineticModel:
+
+    def test_invalid_inputs(self):
+        with pytest.raises(RuntimeError):
+            model = kda.KineticModel(K=None, G=None)
