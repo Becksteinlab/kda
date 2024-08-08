@@ -19,14 +19,6 @@ sys.path.insert(0, os.path.abspath('..'))
 
 import kda
 
-# debugging things to be removed
-print(">" * 30)
-print(os.getcwd())
-print(kda)
-print(kda.__path__)
-print(kda.diagrams)
-print("<" * 30)
-
 # -- Project information -----------------------------------------------------
 
 project = 'Kinetic Diagram Analysis'

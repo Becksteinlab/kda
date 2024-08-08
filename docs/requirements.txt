@@ -60,3 +60,5 @@ urllib3==2.2.2
     # via requests
 zipp==3.19.2
     # via importlib-metadata
+numpy
+
