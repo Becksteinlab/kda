@@ -223,4 +223,8 @@ rst_epilog = """
     :alt: 6-state model with leakage input diagram
     :width: 300px
 
+.. |img_8wl| image:: {url_base}test_model_8_state_leakage/diagrams/input.png?raw=true
+    :alt: 8-state model with leakage input diagram
+    :width: 300px
+
 """.format(url_base=url_base)

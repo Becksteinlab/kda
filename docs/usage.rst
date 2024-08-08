@@ -28,7 +28,7 @@ with `git <https://git-scm.com/>`_:
 Calculating State Probabilities
 -------------------------------
 
-KDA has a host of capabilities, all beginning with defining the connections and reaction rates (if desired) for your system. This is done by constructing an `NxN`array with diagonal values set to zero, and off-diagonal values `(i, j)` representing connections (and reaction rates) between states `i` and `j`. If desired, these can be the edge weights (denoted `kij`), but they can be specified later.
+KDA has a host of capabilities, all beginning with defining the connections and reaction rates (if desired) for your system. This is done by constructing an ``NxN`` array with diagonal values set to zero, and off-diagonal values ``(i, j)`` representing connections (and reaction rates) between states ``i`` and ``j``. If desired, these can be the edge weights (denoted ``kij``), but they can be specified later.
 
 The following is an example for a simple 3-state model with all nodes connected:
 
@@ -73,7 +73,7 @@ As expected, the state probabilities are equal because all edge weights are set 
 Displaying Diagrams
 -------------------
 
-Continuing with the previous example, the KDA `diagrams` and `plotting` modules can be leveraged to display the diagrams that lead to the above probability expression:
+Continuing with the previous example, the KDA ``diagrams`` and ``plotting`` modules can be leveraged to display the diagrams that lead to the above probability expression:
 
 .. code-block:: python
 
@@ -97,7 +97,7 @@ Continuing with the previous example, the KDA `diagrams` and `plotting` modules 
 	    label="directional_panel",
 	)
 
-This will generate two files, `input.png` and `directional_panel.png`, in your current working directory:
+This will generate two files, ``input.png`` and ``directional_panel.png``, in your current working directory:
 
 **input.png**
 
@@ -110,4 +110,5 @@ This will generate two files, `input.png` and `directional_panel.png`, in your c
 **NOTE:** For more examples (like the following) visit the
 `KDA examples <https://github.com/Becksteinlab/kda-examples>`_ repository:
 
-|img_4wl| |img_5wl| |img_6wl|
+|img_4wl| |img_5wl|
+|img_6wl| |img_8wl|
