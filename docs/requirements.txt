@@ -60,3 +60,10 @@ urllib3==2.2.2
     # via requests
 zipp==3.19.2
     # via importlib-metadata
+# add kda dependencies so
+# API docs can build properly
+numpy
+sympy
+networkx
+scipy
+matplotlib
