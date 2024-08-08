@@ -34,41 +34,65 @@ The following is an example for a simple 3-state model with all nodes connected:
 
 .. code-block:: python
 
-	import numpy as np
-	import networkx as nx
-	from kda import graph_utils, calculations
+  import numpy as np
+  import kda
 
-	# define matrix with reaction rates set to 1
-	K = np.array(
-	    [
-	        [0, 1, 1],
-	        [1, 0, 1],
-	        [1, 1, 0],
-	    ]
-	)
-	# initialize an empty graph object
-	G = nx.MultiDiGraph()
-	# populate the edge data
-	graph_utils.generate_edges(G, K, val_key="val", name_key="name")
-	# calculate the state probabilities
-	state_probabilities = calculations.calc_state_probs(G, key="val")
-	# get the state probabilities in expression form
-	state_probability_str = calculations.calc_state_probs(G, key="name", output_strings=True)
-	# print results
-	print("State probabilities: \n", state_probabilities)
-	print("State 1 probability expression: \n", state_probability_str[0])
+  # define matrix with reaction rates set to 1
+  K = np.array(
+      [
+          [0, 1, 1],
+          [1, 0, 1],
+          [1, 1, 0],
+      ]
+  )
+  # create a KineticModel from the rate matrix
+  model = kda.KineticModel(K=K, G=None)
+  # get the state probabilities in numeric form
+  model.build_state_probabilities(symbolic=False)
+  print("State probabilities: \n", model.probabilities)
+  # get the state probabilities in expression form
+  model.build_state_probabilities(symbolic=True)
+  print("State 1 probability expression: \n", model.probabilities[0])
 
 The output from the above example:
 
 .. code-block:: console
 
-	$ python example_script.py
-	State probabilities:
-	 [0.33333333 0.33333333 0.33333333]
-	State 1 probability expression:
-	 (k21*k31 + k21*k32 + k23*k31)/(k12*k23 + k12*k31 + k12*k32 + k13*k21 + k13*k23 + k13*k32 + k21*k31 + k21*k32 + k23*k31)
+  $ python example.py
+  State probabilities:
+   [0.33333333 0.33333333 0.33333333]
+  State 1 probability expression:
+   (k21*k31 + k21*k32 + k23*k31)/(k12*k23 + k12*k31 + k12*k32 + k13*k21 + k13*k23 + k13*k32 + k21*k31 + k21*k32 + k23*k31)
 
 As expected, the state probabilities are equal because all edge weights are set to a value of 1.
+
+Calculating Transition Fluxes
+-----------------------------
+Continuing with the previous example, the transition fluxes (one-way or net) can be calculated from the :class:`~kda.core.KineticModel`:
+
+.. code-block:: python
+
+  # make sure the symbolic probabilities have been generated
+  model.build_state_probabilities(symbolic=True)
+  # iterate over all edges
+  print("One-way transition fluxes:")
+  for (i, j) in model.G.edges():
+      flux = model.get_transition_flux(state_i=i+1, state_j=j+1, net=False, symbolic=True)
+      print(f"j_{i+1}{j+1} = {flux}")
+
+The output from the above example:
+
+.. code-block:: console
+
+  $ python example.py
+  One-way transition fluxes:
+  j_12 = (k12*k21*k31 + k12*k21*k32 + k12*k23*k31)/(k12*k23 + k12*k31 + k12*k32 + k13*k21 + k13*k23 + k13*k32 + k21*k31 + k21*k32 + k23*k31)
+  j_13 = (k13*k21*k31 + k13*k21*k32 + k13*k23*k31)/(k12*k23 + k12*k31 + k12*k32 + k13*k21 + k13*k23 + k13*k32 + k21*k31 + k21*k32 + k23*k31)
+  j_21 = (k12*k21*k31 + k12*k21*k32 + k13*k21*k32)/(k12*k23 + k12*k31 + k12*k32 + k13*k21 + k13*k23 + k13*k32 + k21*k31 + k21*k32 + k23*k31)
+  j_23 = (k12*k23*k31 + k12*k23*k32 + k13*k23*k32)/(k12*k23 + k12*k31 + k12*k32 + k13*k21 + k13*k23 + k13*k32 + k21*k31 + k21*k32 + k23*k31)
+  j_31 = (k12*k23*k31 + k13*k21*k31 + k13*k23*k31)/(k12*k23 + k12*k31 + k12*k32 + k13*k21 + k13*k23 + k13*k32 + k21*k31 + k21*k32 + k23*k31)
+  j_32 = (k12*k23*k32 + k13*k21*k32 + k13*k23*k32)/(k12*k23 + k12*k31 + k12*k32 + k13*k21 + k13*k23 + k13*k32 + k21*k31 + k21*k32 + k23*k31)
+
 
 Displaying Diagrams
 -------------------
@@ -77,25 +101,25 @@ Continuing with the previous example, the KDA ``diagrams`` and ``plotting`` modu
 
 .. code-block:: python
 
-	import os
-	from kda import diagrams, plotting
+  import os
+  from kda import plotting
 
-	# generate the set of directional diagrams for G
-	directional_diagrams = diagrams.generate_directional_diagrams(G)
-	# get the current working directory
-	cwd = os.getcwd()
-	# specify the positions of all nodes in NetworkX fashion
-	node_positions = {0: [0, 1], 1: [-0.5, 0], 2: [0.5, 0]}
-	# plot and save the input diagram
-	plotting.draw_diagrams(G, pos=node_positions, path=cwd, label="input")
-	# plot and save the directional diagrams as a panel
-	plotting.draw_diagrams(
-	    directional_diagrams,
-	    pos=node_positions,
-	    path=cwd,
-	    cbt=True,
-	    label="directional_panel",
-	)
+  # generate the directional diagrams
+  model.build_directional_diagrams()
+  # get the current working directory
+  cwd = os.getcwd()
+  # specify the positions of all nodes in NetworkX fashion
+  node_positions = {0: [0, 1], 1: [-0.5, 0], 2: [0.5, 0]}
+  # plot and save the input diagram
+  plotting.draw_diagrams(model.G, pos=node_positions, path=cwd, label="input")
+  # plot and save the directional diagrams as a panel
+  plotting.draw_diagrams(
+    model.directional_diagrams,
+    pos=node_positions,
+    path=cwd,
+    cbt=True,
+    label="directional_panel",
+  )
 
 This will generate two files, ``input.png`` and ``directional_panel.png``, in your current working directory:
 
@@ -103,7 +127,7 @@ This will generate two files, ``input.png`` and ``directional_panel.png``, in yo
 
 |img_3_input|
 
-**directional.png**
+**directional_panel.png**
 
 |img_3_directional|
 
