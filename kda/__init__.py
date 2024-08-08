@@ -4,9 +4,24 @@
 # Author: Nikolaus C. Awtrey
 #
 """
-Kinetic Diagram Analysis (kda)
+Core functions of Kinetic Diagram Analysis
 =========================================================================
-Python package used for the analysis of biochemical kinetic diagrams.
+
+The core class is a :class:`~kda.core.KineticModel` which contains
+all the system information (kinetic diagram, transition rates, etc.).
+
+To get started, load the KineticModel::
+
+  model = KineticModel(K=rate_matrix, G=nx.MultiDiGraph)
+
+With the model created the state probability expressions can be
+generated using the built-in methods::
+
+  model.build_state_probabilities(symbolic=True)
+
+Other methods are available to generate the various graphs or
+calculate fluxes.
+
 """
 
 # Add imports here

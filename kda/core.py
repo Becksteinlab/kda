@@ -4,10 +4,20 @@
 # Author: Nikolaus C. Awtrey
 #
 """
-Kinetic Diagram Analysis: Core
+Core
 ======================================================================
 The :class:`~kda.core.KineticModel` class contains all the information
 for a kinetic model.
+
+Classes
+=======
+
+.. autoclass:: KineticModel
+   :members:
+
+References
+==========
+.. footbibliography::
 """
 
 import networkx as nx
@@ -27,42 +37,47 @@ class KineticModel(object):
 	==========
 	cycles : list of lists of int
 		All cycles in the kinetic diagram. This attribute becomes
-		available after running the `build_cycles` method.
-    partial_diagrams : array of Networkx Graphs
-        The set of partial diagrams (i.e. spanning trees) for the
-        kinetic diagram. This attribute becomes available after
-        running the `build_partial_diagrams` method.
-    directional_diagrams : array of Networkx MultiDiGraphs
-        The set of directional diagrams for the kinetic diagram.
-        This attribute becomes available after running the
-        `build_directional_diagrams` method.
+		available after running the
+		:meth:`~kda.core.KineticModel.build_cycles` method.
+	partial_diagrams : array of Networkx Graphs
+		The set of partial diagrams (i.e. spanning trees) for the
+		kinetic diagram. This attribute becomes available after
+		running the :meth:`~kda.core.KineticModel.build_partial_diagrams`
+		method.
+	directional_diagrams : array of Networkx MultiDiGraphs
+		The set of directional diagrams for the kinetic diagram.
+		This attribute becomes available after running the
+		:meth:`~kda.core.KineticModel.build_directional_diagrams` method.
 	flux_diagrams : list of lists of Networkx MultiDiGraphs
-        The set of flux diagrams for each cycle in the kinetic
-        diagram. This attribute becomes available after running
-        the `build_flux_diagrams` method.
+		The set of flux diagrams for each cycle in the kinetic
+		diagram. This attribute becomes available after running
+		the :meth:`~kda.core.KineticModel.build_flux_diagrams` method.
 	probabilities : array of floats or list of SymPy expressions
 		The steady-state probabilities for all states in the kinetic
 		diagram. Probabilities are either an array of numeric values
 		or the algebraic expressions. This attribute becomes available
-		after running the `build_state_probabilities` method.
+		after running the
+		:meth:`~kda.core.KineticModel.build_state_probabilities` method.
+
 	"""
 
 	def __init__(self, K=None, G=None):
 		"""
 		Parameters
 		==========
-	    K : ndarray (optional)
-	        'NxN' array where 'N' is the number of nodes in the diagram `G`.
-	        Adjacency matrix for `G` where each element kij is the edge weight
-	        (i.e. transition rate constant). For example, for a 2-state model
-	        with `k12=3` and `k21=4`, `K=[[0, 3], [4, 0]]`. Default is `None`.
-	    G : NetworkX MultiDiGraph (optional)
-	        Input diagram. Default is `None`.
+		K : ndarray (optional)
+			``NxN`` array where ``N`` is the number of nodes in the
+			diagram ``G``. Adjacency matrix for ``G`` where each element
+			``kij`` is the edge weight (i.e. transition rate constant).
+			For example, for a 2-state model with ``k12=3`` and ``k21=4``,
+			``K=[[0, 3], [4, 0]]``. Default is ``None``.
+		G : NetworkX MultiDiGraph (optional)
+			Input diagram. Default is ``None``.
 
 		Raises
-	    ======
-	    RuntimeError
-	    	If both `K` and `G` are `None`.
+		======
+		RuntimeError
+			If both ``K`` and ``G`` are ``None``.
 		"""
 		if G is None or K is None:
 			if K is not None:
@@ -87,31 +102,43 @@ class KineticModel(object):
 
 
 	def build_cycles(self):
-		"""Builds all cycles from the kinetic diagram."""
+		"""Builds all cycles from the kinetic diagram using
+		:meth:`~kda.graph_utils.find_all_unique_cycles()`.
+		"""
 		self.cycles = graph_utils.find_all_unique_cycles(self.G)
 
 
 	def build_partial_diagrams(self):
-		"""Builds the partial diagrams for the kinetic diagram."""
+		"""Builds the partial diagrams for the kinetic diagram using
+		:meth:`~kda.diagrams.generate_partial_diagrams()`.
+		"""
 		self.partial_diagrams = diagrams.generate_partial_diagrams(
 			self.G, return_edges=False)
 
 
 	def build_directional_diagrams(self):
-		"""Builds the directional diagrams for the kinetic diagram."""
+		"""Builds the directional diagrams for the kinetic diagram using
+		:meth:`~kda.diagrams.generate_directional_diagrams()`.
+		"""
 		self.directional_diagrams = diagrams.generate_directional_diagrams(
 			self.G, return_edges=False)
 
 
 	def build_flux_diagrams(self):
-		"""Builds the flux diagrams for the kinetic diagram."""
+		"""Builds the flux diagrams for the kinetic diagram using
+		:meth:`~kda.diagrams.generate_all_flux_diagrams()`.
+		"""
 		self.flux_diagrams = diagrams.generate_all_flux_diagrams(self.G)
 
 
 	def get_partial_diagram_count(self):
 		"""
-		Retrieves the number of partial diagrams that will
-		be created from the kinetic diagram.
+		Returns the number of partial diagrams that will
+		be created from the kinetic diagram. If partial diagrams
+		have already been generated with
+		:meth:`~kda.core.KineticModel.build_partial_diagrams()`
+		the count will simply be returned. Otherwise
+		:meth:`~kda.diagrams.enumerate_partial_diagrams()` is used.
 
 		Returns
 		=======
@@ -125,8 +152,14 @@ class KineticModel(object):
 
 	def get_directional_diagram_count(self):
 		"""
-		Retrieves the number of directional diagrams that will
-		be created from the kinetic diagram.
+		Returns the number of directional diagrams that will
+		be created from the kinetic diagram. If directional diagrams
+		have already been generated with
+		:meth:`~kda.core.KineticModel.build_directional_diagrams()`
+		the count will simply be returned. Otherwise
+		:meth:`~kda.core.KineticModel.get_partial_diagram_count()`
+		is used (there are ``N`` directional diagrams per partial
+		diagram for a kinetic diagram with ``N`` states).
 
 		Returns
 		=======
@@ -141,31 +174,36 @@ class KineticModel(object):
 
 	def get_flux_diagrams(self, cycle):
 		"""
-		Retrieves the flux diagrams for a specific cycle.
+		Retrieves the flux diagrams for a specific cycle using
+		:meth:`~kda.diagrams.generate_flux_diagrams()`.
 
 		Parameters
 		==========
-	    cycle : list of int
-	        List of node indices for cycle of interest, index zero.
-	        Order of node indices does not matter.
+		cycle : list of int
+			List of node indices for cycle of interest, index zero.
+			Order of node indices does not matter.
 
 		Returns
 		=======
 		The flux diagrams associated with the input cycle.
 		"""
+		# TODO: see if we can check if flux diagrams have been
+		# generated using `build_flux_diagrams`, then retrieve
+		# the correct diagrams based on `cycle`
 		return diagrams.generate_flux_diagrams(self.G, cycle)
 
 
 	def build_state_probabilities(self, symbolic=True):
 		"""
-		Builds the state probabilities for the kinetic diagram. Probabilities
+		Builds the state probabilities for the kinetic diagram using
+		:meth:`~kda.calculations.calc_state_probs()`. Probabilities
 		can be stored as raw values or symbolic algebraic expressions.
 
 		Parameters
 		==========
-	    symbolic : bool (optional)
-	        Used to determine whether raw values or symbolic
-	        expressions will be stored. Default is True.
+		symbolic : bool (optional)
+			Used to determine whether raw values or symbolic
+			expressions will be stored. Default is ``True``.
 		"""
 		# TODO: may be able to leverage `calc_state_probs_from_diags()`
 		# here, but it would require the user has already generated the
@@ -183,10 +221,9 @@ class KineticModel(object):
 
 
 	def get_transition_flux(self, state_i, state_j, net=True, symbolic=True):
-		"""
-		Creates the one-way or net transition fluxes between two states.
-		Net transition fluxes are calculated `J_ij = j_ij - j_ji`, where
-		`j_ij = k_ij * p_i` and `j_ji = k_ji * p_j`.
+		r"""
+		Generates the expressions for the one-way or net
+		transition fluxes between two states.
 
 		Parameters
 		==========
@@ -197,24 +234,41 @@ class KineticModel(object):
 		net : bool (optional)
 			Used to determine whether one-way transition fluxes
 			or net transition fluxes will be returned. Default
-			is True.
-	    symbolic : bool (optional)
-	        Used to determine whether raw values or symbolic
-	        expressions will be returned. Default is True.
+			is ``True``.
+		symbolic : bool (optional)
+			Used to determine whether raw values or symbolic
+			expressions will be returned. Default is ``True``.
 
 		Returns
 		=======
-		The transition flux (either one-way or net) from
-		state `i` to state `j`.
+		The transition flux (either one-way or net) from state ``i`` to
+		state ``j``.
 
-	    Raises
-	    ======
-	    ValueError
-	    	If the input states are the same (i.e. `i==j`).
-	    TypeError
-	    	If the stored state probability type (symbolic or numeric)
-	    	is a differnt type than the requested transition
-	    	flux type.
+		Raises
+		======
+		ValueError
+			If the input states are the same (i.e. ``i==j``).
+		TypeError
+			If the stored state probability type (symbolic or numeric)
+			is a differnt type than the requested transition
+			flux type.
+
+		Notes
+		-----
+		The expressions generated here quantify the one-way or
+		net probability flows between two states. The net transition flux
+		between two states is defined :footcite:`hill_free_1989`,
+
+		.. math::
+
+			J_{ij} = j_{ij} - j_{ji},
+
+		where :math:`j_{ij} = k_{ij} p_{i}` and :math:`j_{ji} = k_{ji} p_{j}`
+		are the one-way transition fluxes. For the one-way fluxes,
+		:math:`k_{ij}` is the kinetic rate from state :math:`i`
+		to state :math:`j` and :math:`p_{i}` is the state probability
+		for state :math:`i`.
+
 		"""
 		if state_i == state_j:
 			msg = "Input indices must be unique (i.e. i != j)."
