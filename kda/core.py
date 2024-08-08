@@ -68,7 +68,7 @@ class KineticModel(object):
 			if K is not None:
 				# if only K is input create the diagram
 				G = nx.MultiDiGraph()
-				graph_utils.generate_edges(G=G, K=K)
+				graph_utils.generate_edges(G=G, vals=K)
 			elif G is not None:
 				# if only G is input create the kinetic rate matrix
 				K = graph_utils.retrieve_rate_matrix(G)
@@ -170,8 +170,16 @@ class KineticModel(object):
 		# TODO: may be able to leverage `calc_state_probs_from_diags()`
 		# here, but it would require the user has already generated the
 		# directional diagrams as edges, which is probably atypical
+		# NOTE: currently hacking in the `key` parameters here
+		# assuming the edge attributes follow the name/val convention.
+		# eventually all calculation functions should be sophisticated
+		# enough where only `symbolic=True` is sufficient
+		if symbolic:
+			key = "name"
+		else:
+			key = "val"
 		self.probabilities = calculations.calc_state_probs(
-			self.G, output_strings=symbolic)
+			self.G, key=key, output_strings=symbolic)
 
 
 	def get_transition_flux(self, state_i, state_j, net=True, symbolic=True):

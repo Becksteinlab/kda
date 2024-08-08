@@ -28,221 +28,6 @@ from kda.exceptions import CycleError
     "state_probs_6_state",
     "symbolic_state_probs_6_state",
     )
-class StateProbs3:
-    def __init__(self, k_vals):
-        self.k_vals = k_vals
-
-    def return_probs(self, k12, k21, k23, k32, k13, k31):
-        P1 = k23 * k31 + k32 * k21 + k31 * k21
-        P2 = k13 * k32 + k32 * k12 + k31 * k12
-        P3 = k13 * k23 + k12 * k23 + k21 * k13
-        Sigma = P1 + P2 + P3  # Normalization factor
-        return np.array([P1, P2, P3]) / Sigma
-
-    def get_prob_expressions():
-        p_funcs = [
-            "k23 * k31 + k32 * k21 + k31 * k21",
-            "k13 * k32 + k32 * k12 + k31 * k12",
-            "k13 * k23 + k12 * k23 + k21 * k13",
-        ]
-        Sigma = "+".join(p_funcs)
-        exprs = expressions.construct_sympy_prob_funcs(p_funcs, Sigma)
-        return exprs
-
-
-class StateProbs4:
-    def __init__(self, k_vals):
-        self.k_vals = k_vals
-
-    def return_probs(self, k12, k21, k23, k32, k34, k43, k41, k14):
-        P1 = k43 * k32 * k21 + k23 * k34 * k41 + k21 * k34 * k41 + k41 * k32 * k21
-        P2 = k12 * k43 * k32 + k14 * k43 * k32 + k34 * k41 * k12 + k32 * k41 * k12
-        P3 = k43 * k12 * k23 + k23 * k14 * k43 + k21 * k14 * k43 + k41 * k12 * k23
-        P4 = k12 * k23 * k34 + k14 * k23 * k34 + k34 * k21 * k14 + k32 * k21 * k14
-        Sigma = P1 + P2 + P3 + P4  # Normalization factor
-        return np.array([P1, P2, P3, P4]) / Sigma
-
-
-class StateProbs4WL:
-    def __init__(self, k_vals):
-        self.k_vals = k_vals
-
-    def return_probs(self, k12, k21, k23, k32, k34, k43, k41, k14, k24, k42):
-        P1 = (
-            k43 * k32 * k21
-            + k23 * k34 * k41
-            + k21 * k34 * k41
-            + k41 * k32 * k21
-            + k32 * k42 * k21
-            + k24 * k34 * k41
-            + k34 * k42 * k21
-            + k32 * k24 * k41
-        )
-        P2 = (
-            k12 * k43 * k32
-            + k14 * k43 * k32
-            + k34 * k41 * k12
-            + k32 * k41 * k12
-            + k32 * k42 * k12
-            + k34 * k14 * k42
-            + k12 * k34 * k42
-            + k32 * k14 * k42
-        )
-        P3 = (
-            k43 * k12 * k23
-            + k23 * k14 * k43
-            + k21 * k14 * k43
-            + k41 * k12 * k23
-            + k12 * k42 * k23
-            + k14 * k24 * k43
-            + k12 * k24 * k43
-            + k14 * k42 * k23
-        )
-        P4 = (
-            k12 * k23 * k34
-            + k14 * k23 * k34
-            + k34 * k21 * k14
-            + k32 * k21 * k14
-            + k32 * k12 * k24
-            + k14 * k24 * k34
-            + k34 * k12 * k24
-            + k14 * k32 * k24
-        )
-        Sigma = P1 + P2 + P3 + P4  # Normalization factor
-        return np.array([P1, P2, P3, P4]) / Sigma
-
-
-class StateProbs5WL:
-    def __init__(self, k_vals):
-        self.k_vals = k_vals
-
-    def return_probs(self, k12, k21, k23, k32, k13, k31, k24, k42, k35, k53, k45, k54):
-        P1 = (
-            k35 * k54 * k42 * k21
-            + k24 * k45 * k53 * k31
-            + k21 * k45 * k53 * k31
-            + k42 * k21 * k53 * k31
-            + k54 * k42 * k21 * k31
-            + k54 * k42 * k32 * k21
-            + k45 * k53 * k23 * k31
-            + k53 * k32 * k42 * k21
-            + k42 * k23 * k53 * k31
-            + k54 * k42 * k23 * k31
-            + k45 * k53 * k32 * k21
-        )
-        P2 = (
-            k12 * k35 * k54 * k42
-            + k13 * k35 * k54 * k42
-            + k45 * k53 * k31 * k12
-            + k42 * k53 * k31 * k12
-            + k31 * k12 * k54 * k42
-            + k54 * k42 * k32 * k12
-            + k45 * k53 * k13 * k32
-            + k53 * k32 * k42 * k12
-            + k53 * k13 * k32 * k42
-            + k54 * k42 * k13 * k32
-            + k45 * k53 * k32 * k12
-        )
-        P3 = (
-            k12 * k24 * k45 * k53
-            + k13 * k24 * k45 * k53
-            + k21 * k13 * k45 * k53
-            + k42 * k21 * k13 * k53
-            + k54 * k42 * k21 * k13
-            + k54 * k42 * k12 * k23
-            + k45 * k53 * k23 * k13
-            + k42 * k12 * k23 * k53
-            + k42 * k23 * k13 * k53
-            + k54 * k42 * k23 * k13
-            + k45 * k53 * k12 * k23
-        )
-        P4 = (
-            k12 * k24 * k35 * k54
-            + k24 * k13 * k35 * k54
-            + k21 * k13 * k35 * k54
-            + k53 * k31 * k12 * k24
-            + k54 * k31 * k12 * k24
-            + k12 * k32 * k24 * k54
-            + k13 * k23 * k35 * k54
-            + k53 * k32 * k12 * k24
-            + k13 * k53 * k32 * k24
-            + k13 * k32 * k24 * k54
-            + k12 * k23 * k35 * k54
-        )
-        P5 = (
-            k35 * k12 * k24 * k45
-            + k13 * k35 * k24 * k45
-            + k45 * k21 * k13 * k35
-            + k42 * k21 * k13 * k35
-            + k31 * k12 * k24 * k45
-            + k12 * k32 * k24 * k45
-            + k13 * k23 * k35 * k45
-            + k12 * k42 * k23 * k35
-            + k42 * k23 * k13 * k35
-            + k13 * k32 * k24 * k45
-            + k12 * k23 * k35 * k45
-        )
-        Sigma = P1 + P2 + P3 + P4 + P5  # Normalization factor
-        return np.array([P1, P2, P3, P4, P5]) / Sigma
-
-
-class StateProbs6:
-    def __init__(self, k_vals):
-        self.k_vals = k_vals
-
-    def return_probs(self, k12, k21, k23, k32, k34, k43, k45, k54, k56, k65, k61, k16):
-        P1 = (
-            k65 * k54 * k43 * k32 * k21
-            + k61 * k54 * k43 * k32 * k21
-            + k56 * k61 * k43 * k32 * k21
-            + k45 * k56 * k61 * k32 * k21
-            + k34 * k45 * k56 * k61 * k21
-            + k23 * k34 * k45 * k56 * k61
-        )
-        P2 = (
-            k12 * k65 * k54 * k43 * k32
-            + k61 * k12 * k54 * k43 * k32
-            + k56 * k61 * k12 * k43 * k32
-            + k45 * k56 * k61 * k32 * k12
-            + k34 * k45 * k56 * k61 * k12
-            + k16 * k65 * k54 * k43 * k32
-        )
-        P3 = (
-            k12 * k23 * k65 * k54 * k43
-            + k61 * k12 * k23 * k54 * k43
-            + k56 * k61 * k12 * k23 * k43
-            + k45 * k56 * k61 * k12 * k23
-            + k21 * k16 * k65 * k54 * k43
-            + k23 * k16 * k65 * k54 * k43
-        )
-        P4 = (
-            k65 * k54 * k12 * k23 * k34
-            + k54 * k61 * k12 * k23 * k34
-            + k56 * k61 * k12 * k23 * k34
-            + k32 * k21 * k16 * k65 * k54
-            + k21 * k16 * k65 * k54 * k34
-            + k16 * k65 * k54 * k23 * k34
-        )
-        P5 = (
-            k65 * k12 * k23 * k34 * k45
-            + k61 * k12 * k23 * k34 * k45
-            + k43 * k32 * k21 * k16 * k65
-            + k45 * k32 * k21 * k16 * k65
-            + k34 * k45 * k21 * k16 * k65
-            + k23 * k34 * k45 * k16 * k65
-        )
-        P6 = (
-            k12 * k23 * k34 * k45 * k56
-            + k54 * k43 * k32 * k21 * k16
-            + k56 * k43 * k32 * k21 * k16
-            + k45 * k56 * k32 * k21 * k16
-            + k34 * k45 * k56 * k21 * k16
-            + k16 * k23 * k34 * k45 * k56
-        )
-        Sigma = P1 + P2 + P3 + P4 + P5 + P6  # Normalization factor
-        return np.array([P1, P2, P3, P4, P5, P6]) / Sigma
-
-
 class Test_Probability_Calcs:
 
     @settings(deadline=None)
@@ -1361,7 +1146,7 @@ class TestTransitionFluxes:
             (1, 3),
         ],
     )
-    def test_3_state_model_symbolic(self, i, j):
+    def test_3_state_model_symbolic(self, i, j, symbolic_state_probs_3_state):
         # verify the symbolic results of KineticModel.get_transition_flux
 
         # use rate matrix for a 3-state model
@@ -1383,10 +1168,9 @@ class TestTransitionFluxes:
 
         # create the transition flux using the known
         # solutions for the probability expressions
-        prob_exprs = StateProbs3.get_prob_expressions()
         # One-way transition flux: j_ij = k_ij * p_i
-        j_ij_expected = symbols(f"k{i}{j}") * prob_exprs[i-1]
-        j_ji_expected = symbols(f"k{j}{i}") * prob_exprs[j-1]
+        j_ij_expected = symbols(f"k{i}{j}") * symbolic_state_probs_3_state[i-1]
+        j_ji_expected = symbols(f"k{j}{i}") * symbolic_state_probs_3_state[j-1]
         J_ij_expected = j_ij_expected - j_ji_expected
         J_ji_expected = j_ji_expected - j_ij_expected
 
@@ -1405,7 +1189,7 @@ class TestTransitionFluxes:
             (1, 3),
         ],
     )
-    def test_3_state_model_numeric(self, i, j, Model_3_State):
+    def test_3_state_model_numeric(self, i, j, state_probs_3_state):
         # verify the numeric results of KineticModel.get_transition_flux
 
         # use rate matrix for a 3-state model
@@ -1427,7 +1211,7 @@ class TestTransitionFluxes:
 
         # calculate the transition flux using the known
         # solutions for the probability expressions
-        probs = Model_3_State.return_probs(
+        probs = state_probs_3_state(
             k12=K[0, 1], k21=K[1, 0], k23=K[1, 2],
             k32=K[2, 1], k13=K[0, 2], k31=K[2, 0],
         )
