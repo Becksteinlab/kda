@@ -21,8 +21,9 @@ import kda
 
 # debugging things to be removed
 print(os.getcwd())
-from kda.calculations import calc_state_probs
-
+print(kda)
+print(kda.__path__)
+print(kda.diagrams)
 
 # -- Project information -----------------------------------------------------
 
