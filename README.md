@@ -29,7 +29,7 @@ K = np.array(
 )
 # create a KineticModel from the rate matrix
 model = kda.KineticModel(K=K, G=None)
-# calculate the state probabilities
+# get the state probabilities in numeric form
 model.build_state_probabilities(symbolic=False)
 print("State probabilities: \n", model.probabilities)
 # get the state probabilities in expression form
@@ -39,7 +39,7 @@ print("State 1 probability expression: \n", model.probabilities[0])
 
 The output from the above example:
 ```bash
-$ python example_script.py
+$ python example.py
 State probabilities:
  [0.33333333 0.33333333 0.33333333]
 State 1 probability expression:
@@ -48,12 +48,35 @@ State 1 probability expression:
 ```
 As expected, the state probabilities are equal because all edge weights are set to a value of 1.
 
+Additionally, the transition fluxes (one-way or net) can be calculated from the `KineticModel`:
+```python
+# make sure the symbolic probabilities have been generated
+model.build_state_probabilities(symbolic=True)
+# iterate over all edges
+print("One-way transition fluxes:")
+for (i, j) in model.G.edges():
+    flux = model.get_transition_flux(state_i=i+1, state_j=j+1, net=False, symbolic=True)
+    print(f"j_{i+1}{j+1} = {flux}")
+```
+
+The output from the above example:
+```bash
+$ python example.py
+One-way transition fluxes:
+j_12 = (k12*k21*k31 + k12*k21*k32 + k12*k23*k31)/(k12*k23 + k12*k31 + k12*k32 + k13*k21 + k13*k23 + k13*k32 + k21*k31 + k21*k32 + k23*k31)
+j_13 = (k13*k21*k31 + k13*k21*k32 + k13*k23*k31)/(k12*k23 + k12*k31 + k12*k32 + k13*k21 + k13*k23 + k13*k32 + k21*k31 + k21*k32 + k23*k31)
+j_21 = (k12*k21*k31 + k12*k21*k32 + k13*k21*k32)/(k12*k23 + k12*k31 + k12*k32 + k13*k21 + k13*k23 + k13*k32 + k21*k31 + k21*k32 + k23*k31)
+j_23 = (k12*k23*k31 + k12*k23*k32 + k13*k23*k32)/(k12*k23 + k12*k31 + k12*k32 + k13*k21 + k13*k23 + k13*k32 + k21*k31 + k21*k32 + k23*k31)
+j_31 = (k12*k23*k31 + k13*k21*k31 + k13*k23*k31)/(k12*k23 + k12*k31 + k12*k32 + k13*k21 + k13*k23 + k13*k32 + k21*k31 + k21*k32 + k23*k31)
+j_32 = (k12*k23*k32 + k13*k21*k32 + k13*k23*k32)/(k12*k23 + k12*k31 + k12*k32 + k13*k21 + k13*k23 + k13*k32 + k21*k31 + k21*k32 + k23*k31)
+```
+
 Continuing with the previous example, the KDA `plotting` module can be leveraged to display the diagrams that lead to the above probability expression:
 ```python
 import os
 from kda import plotting
 
-# generate the set of directional diagrams for G
+# generate the directional diagrams
 model.build_directional_diagrams()
 # get the current working directory
 cwd = os.getcwd()
@@ -76,7 +99,7 @@ This will generate two files, `input.png` and `directional_panel.png`, in your c
 #### `input.png`
 <img src="https://github.com/Becksteinlab/kda-examples/blob/master/kda_examples/test_model_3_state/diagrams/input.png" width=300, alt="3-state model input diagram">
 
-#### `directional.png`
+#### `directional_panel.png`
 <img src="https://github.com/Becksteinlab/kda-examples/blob/master/kda_examples/test_model_3_state/diagrams/directional.png" width=300, alt="3-state model directional diagrams">
 
 **NOTE:** For more examples (like the following) visit the [KDA examples](https://github.com/Becksteinlab/kda-examples) repository:

@@ -241,8 +241,7 @@ class KineticModel(object):
 
 		Returns
 		=======
-		The transition flux (either one-way or net) from state ``i`` to
-		state ``j``.
+		The transition flux (one-way or net) from state ``i`` to state ``j``.
 
 		Raises
 		======
