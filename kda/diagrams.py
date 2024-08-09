@@ -35,12 +35,12 @@ from kda import graph_utils
 def _find_unique_edges(G):
     """
     Creates list of unique edges for input diagram G. Effectively removes
-    duplicate edges such as '(1, 0)' from [(0, 1), (1, 0)].
+    duplicate edges such as ``(1, 0)`` from ``[(0, 1), (1, 0)]``.
 
     Parameters
     ----------
-    G : NetworkX MultiDiGraph
-        Input diagram
+    G : NetworkX MultiDiGraph Object
+        The kinetic diagram
     """
     # since non-directional graphs cannot contain forward/reverse edges,
     # simply create a simple graph and collect its (unique) set of edges
@@ -68,15 +68,15 @@ def _get_neighbor_dict(target, unique_edges):
     ----------
     target : int
         Index of target state
-    unique_edges : array
+    unique_edges : ndarray
         Array of edges (made from 2-tuples) that are unique
-        to the diagram, (i.e. [[0, 1], [1, 2], ...]).
+        to the diagram, (e.g. ``[[0, 1], [1, 2], ...]``).
 
     Returns
     -------
     Dictionary of directional connections, where node
     indices are mapped to a list of their respective
-    neighbor node indices (i.e. {0: [1, 5], 1: [2], ...}).
+    neighbor node indices (e.g. ``{0: [1, 5], 1: [2], ...}``).
     """
     # get the indices for each edge pair that contains the target state
     adj_idx = np.nonzero(unique_edges == target)[0]
@@ -120,12 +120,12 @@ def _get_flux_path_edges(target, unique_edges):
         Target state.
     unique_edges : array
         Array of edges (made from 2-tuples) that are unique to the
-        diagram (i.e. `(1, 2)` and `(2, 1)` are considered the same).
+        diagram (e.g. ``(1, 2)`` and ``(2, 1)`` are considered the same).
 
     Returns
     -------
     path_edges : list
-        List of edge tuples (i.e. [(0, 1, 0), (1, 2, 0), ...]).
+        List of edge tuples (e.g. ``[(0, 1, 0), (1, 2, 0), ...]``).
     """
     neighbors = _get_neighbor_dict(target, unique_edges)
     path_edges = [(nbr, tgt, 0) for tgt in neighbors for nbr in neighbors[tgt]]
@@ -139,8 +139,8 @@ def _collect_sources(G):
 
     Parameters
     ----------
-    G : NetworkX MultiDiGraph
-        Partial diagram.
+    G : NetworkX MultiDiGraph Object
+        The kinetic diagram
 
     Returns
     -------
@@ -164,15 +164,15 @@ def _get_directional_path_edges(G, target):
 
     Parameters
     ----------
-    G : NetworkX MultiDiGraph
-        Partial diagram.
+    G : NetworkX Graph Object
+        The partial diagram
     target : int
         Target state.
 
     Returns
     -------
     path_edges : list
-        List of edge tuples (i.e. [(0, 1, 0), (1, 2, 0), ...]).
+        List of edge tuples (e.g. ``[(0, 1, 0), (1, 2, 0), ...]``).
 
     """
     sources = _collect_sources(G)
@@ -223,16 +223,16 @@ def _find_unique_uncommon_edges(G, cycle_edges):
 
     Parameters
     ----------
-    G : NetworkX MultiDiGraph
-        Input diagram
+    G : NetworkX MultiDiGraph Object
+        The kinetic diagram
     cycle_edges : list of tuples
         List of edge tuples for a cycle of interest. Both forward and
-        reverse edges should be included (i.e. `(1, 0)` and `(0, 1)`).
+        reverse edges should be included (e.g. ``(1, 0)`` and ``(0, 1)``).
 
     Returns
     -------
     edges : list of tuples
-        List of uncommon edges between G and "cycle_edges".
+        List of uncommon edges between ``G`` and ``cycle_edges``.
         Since these should be unique edges (no reverse edges), these are the
         unique uncommon edges between two diagrams (normal use case).
     """
@@ -277,10 +277,12 @@ def _flux_edge_conditions(edge_list, n_flux_edges):
 def _append_reverse_edges(edge_list):
     """
     Returns a list that contains original edges and reverse edges.
+
     Parameters
     ----------
     edge_list : list of edge tuples
         List of unidirectional edges to have reverse edges appended to.
+
     Returns
     -------
     new_edge_list : list of edge tuples
@@ -293,17 +295,18 @@ def _append_reverse_edges(edge_list):
 
 def _get_cofactor_matrix(K_laplace):
     """
-    Helper function for `enumerate_partial_diagrams()`. Uses singular value
-    decomposition to get the cofactor matrix for the input Laplacian matrix.
+    Helper function for :meth:`~kda.diagrams.enumerate_partial_diagrams()`.
+    Uses singular value decomposition to get the cofactor matrix for
+    the input Laplacian matrix.
 
     Parameters
     ----------
-    K_laplace : array
-        `NxN` Laplacian matrix, where 'N' is the number of nodes.
+    K_laplace : ndarray
+        ``NxN`` Laplacian matrix, where ``N`` is the number of nodes.
 
     Returns
     -------
-    K_cof : array
+    K_cof : ndarray
         Cofactor matrix for the input Laplacian matrix.
     """
     U, w, Vt = np.linalg.svd(K_laplace)
@@ -319,12 +322,12 @@ def _get_cofactor_matrix(K_laplace):
 def enumerate_partial_diagrams(G):
     """
     Quantifies the number of partial diagrams (undirected spanning
-    trees) that can be generated from an input kinetic diagram `G`.
+    trees) that can be generated from an input kinetic diagram ``G``.
 
     Parameters
     ----------
-    G : NetworkX MultiDiGraph
-        Input diagram
+    G : NetworkX MultiDiGraph Object
+        The kinetic diagram
 
     Returns
     -------
@@ -376,8 +379,8 @@ def generate_partial_diagrams(G, return_edges=False):
 
     Parameters
     ----------
-    G : NetworkX MultiDiGraph
-        Input diagram
+    G : NetworkX MultiDiGraph Object
+        The kinetic diagram
     return_edges : bool
         Binary used for determining whether to return NetworkX diagram objects
         (primarily for plotting) or the edge tuples (generally for
@@ -385,10 +388,11 @@ def generate_partial_diagrams(G, return_edges=False):
 
     Returns
     -------
-    partials : array
+    partials : ndarray
         Array of NetworkX MultiDiGraphs where each graph is a unique
-        partial diagram with no loops (return_edges=False), or a nested
-        array of unique edges for valid partial diagrams (return_edges=True).
+        partial diagram with no loops (``return_edges=False``), or a nested
+        array of unique edges for valid partial diagrams
+        (``return_edges=True``).
     """
     # calculate number of edges needed for each partial diagram
     n_edges = G.number_of_nodes() - 1
@@ -432,7 +436,7 @@ def generate_directional_diagrams(G, return_edges=False):
     Parameters
     ----------
     partials : list
-        List of NetworkX MultiDiGraphs where each graph is a unique partial
+        List of NetworkX Graphs where each graph is a unique partial
         diagram with no loops.
     return_edges : bool
         Binary used for determining whether to return NetworkX diagram objects
@@ -444,7 +448,7 @@ def generate_directional_diagrams(G, return_edges=False):
     directional_partial_diagrams : list
         List of all directional diagrams for a given set of partial
         diagrams.
-    directional_partial_diagram_edges : array
+    directional_partial_diagram_edges : ndarray
         Array of edges (made from 2-tuples) for valid directional
         diagrams.
     """
@@ -481,12 +485,12 @@ def generate_directional_diagrams(G, return_edges=False):
 
 def generate_flux_diagrams(G, cycle):
     """
-    Generates all flux diagrams for `cycle` in the kinetic diagram `G`.
+    Generates all flux diagrams for a specific cycle in the kinetic diagram.
 
     Parameters
     ----------
     G : NetworkX MultiDiGraph Object
-        Input diagram
+        The kinetic diagram
     cycle : list of int
         List of node indices for cycle of interest, index zero. Order of node
         indices does not matter.
@@ -495,8 +499,8 @@ def generate_flux_diagrams(G, cycle):
     -------
     flux_diagrams : list of NetworkX MultiDiGraph objects
         List of flux diagrams. Diagrams contain the input cycle
-        where remaining edges follow path pointing to cycle.
-        Cycle nodes are labeled by attribute 'is_target'.
+        where remaining edges follow path pointing to ``cycle``.
+        Cycle nodes are labeled by attribute ``'is_target'``.
     """
     if sorted(cycle) == sorted(G.nodes):
         print(
@@ -541,18 +545,18 @@ def generate_flux_diagrams(G, cycle):
 
 def generate_all_flux_diagrams(G):
     """
-    Generates all flux diagrams for the kinetic diagram `G`.
+    Generates all flux diagrams for a kinetic diagram.
 
     Parameters
     ----------
     G : NetworkX MultiDiGraph Object
-        Input diagram
+        The kinetic diagram
 
     Returns
     -------
     all_flux_diagrams : list of lists of NetworkX MultiDiGraph objects
-        List of lists of flux diagrams, where each list is for a different cycle
-        in G.
+        List of lists of flux diagrams, where each list
+        is for a different cycle in ``G``.
     """
     all_cycles = graph_utils.find_all_unique_cycles(G)
     n_nodes = G.number_of_nodes()

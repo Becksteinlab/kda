@@ -6,8 +6,8 @@
 """
 Algebraic Expressions
 =========================================================================
-This file contains a host of functions aimed at creating SymPy/Python
-functions from algebraic expressions in string form.
+The :mod:`~kda.expressions` module contains code to convert KDA-generated
+string expressions into SymPy symbolic expressions.
 
 .. autofunction:: construct_sympy_prob_funcs
 .. autofunction:: construct_sympy_net_cycle_flux_func
@@ -27,16 +27,13 @@ def construct_sympy_prob_funcs(state_mult_funcs):
     Parameters
     ----------
     state_mult_funcs : list of str
-        List of length 'N', where N is the number of states, that contains the
-        analytic multiplicity function for each state
-    norm_func : str
-        Sum of all state multiplicity functions, the normalization factor to
-        calculate the state probabilities
+        List of length ``N`` (``N`` is the number of states) which contains
+        the algebraic multiplicity expressions for each state.
 
     Returns
     -------
     sympy_funcs : list
-        List of analytic state probability SymPy functions.
+        List of Sympy symbolic state probability expressions.
     """
     # convert the state multiplicity strings into sympy expressions
     parsed_mult_funcs = [parse_expr(e) for e in state_mult_funcs]
@@ -61,8 +58,8 @@ def construct_sympy_net_cycle_flux_func(pi_diff_str, sigma_K_str, sigma_str):
         Sum of rate products of directional flux diagram edges pointing to
         input cycle in string form.
     sigma_str : str
-        Sum of rate products of all directional diagrams for input
-        diagram G, in string form.
+        Sum of rate products of all directional diagrams for the kinetic
+        diagram, in string form.
 
     Returns
     -------
@@ -89,7 +86,7 @@ def construct_lambda_funcs(sympy_funcs, rate_names):
         List of SymPy functions.
     rate_names : list
         List of strings, where each element is the name of the variables for
-        the input probability functions, ["x12", "x21", "x23", ...].
+        the input probability functions (e.g. ``["k12", "k21", "k23", ...]``).
 
     Returns
     -------

@@ -70,7 +70,7 @@ class KineticModel(object):
 			For example, for a 2-state model with ``k12=3`` and ``k21=4``,
 			``K=[[0, 3], [4, 0]]``. Default is ``None``.
 		G : NetworkX MultiDiGraph (optional)
-			Input diagram. Default is ``None``.
+			The kinetic diagram. Default is ``None``.
 
 		Raises
 		======
