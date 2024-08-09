@@ -1,8 +1,9 @@
 # Nikolaus Awtrey
 # Beckstein Lab
+# Department of Physics
 # Arizona State University
 #
-# Kinetic Diagram Analyzer Testing
+# Kinetic Diagram Analysis Plotting Tests
 
 import os
 import pytest
@@ -12,51 +13,7 @@ import matplotlib.pyplot as plt
 
 from numpy.testing import assert_equal
 
-from kda import plotting, graph_utils, diagrams, ode
-
-
-@pytest.fixture(scope="module")
-def G4wl():
-    k4wl = np.array([[0, 1, 0, 1], [1, 0, 1, 1], [0, 1, 0, 1], [1, 1, 1, 0]])
-    G4wl = nx.MultiDiGraph()
-    graph_utils.generate_edges(G4wl, k4wl)
-    return G4wl
-
-
-@pytest.fixture(scope="function")
-def flux_diagrams_4wl(G4wl):
-    cycles = graph_utils.find_all_unique_cycles(G4wl)
-
-    flux_diagrams = []
-    for cycle in cycles:
-        if not cycle is None:
-            flux_diagrams = diagrams.generate_flux_diagrams(G4wl, cycle)
-            if not flux_diagrams is None:
-                flux_diagrams.extend(flux_diagrams)
-    return flux_diagrams
-
-
-@pytest.fixture(scope="module")
-def pos_4wl():
-    pos = {
-        0: [1, 1],
-        1: [-1, 1],
-        2: [-1, -1],
-        3: [1, -1],
-    }
-    return pos
-
-
-@pytest.fixture(scope="module")
-def results_4wl():
-    k4wl = np.array([[0, 1, 0, 1], [1, 0, 1, 1], [0, 1, 0, 1], [1, 1, 1, 0]])
-    G4wl = nx.MultiDiGraph()
-    graph_utils.generate_edges(G4wl, k4wl)
-    p4wl = np.array([1, 0, 0, 0])
-    results4wl = ode.ode_solver(
-        p4wl, k4wl, t_max=1e2, tol=1e-12, atol=1e-16, rtol=1e-13
-    )
-    return results4wl
+from kda import plotting, graph_utils, diagrams
 
 
 @pytest.mark.parametrize(

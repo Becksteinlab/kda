@@ -1,8 +1,9 @@
 # Nikolaus Awtrey
 # Beckstein Lab
+# Department of Physics
 # Arizona State University
 #
-# Kinetic Diagram Analysis Testing
+# Kinetic Diagram Analysis Tests
 
 import pytest
 import numpy as np
