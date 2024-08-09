@@ -388,8 +388,8 @@ def generate_partial_diagrams(G, return_edges=False):
 
     Returns
     -------
-    partials : ndarray
-        Array of ``NetworkX.Graphs`` where each graph is a unique
+    partials : ndarray of ``NetworkX.Graph``
+        Array of ``NetworkX.Graph`` where each graph is a unique
         partial diagram with no loops (``return_edges=False``), or
         a nested array of unique edges for valid partial diagrams
         (``return_edges=True``).
@@ -444,10 +444,9 @@ def generate_directional_diagrams(G, return_edges=False):
 
     Returns
     -------
-    directional_partial_diagrams : list of ``NetworkX.MultiDiGraph``
-        List of all directional diagrams for a given set of partial
-        diagrams.
-    directional_partial_diagram_edges : ndarray
+    directional_diagrams : ndarray of ``NetworkX.MultiDiGraph``
+        Array of all directional diagrams for ``G``.
+    directional_diagram_edges : ndarray
         Array of edges (made from 2-tuples) for valid directional
         diagrams.
     """

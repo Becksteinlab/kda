@@ -37,20 +37,20 @@ class KineticModel(object):
 		All cycles in the kinetic diagram. This attribute becomes
 		available after running the
 		:meth:`~kda.core.KineticModel.build_cycles` method.
-	partial_diagrams : list of ``Networkx.Graph`` s
+	partial_diagrams : ndarray of ``Networkx.Graph``
 		The set of partial diagrams (i.e. spanning trees) for the
 		kinetic diagram. This attribute becomes available after
 		running the :meth:`~kda.core.KineticModel.build_partial_diagrams`
 		method.
-	directional_diagrams : list of ``Networkx.MultiDiGraph`` s
+	directional_diagrams : ndarray of ``Networkx.MultiDiGraph``
 		The set of directional diagrams for the kinetic diagram.
 		This attribute becomes available after running the
 		:meth:`~kda.core.KineticModel.build_directional_diagrams` method.
-	flux_diagrams : list of lists of ``Networkx.MultiDiGraph`` s
+	flux_diagrams : list of lists of ``Networkx.MultiDiGraph``
 		The set of flux diagrams for each cycle in the kinetic
 		diagram. This attribute becomes available after running
 		the :meth:`~kda.core.KineticModel.build_flux_diagrams` method.
-	probabilities : array of floats or list of SymPy expressions
+	probabilities : array of floats or list of ``SymPy`` expressions
 		The steady-state probabilities for all states in the kinetic
 		diagram. Probabilities are either an array of numeric values
 		or the algebraic expressions. This attribute becomes available

@@ -427,8 +427,8 @@ def calc_thermo_force(G, cycle, order, key="name", output_strings=True):
     thermo_force : float
         The calculated thermodynamic force for the input cycle. This value is
         unitless and should be multiplied by ``kT``.
-    parsed_thermo_force_str : SymPy function
-        The thermodynamic force equation in SymPy function form. Should be
+    parsed_thermo_force_str : ``SymPy`` expression
+        Symbolic thermodynamic force expression. Should be
         multiplied by ``kT`` to get actual thermodynamic force.
 
     Notes
@@ -509,11 +509,11 @@ def calc_state_probs(G, key="name", output_strings=True):
 
     Returns
     -------
-    state_probs : NumPy array
+    state_probs : ndarray
         Array of state probabilities for ``N`` states
         of the form ``[p1, p2, p3, ..., pN]``.
-    state_probs_sympy : SymPy object
-        List of analytic SymPy state probability functions.
+    state_probs_sympy : ``SymPy`` expression
+        List of symbolic state probability expressions.
 
     Notes
     -----
@@ -579,8 +579,8 @@ def calc_net_cycle_flux(G, cycle, order, key="name", output_strings=True):
     -------
     net_cycle_flux : float
         Net cycle flux for input cycle.
-    net_cycle_flux_func : SymPy object
-        Analytic net cycle flux SymPy function.
+    net_cycle_flux_func : ``SymPy`` expression
+        Symbolic net cycle flux expression.
 
     Notes
     -----
@@ -651,11 +651,8 @@ def calc_state_probs_from_diags(G, dirpar_edges, key="name", output_strings=True
     state_probabilities : ndarray
         Array of state probabilities for ``N`` states of
         the form ``[p1, p2, p3, ..., pN]``.
-    state_mults : list
-        List of analytic state multiplicity functions in string form.
-    norm : str
-        Analytic state multiplicity function normalization function in
-        string form. This is the sum of all multiplicty functions.
+    state_mults : list of str
+        List of algebraic state multiplicity expressions.
 
     """
     # get the number of nodes/states
@@ -746,8 +743,8 @@ def calc_net_cycle_flux_from_diags(
     -------
     net_cycle_flux : float
         Net cycle flux for input cycle.
-    net_cycle_flux_func : SymPy object
-        Analytic net cycle flux SymPy function.
+    net_cycle_flux_func : ``SymPy`` expression
+        Symbolic net cycle flux expression.
 
     """
     flux_diags = diagrams.generate_flux_diagrams(G, cycle)
