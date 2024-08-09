@@ -4,13 +4,11 @@
 # Author: Nikolaus C. Awtrey
 #
 """
-Core
+KDA Core Objects
 ======================================================================
-The :class:`~kda.core.KineticModel` class contains all the information
+The :mod:`~kda.core` module contains code to build the core
+:class:`~kda.core.KineticModel` object which contains all system information
 for a kinetic model.
-
-Classes
-=======
 
 .. autoclass:: KineticModel
    :members:

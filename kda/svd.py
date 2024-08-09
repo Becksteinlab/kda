@@ -9,8 +9,6 @@ SVD and Matrix Solvers
 This file contains a host of functions aimed at the analysis of biochemical
 kinetic diagrams via singular value decomposition.
 
-Functions
-=========
 .. autofunction:: svd_solver
 .. autofunction:: matrix_solver
 
