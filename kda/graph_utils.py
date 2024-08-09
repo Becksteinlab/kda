@@ -6,7 +6,7 @@
 """
 Graph Utilities
 =========================================================================
-This file contains a host of utility functions for NetworkX graphs.
+This file contains a host of utility functions for ``NetworkX`` graphs.
 
 .. autofunction:: generate_edges
 .. autofunction:: find_all_unique_cycles
@@ -57,8 +57,8 @@ def generate_edges(G, vals, names=None, val_key="val", name_key="name"):
 
     Parameters
     ----------
-    G : NetworkX MultiDiGraph Object
-        The kinetic diagram
+    G : ``NetworkX.MultiDiGraph``
+        A kinetic diagram
     vals : ndarray
         ``NxN`` array where ``N`` is the number of nodes in ``G``. Contains
         the kinetic rate *values* for each transition in ``G``. For example,
@@ -99,8 +99,8 @@ def retrieve_rate_matrix(G, key="val"):
 
     Parameters
     ----------
-    G : NetworkX MultiDiGraph Object
-        The kinetic diagram
+    G : ``NetworkX.MultiDiGraph``
+        A kinetic diagram
     key : str
         Attribute key used to retrieve edge data from ``G.edges``. The default
         ``NetworkX`` edge key is ``"weight"``, however the ``kda`` edge keys
@@ -131,8 +131,8 @@ def find_all_unique_cycles(G):
 
     Parameters
     ----------
-    G : NetworkX MultiDiGraph Object
-        The kinetic diagram
+    G : ``NetworkX.MultiDiGraph``
+        A kinetic diagram
 
     Returns
     -------

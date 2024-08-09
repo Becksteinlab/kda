@@ -39,7 +39,7 @@ def _find_unique_edges(G):
 
     Parameters
     ----------
-    G : NetworkX MultiDiGraph Object
+    G : ``NetworkX.MultiDiGraph``
         Input diagram
     """
     # since non-directional graphs cannot contain forward/reverse edges,
@@ -139,7 +139,7 @@ def _collect_sources(G):
 
     Parameters
     ----------
-    G : NetworkX Graph Object
+    G : ``NetworkX.Graph``
         A partial diagram
 
     Returns
@@ -164,8 +164,8 @@ def _get_directional_path_edges(G, target):
 
     Parameters
     ----------
-    G : NetworkX Graph Object
-        The partial diagram
+    G : ``NetworkX.MultiDiGraph``
+        A kinetic diagram
     target : int
         Target state.
 
@@ -223,8 +223,8 @@ def _find_unique_uncommon_edges(G, cycle_edges):
 
     Parameters
     ----------
-    G : NetworkX MultiDiGraph Object
-        The kinetic diagram
+    G : ``NetworkX.MultiDiGraph``
+        A kinetic diagram
     cycle_edges : list of tuples
         List of edge tuples for a cycle of interest. Both forward and
         reverse edges should be included (e.g. ``(1, 0)`` and ``(0, 1)``).
@@ -322,12 +322,12 @@ def _get_cofactor_matrix(K_laplace):
 def enumerate_partial_diagrams(G):
     """
     Quantifies the number of partial diagrams (undirected spanning
-    trees) that can be generated from an input kinetic diagram ``G``.
+    trees) that can be generated from a kinetic diagram.
 
     Parameters
     ----------
-    G : NetworkX MultiDiGraph Object
-        The kinetic diagram
+    G : ``NetworkX.MultiDiGraph``
+        A kinetic diagram
 
     Returns
     -------
@@ -345,7 +345,7 @@ def enumerate_partial_diagrams(G):
     number of undirected spanning trees.
 
     A more sophistocated version of this function is available in
-    the `NetworkX` library :footcite:`hagberg_exploring_2008`
+    the ``NetworkX`` library :footcite:`hagberg_exploring_2008`
     (see `here <https://networkx.org/documentation/stable/reference/
     algorithms/generated/networkx.algorithms.tree.mst.
     number_of_spanning_trees.html>`_).
@@ -375,14 +375,14 @@ def enumerate_partial_diagrams(G):
 def generate_partial_diagrams(G, return_edges=False):
     """
     Generates all partial diagrams (undirected spanning trees)
-    for kinetic diagram ``G``.
+    for a kinetic diagram.
 
     Parameters
     ----------
-    G : NetworkX MultiDiGraph Object
-        The kinetic diagram
+    G : ``NetworkX.MultiDiGraph``
+        A kinetic diagram
     return_edges : bool
-        Binary used for determining whether to return NetworkX
+        Binary used for determining whether to return ``NetworkX``
         diagram objects (primarily for plotting) or the edge
         tuples (generally for calculations).
 
@@ -435,17 +435,16 @@ def generate_directional_diagrams(G, return_edges=False):
 
     Parameters
     ----------
-    partials : list
-        List of NetworkX Graphs where each graph is a unique partial
-        diagram with no loops.
+    G : ``NetworkX.MultiDiGraph``
+        A kinetic diagram
     return_edges : bool
-        Binary used for determining whether to return NetworkX diagram
+        Binary used for determining whether to return ``NetworkX`` graph
         objects (primarily for plotting) or the edge tuples (generally
         for calculations).
 
     Returns
     -------
-    directional_partial_diagrams : list of NetworkX.MultiDiGraph
+    directional_partial_diagrams : list of ``NetworkX.MultiDiGraph``
         List of all directional diagrams for a given set of partial
         diagrams.
     directional_partial_diagram_edges : ndarray
@@ -489,15 +488,15 @@ def generate_flux_diagrams(G, cycle):
 
     Parameters
     ----------
-    G : NetworkX MultiDiGraph Object
-        The kinetic diagram
+    G : ``NetworkX.MultiDiGraph``
+        A kinetic diagram
     cycle : list of int
         List of node indices for cycle of interest, index zero. Order of node
         indices does not matter.
 
     Returns
     -------
-    flux_diagrams : list of NetworkX MultiDiGraph objects
+    flux_diagrams : list of ``NetworkX.MultiDiGraph``
         List of flux diagrams. Diagrams contain the input cycle
         where remaining edges follow path pointing to ``cycle``.
         Cycle nodes are labeled by attribute ``'is_target'``.
@@ -549,12 +548,12 @@ def generate_all_flux_diagrams(G):
 
     Parameters
     ----------
-    G : NetworkX MultiDiGraph Object
-        The kinetic diagram
+    G : ``NetworkX.MultiDiGraph``
+        A kinetic diagram
 
     Returns
     -------
-    all_flux_diagrams : list of lists of NetworkX MultiDiGraph objects
+    all_flux_diagrams : list of lists of ``NetworkX.MultiDiGraph``
         List of lists of flux diagrams, where each list
         is for a different cycle in ``G``.
     """

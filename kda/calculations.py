@@ -41,8 +41,8 @@ def _get_ordered_cycle(G, input_cycle):
 
     Parameters
     ----------
-    G : NetworkX MultiDiGraph Object
-        The kinetic diagram
+    G : ``NetworkX.MultiDiGraph``
+        A kinetic diagram
     input_cycle : list of int
         List of node indices for cycle of interest, index zero. Order of node
         indices does not matter.
@@ -107,8 +107,8 @@ def calc_sigma(G, dirpar_edges, key="name", output_strings=True):
 
     Parameters
     ----------
-    G : NetworkX MultiDiGraph Object
-        The kinetic diagram
+    G : ``NetworkX.MultiDiGraph``
+        A kinetic diagram
     dirpar_edges : list
         List of all directional diagrams for the input diagram ``G``.
     key : str
@@ -203,8 +203,8 @@ def calc_sigma_K(G, cycle, flux_diags, key="name", output_strings=True):
 
     Parameters
     ----------
-    G : NetworkX MultiDiGraph Object
-        The kinetic diagram
+    G : ``NetworkX.MultiDiGraph``
+        A kinetic diagram
     cycle : list of int
         List of node indices for cycle of interest, index zero. Order of node
         indices does not matter but should not contain all nodes.
@@ -309,8 +309,8 @@ def calc_pi_difference(G, cycle, order, key="name", output_strings=True):
 
     Parameters
     ----------
-    G : NetworkX MultiDiGraph Object
-        The kinetic diagram
+    G : ``NetworkX.MultiDiGraph``
+        A kinetic diagram
     cycle : list of int
         List of node indices for cycle of interest, index zero. Order of node
         indices does not matter unless your cycle contains all nodes.
@@ -400,8 +400,8 @@ def calc_thermo_force(G, cycle, order, key="name", output_strings=True):
 
     Parameters
     ----------
-    G : NetworkX MultiDiGraph Object
-        The kinetic diagram
+    G : ``NetworkX.MultiDiGraph``
+        A kinetic diagram
     cycle : list of int
         List of node indices for cycle of interest, index zero. Order of node
         indices does not matter unless your cycle contains all nodes.
@@ -493,8 +493,8 @@ def calc_state_probs(G, key="name", output_strings=True):
 
     Parameters
     ----------
-    G : NetworkX MultiDiGraph Object
-        The kinetic diagram
+    G : ``NetworkX.MultiDiGraph``
+        A kinetic diagram
     key : str
         Attribute key used to retrieve edge data from ``G.edges``. The default
         ``NetworkX`` edge key is ``"weight"``, however the ``kda`` edge keys
@@ -553,8 +553,8 @@ def calc_net_cycle_flux(G, cycle, order, key="name", output_strings=True):
 
     Parameters
     ----------
-    G : NetworkX MultiDiGraph Object
-        The kinetic diagram
+    G : ``NetworkX.MultiDiGraph``
+        A kinetic diagram
     cycle : list of int
         List of node indices for cycle of interest, index zero. Order of node
         indices does not matter.
@@ -630,8 +630,8 @@ def calc_state_probs_from_diags(G, dirpar_edges, key="name", output_strings=True
 
     Parameters
     ----------
-    G : NetworkX MultiDiGraph Object
-        The kinetic diagram
+    G : ``NetworkX.MultiDiGraph``
+        A kinetic diagram
     dirpar_edges : array
         Array of all directional diagram edges (made from 2-tuples).
     key : str
@@ -648,7 +648,7 @@ def calc_state_probs_from_diags(G, dirpar_edges, key="name", output_strings=True
 
     Returns
     -------
-    state_probabilities : NumPy array
+    state_probabilities : ndarray
         Array of state probabilities for ``N`` states of
         the form ``[p1, p2, p3, ..., pN]``.
     state_mults : list
@@ -719,9 +719,9 @@ def calc_net_cycle_flux_from_diags(
 
     Parameters
     ----------
-    G : NetworkX MultiDiGraph Object
-        The kinetic diagram
-    dirpar_edges : array
+    G : ``NetworkX.MultiDiGraph``
+        A kinetic diagram
+    dirpar_edges : ndarray
         Array of all directional diagram edges (made from 2-tuples).
     cycle : list of int
         List of node indices for cycle of interest, index zero. Order of node

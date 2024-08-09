@@ -173,7 +173,7 @@ def _plot_single_diagram(
 
     Parameters
     ----------
-    diagram : ``NetworkX.MultiDiGraph`` or ``NetworkX.Graph()``
+    diagram : ``NetworkX.MultiDiGraph`` or ``NetworkX.Graph``
         Diagram to be plotted.
     pos : dict (optional)
         Dictionary where keys are the indexed states (e.g. 0, 1, 2,
@@ -292,7 +292,7 @@ def _plot_panel(
 
     Parameters
     ----------
-    diagrams : list of cycles or NetworkX graph objects
+    diagrams : list of cycles or ``NetworkX`` graph objects
         List of diagrams or single diagram to be plotted.
     rows : int (optional)
         Number of rows. Default is ``None``, which results in the number
@@ -381,7 +381,7 @@ def draw_diagrams(
 
     Parameters
     ----------
-    diagrams : list of cycles or NetworkX graph objects
+    diagrams : list of cycles or ``NetworkX`` graph objects
         List of diagrams or single diagram to be plotted.
     pos : dict (optional)
         Dictionary where keys are the indexed states (e.g. 0, 1, 2,
@@ -511,7 +511,7 @@ def draw_cycles(
 
     Parameters
     ----------
-    G : NetworkX MultiDiGraph
+    G : ``NetworkX.MultiDiGraph``
         Input diagram used for plotting the cycles.
     cycles : list of lists of int
         List of cycles or individual cycle to be plotted, index zero. Order

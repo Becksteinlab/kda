@@ -37,16 +37,16 @@ class KineticModel(object):
 		All cycles in the kinetic diagram. This attribute becomes
 		available after running the
 		:meth:`~kda.core.KineticModel.build_cycles` method.
-	partial_diagrams : array of Networkx Graphs
+	partial_diagrams : list of ``Networkx.Graph`` s
 		The set of partial diagrams (i.e. spanning trees) for the
 		kinetic diagram. This attribute becomes available after
 		running the :meth:`~kda.core.KineticModel.build_partial_diagrams`
 		method.
-	directional_diagrams : array of Networkx MultiDiGraphs
+	directional_diagrams : list of ``Networkx.MultiDiGraph`` s
 		The set of directional diagrams for the kinetic diagram.
 		This attribute becomes available after running the
 		:meth:`~kda.core.KineticModel.build_directional_diagrams` method.
-	flux_diagrams : list of lists of Networkx MultiDiGraphs
+	flux_diagrams : list of lists of ``Networkx.MultiDiGraph`` s
 		The set of flux diagrams for each cycle in the kinetic
 		diagram. This attribute becomes available after running
 		the :meth:`~kda.core.KineticModel.build_flux_diagrams` method.
@@ -69,8 +69,8 @@ class KineticModel(object):
 			``kij`` is the edge weight (i.e. transition rate constant).
 			For example, for a 2-state model with ``k12=3`` and ``k21=4``,
 			``K=[[0, 3], [4, 0]]``. Default is ``None``.
-		G : NetworkX MultiDiGraph (optional)
-			The kinetic diagram. Default is ``None``.
+		G : ``NetworkX.MultiDiGraph`` (optional)
+			A kinetic diagram. Default is ``None``.
 
 		Raises
 		======
