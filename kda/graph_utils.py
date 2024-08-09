@@ -14,8 +14,6 @@ Functions
 .. autofunction:: find_all_unique_cycles
 .. autofunction:: generate_K_string_matrix
 .. autofunction:: retrieve_rate_matrix
-.. autofunction:: add_node_attribute
-.. autofunction:: add_graph_attribute
 .. autofunction:: get_ccw_cycle
 
 """
@@ -119,41 +117,6 @@ def retrieve_rate_matrix(G, key="val"):
         # use edge indices and edge values to construct rate matrix
         rate_matrix[i, j] = data[key]
     return rate_matrix
-
-
-def add_node_attribute(G, data, label):
-    """
-    Sequentially add attributes to nodes from array of values, i.e. state
-    probabilities.
-
-    Parameters
-    ----------
-    G : NetworkX MultiDiGraph
-        Input diagram
-    data : array like
-        Array or list of length 'n', where 'n' is the number of nodes in the
-        diagram G. Elements must be in order, i.e. [x1, x2, x3, ..., xn]
-    label : str
-        Name of new attribute to be assigned to nodes.
-    """
-    for i in range(G.number_of_nodes()):
-        G.nodes[i][label] = data[i]
-
-
-def add_graph_attribute(G, data, label):
-    """
-    Add attribute to graph G.
-
-    Parameters
-    ----------
-    G : NetworkX MultiDiGraph
-        Input diagram
-    data : anything
-        Data to be assigned as an attribute to G.
-    label : str
-        Name of new attribute to be assigned to nodes.
-    """
-    G.graph[label] = data
 
 
 def find_all_unique_cycles(G):
