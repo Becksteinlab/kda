@@ -8,8 +8,6 @@ Graph Utilities
 =========================================================================
 This file contains a host of utility functions for NetworkX graphs.
 
-Functions
-=========
 .. autofunction:: generate_edges
 .. autofunction:: find_all_unique_cycles
 .. autofunction:: generate_K_string_matrix

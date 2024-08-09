@@ -5,12 +5,10 @@
 #
 """
 State Probability & Flux Calculations
-=========================================================================
-This file contains functions for calculating steady-state probabilities
-and fluxes from a user-defined kinetic diagram.
+=====================================
+The :mod:`~kda.calculations` module contains code to calculate steady-state
+probabilities and fluxes from a user-defined kinetic diagram.
 
-Functions
-=========
 .. autofunction:: calc_state_probs
 .. autofunction:: calc_net_cycle_flux
 .. autofunction:: calc_sigma

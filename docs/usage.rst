@@ -1,29 +1,27 @@
-Usage
-=====
+Basic Usage
+===========
 
-Installation
-------------
+The KDA core object is a :class:`~kda.core.KineticModel` which contains
+all the system information (kinetic diagram, transition rates, etc.).
 
-The easiest approach to install is to use pip_.
+To get started, load a ``KineticModel``:
 
-Installation with `pip <https://pip.pypa.io/en/latest/>`_ and a
-*minimal set of dependencies*:
+.. code-block:: python
 
-.. code-block:: console
+   import kda
+   # build a model from a `nx.MultiDiGraph`
+   model = kda.KineticModel(G)
 
-  pip install kda
+With the model created the state probability expressions can be
+generated using the built-in methods:
 
-Source Code
------------
+.. code-block:: python
 
-**Source code** is available from
-https://github.com/Becksteinlab/kda under the `GNU General Public License,
-Version 3 <https://www.gnu.org/licenses/gpl-3.0.en.html>`_. Obtain the sources
-with `git <https://git-scm.com/>`_:
+  model.build_state_probabilities(symbolic=True)
 
-.. code-block:: console
+Other methods are available to generate the various graphs or
+calculate fluxes.
 
-   git clone https://github.com/Becksteinlab/kda.git
 
 Calculating State Probabilities
 -------------------------------

@@ -20,12 +20,19 @@ Tracker <https://github.com/Becksteinlab/kda/issues>`_.
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: Contents
+   :numbered:
+   :hidden:
 
+   installation
    usage
    api
 
+Indices and tables
+==================
+
 * :ref:`genindex`
+* :ref:`modindex`
 
 References
 ==========

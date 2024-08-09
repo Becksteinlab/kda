@@ -62,6 +62,9 @@ autosummary_generate = True
 napoleon_google_docstring = False
 napoleon_use_param = False
 napoleon_use_ivar = True
+# remove parent module names from functions (e.g. `calc_state_probs()`
+# instead of `kda.calculations.calc_state_probs()`)
+add_module_names = False
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

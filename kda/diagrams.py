@@ -6,14 +6,11 @@
 """
 Diagram Generation
 =========================================================================
-This file contains functions for generating partial diagrams (undirected
-spanning trees), directional diagrams, and flux diagrams using the
+The :mod:`~kda.diagrams` module contains code to generate partial diagrams
+(undirected spanning trees), directional diagrams, and flux diagrams using the
 diagram method developed by King and Altman :footcite:`king_schematic_1956`
 and Hill :footcite:`hill_studies_1966`.
 
-
-Functions
-=========
 .. autofunction:: enumerate_partial_diagrams
 .. autofunction:: generate_partial_diagrams
 .. autofunction:: generate_directional_diagrams
