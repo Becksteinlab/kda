@@ -6,9 +6,10 @@
 """
 Diagram Plotting
 =========================================================================
-This file contains a host of functions used for plotting various diagrams, such
-as partial, directional, and flux diagrams. Also contains a function to plot
-results from `ode.ode_solver`.
+The :mod:`~kda.plotting` module contains code to plot partial diagrams
+(undirected spanning trees), directional diagrams, and flux diagrams, as
+well as cycles and :meth:`~kda.ode.ode_solver` results.
+
 
 .. autofunction:: draw_diagrams
 .. autofunction:: draw_cycles
@@ -31,7 +32,7 @@ def _get_node_labels(node_list):
     Parameters
     ----------
     node_list : list
-        List of node indices (i.e. [0, 2, 3, 1]) indicating
+        List of node indices (e.g. ``[0, 2, 3, 1]``) indicating
         which node labels should be made.
 
     Returns
@@ -54,17 +55,17 @@ def _get_node_colors(cbt, obj):
     ----------
     cbt : bool
         'Color by target' option that paints target nodes with a
-        coral red when true. Typically used for plotting partial
+        coral red when ``True``. Typically used for plotting directional
         and flux diagrams.
     obj: object
-        `NetworkX.Graph`, `NetworkX.MultiDiGraph`, or list of nodes to
-        return color values for. If a graph object is input, only nodes
-        with attribute `is_target=True` will be colored coral red.
+        ``nx.Graph``, ``nx.MultiDiGraph``, or list of nodes to return color
+        values for. If a graph object is input, only nodes
+        with attribute ``is_target=True`` will be colored coral red.
 
     Returns
     -------
     node_colors: list
-        List of strings of color values (i.e. `["0.8", "0.8",...]`).
+        List of strings of color values (e.g. ``["0.8", "0.8",...]``).
 
     """
     base_color = "0.8"
@@ -93,15 +94,17 @@ def _get_axis_limits(pos, scale_factor=1.4):
     Parameters
     ----------
     pos : dict
-        Dictionary where keys are the indexed states (0, 1, 2, ..., N)
-        and the values are the x, y coordinates for each node.
+        Dictionary where keys are the indexed states (e.g. 0, 1,
+        2, ..., ``N``) and the values are the x, y coordinates for
+        each node.
     scale_factor: float (optional)
-        Factor used to scale the x/y axis limits. Default is `1.4`.
+        Factor used to scale the x/y axis limits. Default is ``1.4``.
 
     Returns
     -------
-    Tuple of the form ``(xlims, ylims)``, where `xlims` and `ylims` are lists
-    containing the scaled minimum and maximum x and y values, respectively.
+    Tuple of the form ``(xlims, ylims)``, where ``xlims``
+    and ``ylims`` are lists containing the scaled minimum
+    and maximum x and y values, respectively.
 
     """
     x = np.zeros(len(pos))
@@ -129,14 +132,15 @@ def _get_panel_dimensions(n_diagrams, rows, cols=None):
         Number of rows, typically based on the square
         root of the number of diagrams to generate.
     cols : int (optional)
-        Number of columns. Default is `None`, which results in the number
+        Number of columns. Default is ``None``, which results in the number
         of rows being determined based on the number of diagrams input.
 
     Returns
     -------
-    Tuple of the form ``(rows, cols, excess_plots)``, where `rows` and `cols`
-    are the number of rows and columns in the panel, respectively, and
-    `excess_plots` is the number of extra graphs available in the panel.
+    Tuple of the form ``(rows, cols, excess_plots)``, where
+    ``rows`` and ``cols`` are the number of rows and columns in the
+    panel, respectively, and ``excess_plots`` is the number of extra
+    graphs available in the panel.
 
     """
     if rows is None:
@@ -169,53 +173,54 @@ def _plot_single_diagram(
 
     Parameters
     ----------
-    diagram : `NetworkX.MultiDiGraph` or `NetworkX.Graph()`
+    diagram : ``NetworkX.MultiDiGraph`` or ``NetworkX.Graph``
         Diagram to be plotted.
     pos : dict (optional)
-        Dictionary where keys are the indexed states (0, 1, 2, ..., N)
-        and the values are the x, y coordinates for each node. If
-        not specified, ``NetworkX.spring_layout()`` is used.
+        Dictionary where keys are the indexed states (e.g. 0, 1, 2,
+        ..., ``N``) and the values are the x, y coordinates for each
+        node. If not specified, ``NetworkX.spring_layout()`` is used.
     node_labels: dict (optional)
         Dictionary where keys are the node index (index-zero) and the
         keys are the node index string (index-one). If not specified, labels
         will be created for all nodes in the input diagram.
     node_list : list (optional)
-        List of node indices (i.e. [0, 2, 3, 1]) indicating
+        List of node indices (e.g. ``[0, 2, 3, 1]``) indicating
         which nodes to plot. If not specified, all nodes in the input
         diagram will be plotted.
     node_colors: list (optional)
-        List of strings of color values (i.e. `["0.8", "0.8",...]`)
+        List of strings of color values (e.g. ``["0.8", "0.8",...]``)
         used to color the nodes. If not specified, node colors will
-        be determined using the `cbt` parameter.
+        be determined using the ``cbt`` parameter.
     edge_list: list (optional)
-        List of edge tuples (i.e. `[(1, 0), (1, 2), ...]`) to plot. If not
+        List of edge tuples (e.g. ``[(1, 0), (1, 2), ...]``) to plot. If not
         specified, all edges will be plotted.
     font_size : int (optional)
-        Sets the font size for the figure. Default is `12`.
+        Sets the font size for the figure. Default is ``12``.
     figsize: tuple (optional)
-        Tuple of the form ``(x, y)``, where `x` and `y` are the x and y-axis
-        figure dimensions in inches. Default is `(3, 3)`.
+        Tuple of the form ``(x, y)``, where ``x`` and ``y`` are the
+        x and y-axis figure dimensions in inches. Default is ``(3, 3)``.
     node_size: int (optional)
-        Size of nodes used for `NetworkX` diagram. Default is `300`.
+        Size of nodes used for ``NetworkX`` diagram. Default is ``300``.
     arrow_width: float (optional)
-        Arrow width used for `NetworkX` diagram. Default is `1.5`.
+        Arrow width used for ``NetworkX`` diagram. Default is ``1.5``.
     arrow_size: int (optional)
-        Arrow size used for `NetworkX` diagram. Default is `12`.
+        Arrow size used for ``NetworkX`` diagram. Default is ``12``.
     arrow_style: str (optional)
-        Style of arrows used for `NetworkX` diagram. Default is "->".
+        Style of arrows used for ``NetworkX`` diagram. Default is ``"->"``.
     connection_style: str (optional)
-        Style of arrow connections for `NetworkX` diagram. Default is "arc3".
-    ax: `matplotlib` axis object (optional)
+        Style of arrow connections for ``NetworkX`` diagram.
+        Default is ``"arc3"``.
+    ax: ``matplotlib`` axis object (optional)
         Axis to place diagrams on. If not specified, a new figure
-        and axis will be created. Default is `None`.
+        and axis will be created. Default is ``None``.
     cbt : bool (optional)
         'Color by target' option that paints target nodes with a coral red.
         Typically used for plotting directional and flux diagrams.
-        Default is `False`.
+        Default is ``False``.
 
     Returns
     -------
-    fig: `matplotlib.pyplot.figure` object
+    fig: ``matplotlib.pyplot.figure`` object
         The plotted diagram.
 
     """
@@ -287,34 +292,34 @@ def _plot_panel(
 
     Parameters
     ----------
-    diagrams : list of cycles or NetworkX graph objects
+    diagrams : list of cycles or ``NetworkX`` graph objects
         List of diagrams or single diagram to be plotted.
     rows : int (optional)
-        Number of rows. Default is `None`, which results in the number
+        Number of rows. Default is ``None``, which results in the number
         of rows being determined based on the number of diagrams input.
     cols : int (optional)
-        Number of columns. Default is `None`, which results in the number
+        Number of columns. Default is ``None``, which results in the number
         of columns being determined based on the number of diagrams input.
     pos : dict (optional)
-        Dictionary where keys are the indexed states (0, 1, 2, ..., N)
-        and the values are the x, y coordinates for each node. If
-        not specified, ``NetworkX.spring_layout()`` is used.
+        Dictionary where keys are the indexed states (e.g. 0, 1, 2,
+        ..., ``N``) and the values are the x, y coordinates for each
+        node. If not specified, ``NetworkX.spring_layout()`` is used.
     panel_scale : float (optional)
-        Parameter used to scale figure if `panel=True`. Linearly
-        scales figure height and width. Default is `2`.
+        Parameter used to scale figure if ``panel=True``. Linearly
+        scales figure height and width. Default is ``2``.
     font_size : int (optional)
-        Sets the font size for the figure. Default is `12`.
+        Sets the font size for the figure. Default is ``12``.
     cbt : bool (optional)
         'Color by target' option that paints target nodes with a
-        coral red. Typically used for plotting partial and flux
-        diagrams. Default is `False`.
+        coral red. Typically used for plotting directional and flux
+        diagrams. Default is ``False``.
     curved_arrows: bool (optional)
         Switches on arrows with a slight curvature to separate double arrows
-        for directional diagrams. Default is `False`.
+        for directional diagrams. Default is ``False``.
 
     Returns
     -------
-    fig: `matplotlib.pyplot.figure` object
+    fig: ``matplotlib.pyplot.figure`` object
         A panel of figures, where each figure is a plotted diagram or cycle.
 
     Notes
@@ -376,47 +381,45 @@ def draw_diagrams(
 
     Parameters
     ----------
-    diagrams : list of cycles or NetworkX graph objects
+    diagrams : list of cycles or ``NetworkX`` graph objects
         List of diagrams or single diagram to be plotted.
     pos : dict (optional)
-        Dictionary where keys are the indexed states (0, 1, 2, ..., N)
-        and the values are the x, y coordinates for each node. If
-        not specified, ``NetworkX.spring_layout()`` is used.
+        Dictionary where keys are the indexed states (e.g. 0, 1, 2,
+        ..., ``N``) and the values are the x, y coordinates for each
+        node. If not specified, ``NetworkX.spring_layout()`` is used.
     panel : bool (optional)
-        Tells the function to output diagrams as an 'NxM' matrix of subplots,
-        where 'N' and 'M' are the number of rows and columns, respectively.
-        True will output a panel figure, False will output each figure
-        individually. Default is `False`.
+        Tells the function to output diagrams as an ``NxM`` matrix of subplots,
+        where ``N`` and ``M`` are the number of rows and columns, respectively.
+        ``True`` will output a panel figure, ``False`` will output each figure
+        individually. Default is ``False``.
     panel_scale : float (optional)
-        Parameter used to scale figure if `panel=True`. Linearly
-        scales figure height and width. Default is `2`.
+        Parameter used to scale figure if ``panel=True``. Linearly
+        scales figure height and width. Default is ``2``.
     font_size : int (optional)
-        Sets the font size for the figure. Default is `12`.
+        Sets the font size for the figure. Default is ``12``.
     cbt : bool (optional)
         'Color by target' option that paints target nodes with a
-        coral red. Typically used for plotting directional and
-        flux diagrams. Default is `False`.
+        coral red. Typically used for plotting directional and flux
+        diagrams. Default is ``False``.
     rows : int (optional)
-        Number of rows to output if `panel=True`. Default is `None`, which
-        results in the number of rows being determined based on the number of
-        diagrams input.
+        Number of rows. Default is ``None``, which results in the number
+        of rows being determined based on the number of diagrams input.
     cols : int (optional)
-        Number of columns to output if  `panel=True`. Default is `None`, which
-        results in the number of columns being determined based on the number of
-        diagrams input.
+        Number of columns. Default is ``None``, which results in the number
+        of columns being determined based on the number of diagrams input.
     path : str (optional)
         String of save path for figure. If a path is specified the figure(s)
-        will be saved at the specified location. Default is `None`.
+        will be saved at the specified location. Default is ``None``.
     label : str (optional)
-        Figure label used to create unique filename if `path` is
-        input. Includes `.png` file extension. Default is `None`.
+        Figure label used to create unique filename if ``path`` is
+        input. Includes ``.png`` file extension. Default is ``None``.
     curved_arrows: bool (optional)
         Switches on arrows with a slight curvature to separate double arrows
-        for directional diagrams. Default is `False`.
+        for directional diagrams. Default is ``False``.
 
     Notes
     -----
-    When using `panel=True`, if number of diagrams is not a perfect square,
+    When using ``panel=True``, if number of diagrams is not a perfect square,
     extra plots will be generated as empty coordinate axes.
 
     """
@@ -508,42 +511,42 @@ def draw_cycles(
 
     Parameters
     ----------
-    G : NetworkX MultiDiGraph
+    G : ``NetworkX.MultiDiGraph``
         Input diagram used for plotting the cycles.
     cycles : list of lists of int
         List of cycles or individual cycle to be plotted, index zero. Order
         of node indices does not matter.
     pos : dict (optional)
-        Dictionary where keys are the indexed states (0, 1, 2, ..., N)
-        and the values are the x, y coordinates for each node. If
-        not specified, ``NetworkX.spring_layout()`` is used.
+        Dictionary where keys are the indexed states (e.g. 0, 1, 2,
+        ..., ``N``) and the values are the x, y coordinates for each
+        node. If not specified, ``NetworkX.spring_layout()`` is used.
     panel : bool (optional)
-        Tells the function to output diagrams as an 'NxM' matrix of subplots,
-        where 'N' and 'M' are the number of rows and columns, respectively.
-        True will output a panel figure, False will output each figure
-        individually. Default is `False`.
+        Tells the function to output diagrams as an ``NxM`` matrix of subplots,
+        where ``N`` and ``M`` are the number of rows and columns, respectively.
+        ``True`` will output a panel figure, ``False`` will output each figure
+        individually. Default is ``False``.
     panel_scale : float (optional)
-        Parameter used to scale figure if `panel=True`. Linearly scales figure
-        height and width. Default is `2`.
+        Parameter used to scale figure if ``panel=True``. Linearly
+        scales figure height and width. Default is ``2``.
     font_size : int (optional)
-        Sets the font size for the figure. Default is `12`.
+        Sets the font size for the figure. Default is ``12``.
     cbt : bool (optional)
         'Color by target' option that paints target nodes with a
-        coral red. Typically used for plotting directional and
-        flux diagrams. Default is `False`.
+        coral red. Typically used for plotting directional and flux
+        diagrams. Default is ``False``.
     curved_arrows: bool (optional)
         Switches on arrows with a slight curvature to separate double arrows
-        for directional diagrams. Default is `False`.
+        for directional diagrams. Default is ``False``.
     path : str (optional)
         String of save path for figure. If a path is specified the figure(s)
-        will be saved at the specified location. Default is `None`.
+        will be saved at the specified location. Default is ``None``.
     label : str (optional)
-        Figure label used to create unique filename if `path` is
-        input. Includes `.png` file extension. Default is `None`.
+        Figure label used to create unique filename if ``path`` is
+        input. Includes ``.png`` file extension. Default is ``None``.
 
     Notes
     -----
-    When using `panel=True`, if number of diagrams is not a perfect square,
+    When using ``panel=True``, if number of diagrams is not a perfect square,
     extra plots will be generated as empty coordinate axes.
 
     """
@@ -667,28 +670,29 @@ def draw_ode_results(
     results, figsize=(5, 4), legendloc="best", bbox_coords=None, path=None, label=None
 ):
     """
-    Plots probability time series for all states generated by `ode.ode_solver`.
+    Plots probability time series for all states generated
+    by :meth:`~kda.ode.ode_solver`.
 
     Parameters
     ----------
     results : ``Bunch`` object
-        Contains time information (results.t) and function information
-        at time t (results.y), as well as various other fields.
+        Contains time information (``results.t``) and function information
+        at time ``t`` (``results.y``), as well as various other fields.
     figsize: tuple (optional)
-        Tuple of the form `(x, y)`, where `x` and `y` are the x and y-axis
-        figure dimensions in inches. Default is `(5, 4)`.
+        Tuple of the form ``(x, y)``, where ``x`` and ``y`` are the x and
+        y-axis figure dimensions in inches. Default is ``(5, 4)``.
     legendloc : str (optional)
         String passed to determine where to place the legend for the figure.
-        Default is 'best'.
+        Default is ``"best"``.
     bbox_coords : tuple (optional)
-        Tuple of the form `(x, y)`, where `x` and `y` are the x and y-axis
-        coordinates for the legend. Default is `None`.
+        Tuple of the form ``(x, y)``, where ``x`` and ``y`` are the x
+        and y-axis coordinates for the legend. Default is ``None``.
     path : str (optional)
         String of save path for figure. If a path is specified the figure
-        will be saved at the specified location. Default is `None`.
+        will be saved at the specified location. Default is ``None``.
     label : str (optional)
-        Figure label used to create unique filename if `path` is
-        input. Includes `.png` file extension. Default is `None`.
+        Figure label used to create unique filename if ``path`` is
+        input. Includes ``.png`` file extension. Default is ``None``.
 
     """
     N = int(len(results.y))

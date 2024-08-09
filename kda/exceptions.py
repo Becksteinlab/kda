@@ -6,7 +6,7 @@
 """
 Kinetic Diagram Analysis (kda) Exceptions
 =========================================================================
-This file contains a host of custom exception classes for kda.core.
+This file contains a host of custom exception classes.
 """
 
 

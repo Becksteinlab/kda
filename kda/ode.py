@@ -24,24 +24,24 @@ def ode_solver(P, K, t_max, method="LSODA", tol=1e-16, **options):
     Parameters
     ----------
     P : array
-        'Nx1' matrix of initial state probabilities.
-    K : array
-        'NxN' matrix, where N is the number of states. Element i, j represents
-        the rate constant from state i to state j. Diagonal elements should be
-        zero, but does not have to be in input k
-        matrix.
+        ``Nx1`` matrix of initial state probabilities.
+    K : ndarray
+        Adjacency matrix for the kinetic diagram where each element
+        ``kij`` is the edge weight (i.e. transition rate constant).
+        For example, for a 2-state model with ``k12=3`` and ``k21=4``,
+        ``K=[[0, 3], [4, 0]]``.
     t_max : int
-        Length of time for integrator to run, in seconds.
+        Length of time for integrator to run in seconds.
     method : str
-        Integration method used in `scipy.integrate.solve_ivp()`. Default is
-        LSODA since it has automatic stiffness detection, and generally
-        requires much less run time to reach convergence than RK45.
+        Integration method used in ``scipy.integrate.solve_ivp()``. Default is
+        ``"LSODA"`` since it has automatic stiffness detection, and generally
+        requires much less run time to reach convergence than ``"RK45"``.
     tol : float (optional)
         Tolerance value used as convergence criteria. Once all dp/dt values for
         each state are less than the tolerance the integrator will terminate.
-        Default is 1e-16.
+        Default is ``1e-16``.
     options
-        Options passed to scipy.integrate.solve_ivp().
+        Options passed to ``scipy.integrate.solve_ivp()``.
 
     Returns
     -------
@@ -49,12 +49,13 @@ def ode_solver(P, K, t_max, method="LSODA", tol=1e-16, **options):
     t : ndarray, shape (n_points,)
         Time points.
     y : ndarray, shape (n, n_points)
-        Values of the solution at t.
+        Values of the solution at ``t``.
 
-    Note:
-    For all parameters and returns, view the SciPy.integrate.solve_ivp()
-    documentation: "https://docs.scipy.org/doc/scipy/reference/generated/
-    scipy.integrate.solve_ivp.html"
+    Notes
+    -----
+    For all parameters and returns, view the ``SciPy.integrate.solve_ivp()``
+    documentation (see `here <https://docs.scipy.org/doc/scipy/reference/
+    generated/scipy.integrate.solve_ivp.html>`_).
     """
 
     def convert_K(K):

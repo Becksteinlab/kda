@@ -35,14 +35,14 @@ from kda.exceptions import CycleError
 def _get_ordered_cycle(G, input_cycle):
     """
     Takes in arbitrary list of nodes and returns list of nodes in correct order.
-    Can be used in conjunction with `diagrams._construct_cycle_edges` to
+    Can be used in conjunction with ``diagrams._construct_cycle_edges`` to
     generate list of edge tuples for an arbitrary input cycle. Assumes input
     cycle only exists once in the input diagram G.
 
     Parameters
     ----------
-    G : NetworkX MultiDiGraph Object
-        Input diagram
+    G : ``NetworkX.MultiDiGraph``
+        A kinetic diagram
     input_cycle : list of int
         List of node indices for cycle of interest, index zero. Order of node
         indices does not matter.
@@ -107,19 +107,20 @@ def calc_sigma(G, dirpar_edges, key="name", output_strings=True):
 
     Parameters
     ----------
-    G : NetworkX MultiDiGraph Object
-        Input diagram
+    G : ``NetworkX.MultiDiGraph``
+        A kinetic diagram
     dirpar_edges : list
-        List of all directional diagrams for the input diagram G.
+        List of all directional diagrams for the input diagram ``G``.
     key : str
-        Definition of key in NetworkX diagram edges, used to call edge rate
-        values or names. This needs to match the key used for the rate
-        constants names or values in the input diagram G.
+        Attribute key used to retrieve edge data from ``G.edges``. The default
+        ``NetworkX`` edge key is ``"weight"``, however the ``kda`` edge keys
+        are ``"name"`` (for rate constant names, e.g. ``"k12"``) and ``"val"``
+        (for the rate constant values, e.g. ``100``). Default is ``"name"``.
     output_strings : bool (optional)
         Used to denote whether values or strings will be combined. Default
-        is False, which tells the function to calculate the normalization factor
-        using numbers. If True, this will assume the input
-        'key' will return strings of variable names to join into the
+        is ``False``, which tells the function to calculate the normalization
+        factor using numbers. If ``True``, this will assume the input
+        ``'key'`` will return strings of variable names to join into the
         analytic cycle flux function.
 
     Returns
@@ -128,7 +129,7 @@ def calc_sigma(G, dirpar_edges, key="name", output_strings=True):
         Normalization factor for state probabilities.
     sigma_str : str
         Sum of rate products of all directional diagrams for input
-        diagram G, in string form.
+        diagram ``G``, in string form.
 
     Notes
     -----
@@ -196,29 +197,31 @@ def calc_sigma(G, dirpar_edges, key="name", output_strings=True):
 def calc_sigma_K(G, cycle, flux_diags, key="name", output_strings=True):
     r"""
     Generates the expression for the path-based componenet of the
-    sum of flux diagrams for some `cycle` in kinetic diagram `G`.
+    sum of flux diagrams for some ``cycle`` in kinetic diagram ``G``.
     The sum of flux diagrams is used in calculating net
     cycle fluxes :footcite:`hill_free_1989`.
 
     Parameters
     ----------
-    G : NetworkX MultiDiGraph Object
-        Input diagram
+    G : ``NetworkX.MultiDiGraph``
+        A kinetic diagram
     cycle : list of int
         List of node indices for cycle of interest, index zero. Order of node
         indices does not matter but should not contain all nodes.
     flux_diags : list
         List of relevant directional flux diagrams for input cycle.
     key : str
-        Definition of key in NetworkX diagram edges, used to call edge rate
-        values or names. This needs to match the key used for the rate
-        constants names or values in the input diagram G.
+        Attribute key used to retrieve edge data from ``G.edges``. The default
+        ``NetworkX`` edge key is ``"weight"``, however the ``kda`` edge keys
+        are ``"name"`` (for rate constant names, e.g. ``"k12"``) and ``"val"``
+        (for the rate constant values, e.g. ``100``). Default is ``"name"``.
+        Default is ``"name"``.
     output_strings : bool (optional)
         Used to denote whether values or strings will be combined. Default
-        is False, which tells the function to calculate the sum of all
-        directional flux diagrams using numbers. If True, this will assume the
-        input 'key' will return strings of variable names to join into the
-        analytic function.
+        is ``False``, which tells the function to calculate the sum of all
+        directional flux diagrams using numbers. If ``True``, this will assume
+        the input ``'key'`` will return strings of variable names to join into
+        the analytic function.
 
     Returns
     -------
@@ -300,30 +303,33 @@ def calc_sigma_K(G, cycle, flux_diags, key="name", output_strings=True):
 def calc_pi_difference(G, cycle, order, key="name", output_strings=True):
     r"""
     Generates the expression for the cycle-based componenet of the
-    sum of flux diagrams for some `cycle` in kinetic diagram `G`.
+    sum of flux diagrams for some ``cycle`` in kinetic diagram ``G``.
     The sum of flux diagrams is used in calculating net
     cycle fluxes :footcite:`hill_free_1989`.
 
     Parameters
     ----------
-    G : NetworkX MultiDiGraph Object
-        Input diagram
+    G : ``NetworkX.MultiDiGraph``
+        A kinetic diagram
     cycle : list of int
         List of node indices for cycle of interest, index zero. Order of node
         indices does not matter unless your cycle contains all nodes.
     order : list of int
-        List of integers of length 2, where the integers must be nodes in the
-        input cycle. This pair of nodes is used to determine which direction is
-        CCW.
+        List of integers of length 2 (e.g. ``[0, 1]``), where the integers are
+        nodes in ``cycle``. The pair of nodes should be ordered such that
+        a counter-clockwise path is followed.
     key : str
-        Definition of key in NetworkX diagram edges, used to call edge rate
-        values or names. This needs to match the key used for the rate
-        constants names or values in the input diagram G.
+        Attribute key used to retrieve edge data from ``G.edges``. The default
+        ``NetworkX`` edge key is ``"weight"``, however the ``kda`` edge keys
+        are ``"name"`` (for rate constant names, e.g. ``"k12"``) and ``"val"``
+        (for the rate constant values, e.g. ``100``). Default is ``"name"``.
+        Default is ``"name"``.
     output_strings : bool (optional)
         Used to denote whether values or strings will be combined. Default
-        is False, which tells the function to calculate the difference using
-        numbers. If True, this will assume the input 'key' will return strings
-        of variable names to join into the analytic function.
+        is ``False``, which tells the function to calculate the difference
+        using numbers. If ``True``, this will assume the input ``'key'``
+        will return strings of variable names to join into the analytic
+        function.
 
     Returns
     -------
@@ -390,38 +396,40 @@ def calc_pi_difference(G, cycle, order, key="name", output_strings=True):
 def calc_thermo_force(G, cycle, order, key="name", output_strings=True):
     r"""
     Generates the expression for the thermodynamic driving force
-    for some `cycle` in the kinetic diagram `G`.
+    for some ``cycle`` in the kinetic diagram ``G``.
 
     Parameters
     ----------
-    G : NetworkX MultiDiGraph Object
-        Input diagram
+    G : ``NetworkX.MultiDiGraph``
+        A kinetic diagram
     cycle : list of int
         List of node indices for cycle of interest, index zero. Order of node
         indices does not matter unless your cycle contains all nodes.
     order : list of int
-        List of integers of length 2, where the integers must be nodes in the
-        input cycle. This pair of nodes is used to determine which direction is
-        CCW.
+        List of integers of length 2 (e.g. ``[0, 1]``), where the integers are
+        nodes in ``cycle``. The pair of nodes should be ordered such that
+        a counter-clockwise path is followed.
     key : str
-        Definition of key in NetworkX diagram edges, used to call edge rate
-        values or names. This needs to match the key used for the rate
-        constants names or values in the input diagram G.
+        Attribute key used to retrieve edge data from ``G.edges``. The default
+        ``NetworkX`` edge key is ``"weight"``, however the ``kda`` edge keys
+        are ``"name"`` (for rate constant names, e.g. ``"k12"``) and ``"val"``
+        (for the rate constant values, e.g. ``100``). Default is ``"name"``.
+        Default is ``"name"``.
     output_strings : bool (optional)
         Used to denote whether values or strings will be combined. Default
-        is False, which tells the function to calculate the thermodynamic force
-        using numbers. If True, this will assume the input
-        'key' will return strings of variable names to join into the
+        is ``False``, which tells the function to calculate the thermodynamic
+        force using numbers. If ``True``, this will assume the input
+        ``'key'`` will return strings of variable names to join into the
         analytic function.
 
     Returns
     -------
     thermo_force : float
         The calculated thermodynamic force for the input cycle. This value is
-        unitless and should be multiplied by 'kT'.
-    parsed_thermo_force_str : SymPy function
-        The thermodynamic force equation in SymPy function form. Should be
-        multiplied by 'kT' to get actual thermodynamic force.
+        unitless and should be multiplied by ``kT``.
+    parsed_thermo_force_str : ``SymPy`` expression
+        Symbolic thermodynamic force expression. Should be
+        multiplied by ``kT`` to get actual thermodynamic force.
 
     Notes
     -----
@@ -485,25 +493,27 @@ def calc_state_probs(G, key="name", output_strings=True):
 
     Parameters
     ----------
-    G : NetworkX MultiDiGraph Object
-        Input diagram
+    G : ``NetworkX.MultiDiGraph``
+        A kinetic diagram
     key : str
-        Definition of key in NetworkX diagram edges, used to call edge rate
-        values or names. This needs to match the key used for the rate
-        constants names or values in the input diagram G.
+        Attribute key used to retrieve edge data from ``G.edges``. The default
+        ``NetworkX`` edge key is ``"weight"``, however the ``kda`` edge keys
+        are ``"name"`` (for rate constant names, e.g. ``"k12"``) and ``"val"``
+        (for the rate constant values, e.g. ``100``). Default is ``"name"``.
     output_strings : bool (optional)
         Used to denote whether values or strings will be combined. Default
-        is False, which tells the function to calculate the state
-        probabilities using numbers. If True, this will assume the input
-        'key' will return strings of variable names to join into the
+        is ``False``, which tells the function to calculate the state
+        probabilities using numbers. If ``True``, this will assume the input
+        ``'key'`` will return strings of variable names to join into the
         analytic state multplicity and normalization function.
 
     Returns
     -------
-    state_probs : NumPy array
-        Array of state probabilities for N states, [p1, p2, p3, ..., pN].
-    state_probs_sympy : SymPy object
-        List of analytic SymPy state probability functions.
+    state_probs : ndarray
+        Array of state probabilities for ``N`` states
+        of the form ``[p1, p2, p3, ..., pN]``.
+    state_probs_sympy : ``SymPy`` expression
+        List of symbolic state probability expressions.
 
     Notes
     -----
@@ -539,31 +549,38 @@ def calc_state_probs(G, key="name", output_strings=True):
 
 def calc_net_cycle_flux(G, cycle, order, key="name", output_strings=True):
     r"""Generates the expression for the net cycle flux for
-    some `cycle` in kinetic diagram `G`.
+    some ``cycle`` in kinetic diagram ``G``.
 
     Parameters
     ----------
-    G : NetworkX MultiDiGraph Object
-        Input diagram.
+    G : ``NetworkX.MultiDiGraph``
+        A kinetic diagram
     cycle : list of int
         List of node indices for cycle of interest, index zero. Order of node
         indices does not matter.
+    order : list of int
+        List of integers of length 2 (e.g. ``[0, 1]``), where the integers are
+        nodes in ``cycle``. The pair of nodes should be ordered such that
+        a counter-clockwise path is followed.
     key : str
-        Definition of key in NetworkX diagram edges, used to call edge rate
-        values or names. This needs to match the key used for the rate
-        constants names or values in the input diagram G.
+        Attribute key used to retrieve edge data from ``G.edges``. The default
+        ``NetworkX`` edge key is ``"weight"``, however the ``kda`` edge keys
+        are ``"name"`` (for rate constant names, e.g. ``"k12"``) and ``"val"``
+        (for the rate constant values, e.g. ``100``). Default is ``"name"``.
+        Default is ``"name"``.
     output_strings : bool (optional)
         Used to denote whether values or strings will be combined. Default
-        is False, which tells the function to calculate the cycle flux using
-        numbers. If True, this will assume the input 'key' will return strings
-        of variable names to join into the analytic cycle flux function.
+        is ``False``, which tells the function to calculate the cycle flux
+        using numbers. If ``True``, this will assume the input ``'key'``
+        will return strings of variable names to join into the analytic
+        cycle flux function.
 
     Returns
     -------
     net_cycle_flux : float
         Net cycle flux for input cycle.
-    net_cycle_flux_func : SymPy object
-        Analytic net cycle flux SymPy function.
+    net_cycle_flux_func : ``SymPy`` expression
+        Symbolic net cycle flux expression.
 
     Notes
     -----
@@ -613,30 +630,29 @@ def calc_state_probs_from_diags(G, dirpar_edges, key="name", output_strings=True
 
     Parameters
     ----------
-    G : NetworkX MultiDiGraph
-        Input diagram
+    G : ``NetworkX.MultiDiGraph``
+        A kinetic diagram
     dirpar_edges : array
         Array of all directional diagram edges (made from 2-tuples).
     key : str
-        Definition of key in NetworkX diagram edges, used to call edge rate
-        values or names. This needs to match the key used for the rate
-        constants names or values in the input diagram G.
+        Attribute key used to retrieve edge data from ``G.edges``. The default
+        ``NetworkX`` edge key is ``"weight"``, however the ``kda`` edge keys
+        are ``"name"`` (for rate constant names, e.g. ``"k12"``) and ``"val"``
+        (for the rate constant values, e.g. ``100``). Default is ``"name"``.
     output_strings : bool (optional)
         Used to denote whether values or strings will be combined. Default
-        is False, which tells the function to calculate the state
-        probabilities using numbers. If True, this will assume the input
-        'key' will return strings of variable names to join into the
+        is ``False``, which tells the function to calculate the state
+        probabilities using numbers. If ``True``, this will assume the input
+        ``'key'`` will return strings of variable names to join into the
         analytic state multplicity and normalization functions.
 
     Returns
     -------
-    state_probabilities : NumPy array
-        Array of state probabilities for N states, [p1, p2, p3, ..., pN].
-    state_mults : list
-        List of analytic state multiplicity functions in string form.
-    norm : str
-        Analytic state multiplicity function normalization function in
-        string form. This is the sum of all multiplicty functions.
+    state_probabilities : ndarray
+        Array of state probabilities for ``N`` states of
+        the form ``[p1, p2, p3, ..., pN]``.
+    state_mults : list of str
+        List of algebraic state multiplicity expressions.
 
     """
     # get the number of nodes/states
@@ -694,35 +710,41 @@ def calc_state_probs_from_diags(G, dirpar_edges, key="name", output_strings=True
 def calc_net_cycle_flux_from_diags(
     G, dirpar_edges, cycle, order, key="name", output_strings=True
 ):
-    """Generates the expression for the net cycle flux for some `cycle`
-    in kinetic diagram `G`. If directional diagram edges are already
+    """Generates the expression for the net cycle flux for some ``cycle``
+    in kinetic diagram ``G``. If directional diagram edges are already
     generated this offers better performance than :func:`calc_net_cycle_flux`.
 
     Parameters
     ----------
-    G : NetworkX MultiDiGraph Object
-        Input diagram.
-    dirpar_edges : array
+    G : ``NetworkX.MultiDiGraph``
+        A kinetic diagram
+    dirpar_edges : ndarray
         Array of all directional diagram edges (made from 2-tuples).
     cycle : list of int
         List of node indices for cycle of interest, index zero. Order of node
         indices does not matter.
+    order : list of int
+        List of integers of length 2 (e.g. ``[0, 1]``), where the integers are
+        nodes in ``cycle``. The pair of nodes should be ordered such that
+        a counter-clockwise path is followed.
     key : str
-        Definition of key in NetworkX diagram edges, used to call edge rate
-        values or names. This needs to match the key used for the rate
-        constants names or values in the input diagram G.
+        Attribute key used to retrieve edge data from ``G.edges``. The default
+        ``NetworkX`` edge key is ``"weight"``, however the ``kda`` edge keys
+        are ``"name"`` (for rate constant names, e.g. ``"k12"``) and ``"val"``
+        (for the rate constant values, e.g. ``100``). Default is ``"name"``.
     output_strings : bool (optional)
         Used to denote whether values or strings will be combined. Default
-        is False, which tells the function to calculate the cycle flux using
-        numbers. If True, this will assume the input 'key' will return strings
-        of variable names to join into the analytic cycle flux function.
+        is ``False``, which tells the function to calculate the cycle flux
+        using numbers. If ``True``, this will assume the input ``'key'``
+        will return strings of variable names to join into the analytic
+        cycle flux function.
 
     Returns
     -------
     net_cycle_flux : float
         Net cycle flux for input cycle.
-    net_cycle_flux_func : SymPy object
-        Analytic net cycle flux SymPy function.
+    net_cycle_flux_func : ``SymPy`` expression
+        Symbolic net cycle flux expression.
 
     """
     flux_diags = diagrams.generate_flux_diagrams(G, cycle)

@@ -6,8 +6,8 @@
 """
 SVD and Matrix Solvers
 =========================================================================
-This file contains a host of functions aimed at the analysis of biochemical
-kinetic diagrams via singular value decomposition.
+The :mod:`~kda.svd` module contains code to calculate steady-state
+probabilities using matrix and singular value decomposition methods.
 
 .. autofunction:: svd_solver
 .. autofunction:: matrix_solver
@@ -25,18 +25,21 @@ def svd_solver(K, tol=1e-12):
 
     Parameters
     ----------
-    K : array
-        'NxN' matrix, where N is the number of states. Element i, j represents
-        the rate constant from state i to state j. Diagonal elements should be
-        zero, but does not have to be in input K matrix.
+    K : ndarray
+        Adjacency matrix for the kinetic diagram where each element
+        ``kij`` is the edge weight (i.e. transition rate constant).
+        For example, for a 2-state model with ``k12=3`` and ``k21=4``,
+        ``K=[[0, 3], [4, 0]]``.
     tol : float (optional)
-        Tolerance used for singular value determination. Values are considered
-        singular if they are less than the input tolerance. Default is 1e-12.
+        Tolerance used for singular value determination. Values are
+        considered singular if they are less than the input tolerance.
+        Default is ``1e-12``.
 
     Returns
     -------
     state_probs : NumPy array
-        Array of state probabilities for N states, [p1, p2, p3, ..., pN].
+        Array of state probabilities for ``N`` states of the
+        form ``[p1, p2, p3, ..., pN]``.
     """
     # get number of states
     N = K.shape[0]
@@ -101,15 +104,17 @@ def matrix_solver(K):
 
     Parameters
     ----------
-    K : array
-        'NxN' matrix, where N is the number of states. Element i, j represents
-        the rate constant from state i to state j. Diagonal elements should be
-        zero, but does not have to be in input K matrix.
+    K : ndarray
+        Adjacency matrix for the kinetic diagram where each element
+        ``kij`` is the edge weight (i.e. transition rate constant).
+        For example, for a 2-state model with ``k12=3`` and ``k21=4``,
+        ``K=[[0, 3], [4, 0]]``.
 
     Returns
     -------
-    state_probs : NumPy array
-        Array of state probabilities for N states, [p1, p2, p3, ..., pN].
+    state_probs : ndarray
+        Array of state probabilities for ``N`` states
+        of the form ``[p1, p2, p3, ..., pN]``.
     """
     # get number of states
     N = K.shape[0]
