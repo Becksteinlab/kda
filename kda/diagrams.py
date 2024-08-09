@@ -34,13 +34,13 @@ from kda import graph_utils
 
 def _find_unique_edges(G):
     """
-    Creates list of unique edges for input diagram G. Effectively removes
+    Creates list of unique edges for input diagram ``G``. Effectively removes
     duplicate edges such as ``(1, 0)`` from ``[(0, 1), (1, 0)]``.
 
     Parameters
     ----------
     G : NetworkX MultiDiGraph Object
-        The kinetic diagram
+        Input diagram
     """
     # since non-directional graphs cannot contain forward/reverse edges,
     # simply create a simple graph and collect its (unique) set of edges
@@ -139,8 +139,8 @@ def _collect_sources(G):
 
     Parameters
     ----------
-    G : NetworkX MultiDiGraph Object
-        The kinetic diagram
+    G : NetworkX Graph Object
+        A partial diagram
 
     Returns
     -------
@@ -375,23 +375,23 @@ def enumerate_partial_diagrams(G):
 def generate_partial_diagrams(G, return_edges=False):
     """
     Generates all partial diagrams (undirected spanning trees)
-    for kinetic diagram `G`.
+    for kinetic diagram ``G``.
 
     Parameters
     ----------
     G : NetworkX MultiDiGraph Object
         The kinetic diagram
     return_edges : bool
-        Binary used for determining whether to return NetworkX diagram objects
-        (primarily for plotting) or the edge tuples (generally for
-        calculations).
+        Binary used for determining whether to return NetworkX
+        diagram objects (primarily for plotting) or the edge
+        tuples (generally for calculations).
 
     Returns
     -------
     partials : ndarray
-        Array of NetworkX MultiDiGraphs where each graph is a unique
-        partial diagram with no loops (``return_edges=False``), or a nested
-        array of unique edges for valid partial diagrams
+        Array of ``NetworkX.Graphs`` where each graph is a unique
+        partial diagram with no loops (``return_edges=False``), or
+        a nested array of unique edges for valid partial diagrams
         (``return_edges=True``).
     """
     # calculate number of edges needed for each partial diagram
@@ -431,7 +431,7 @@ def generate_partial_diagrams(G, return_edges=False):
 
 def generate_directional_diagrams(G, return_edges=False):
     """
-    Generates all directional diagrams for kinetic diagram `G`.
+    Generates all directional diagrams for a kinetic diagram.
 
     Parameters
     ----------
@@ -439,13 +439,13 @@ def generate_directional_diagrams(G, return_edges=False):
         List of NetworkX Graphs where each graph is a unique partial
         diagram with no loops.
     return_edges : bool
-        Binary used for determining whether to return NetworkX diagram objects
-        (primarily for plotting) or the edge tuples (generally for
-        calculations).
+        Binary used for determining whether to return NetworkX diagram
+        objects (primarily for plotting) or the edge tuples (generally
+        for calculations).
 
     Returns
     -------
-    directional_partial_diagrams : list
+    directional_partial_diagrams : list of NetworkX.MultiDiGraph
         List of all directional diagrams for a given set of partial
         diagrams.
     directional_partial_diagram_edges : ndarray
