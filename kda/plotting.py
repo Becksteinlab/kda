@@ -10,6 +10,103 @@ The :mod:`~kda.plotting` module contains code to plot partial diagrams
 (undirected spanning trees), directional diagrams, and flux diagrams, as
 well as cycles and :meth:`~kda.ode.ode_solver` results.
 
+The two main functions used for plotting KDA-generated diagrams are
+:meth:`~kda.plotting.draw_diagrams` and :meth:`~kda.plotting.draw_cycles`.
+``draw_diagrams`` is used for plotting kinetic diagrams, partial diagrams,
+directional diagrams, and flux diagrams, while ``draw_cycles`` is used for
+plotting cycles in the kinetic diagram.
+
+For example, for a 4-state model we start by generating the
+:meth:`~kda.core.KineticModel` and plotting the kinetic diagram:
+
+.. code-block:: python
+
+  import os
+  import numpy as np
+  import kda
+  from kda import plotting
+
+  # define matrix with reaction rates set to 1
+  K = np.array([
+      [0, 1, 0, 1],
+      [1, 0, 1, 1],
+      [0, 1, 0, 1],
+      [1, 1, 1, 0],
+  ])
+  # create a KineticModel from the rate matrix
+  model = kda.KineticModel(K=K, G=None)
+  # specify the positions of all nodes in NetworkX fashion
+  node_positions = {0: [1, 1], 1: [-1, 1], 2: [-1, -1], 3: [1, -1]}
+  # plot and save the input diagram in the current directory
+  plotting.draw_diagrams(model.G, pos=node_positions, path=os.getcwd(), label="input")
+
+The output kinetic diagram figure, ``input.png``:
+
+|img_4wl_small|
+
+We can also plot all cycles:
+
+.. code-block:: python
+
+  # build the cycles for the model
+  model.build_cycles()
+  # plot cycles with coral-colored nodes
+  plotting.draw_cycles(
+      G=model.G,
+      cycles=model.cycles,
+      pos=node_positions,
+      path=os.getcwd(),
+      # set color-by-target to label the target nodes
+      cbt=True,
+      label="cycles_panel",
+  )
+
+The output cycles figure, ``cycles_panel.png``:
+
+|img_4wl_cycles_small|
+
+Lastly, we can generate the directional and flux diagrams:
+
+.. code-block:: python
+
+  # generate the flux and directional diagrams
+  model.build_flux_diagrams()
+  model.build_directional_diagrams()
+  # plot and save the directional diagrams as a panel
+  plotting.draw_diagrams(
+      model.directional_diagrams,
+      pos=node_positions,
+      rows=model.G.number_of_nodes(),
+      path=os.getcwd(),
+      # set color-by-target to label the target nodes
+      cbt=True,
+      label="directional_panel",
+  )
+  # flatten the flux diagrams since they are stored in nested lists
+  flux_diagrams = [g for l in model.flux_diagrams if not l is None for g in l]
+  # plot and save the flux diagrams as a panel
+  plotting.draw_diagrams(
+      flux_diagrams,
+      pos=node_positions,
+      path=os.getcwd(),
+      # set color-by-target to label the target nodes
+      cbt=True,
+      label="flux_panel",
+  )
+
+The output directional and flux diagrams figures, ``directional_panel.png``
+and ``flux_panel.png``:
+
+**directional_panel.png**
+
+|img_4wl_directional|
+
+**flux_panel.png**
+
+|img_4wl_flux_small|
+
+**NOTE:** For more examples visit the
+`KDA examples <https://github.com/Becksteinlab/kda-examples>`_ repository.
 
 .. autofunction:: draw_diagrams
 .. autofunction:: draw_cycles
@@ -376,12 +473,12 @@ def draw_diagrams(
     curved_arrows=False,
 ):
     """
-    Plots any number of input diagrams. Typically used for plotting input
+    Plots any number of input diagrams. Typically used for plotting kinetic
     diagrams, or arrays of partial, directional, or flux diagrams.
 
     Parameters
     ----------
-    diagrams : list of cycles or ``NetworkX`` graph objects
+    diagrams : list of ``NetworkX`` graph objects
         List of diagrams or single diagram to be plotted.
     pos : dict (optional)
         Dictionary where keys are the indexed states (e.g. 0, 1, 2,
@@ -421,6 +518,45 @@ def draw_diagrams(
     -----
     When using ``panel=True``, if number of diagrams is not a perfect square,
     extra plots will be generated as empty coordinate axes.
+
+    Examples
+    --------
+    The :meth:`~kda.plotting.draw_diagrams` function allows for easy
+    plotting of KDA-generated diagrams:
+
+    .. code-block:: python
+
+      import os
+      import numpy as np
+      import kda
+      from kda import plotting
+
+      # define matrix with reaction rates set to 1
+      K = np.array([
+          [0, 1, 1],
+          [1, 0, 1],
+          [1, 1, 0],
+      ])
+      # create a KineticModel from the rate matrix
+      model = kda.KineticModel(K=K, G=None)
+      # generate the directional diagrams
+      model.build_directional_diagrams()
+      # specify the positions of all nodes in NetworkX fashion
+      node_positions = {0: [0, 1], 1: [-0.5, 0], 2: [0.5, 0]}
+      # plot and save the input diagram in the current directory
+      plotting.draw_diagrams(model.G, pos=node_positions, path=os.getcwd(), label="input")
+      # plot and save the directional diagrams as a panel
+      plotting.draw_diagrams(
+          model.directional_diagrams,
+          pos=node_positions,
+          path=cwd,
+          # set color-by-target to label the target nodes
+          cbt=True,
+          label="directional_panel",
+      )
+
+    This will save two files, ``input.png`` and ``directional_panel.png``,
+    in your current working directory.
 
     """
     if curved_arrows:
@@ -532,8 +668,7 @@ def draw_cycles(
         Sets the font size for the figure. Default is ``12``.
     cbt : bool (optional)
         'Color by target' option that paints target nodes with a
-        coral red. Typically used for plotting directional and flux
-        diagrams. Default is ``False``.
+        coral red. Default is ``False``.
     curved_arrows: bool (optional)
         Switches on arrows with a slight curvature to separate double arrows
         for directional diagrams. Default is ``False``.
@@ -548,6 +683,45 @@ def draw_cycles(
     -----
     When using ``panel=True``, if number of diagrams is not a perfect square,
     extra plots will be generated as empty coordinate axes.
+
+    Examples
+    --------
+    The :meth:`~kda.plotting.draw_cycles` function allows for easy
+    plotting of cycles in kinetic diagrams:
+
+    .. code-block:: python
+
+      import os
+      import numpy as np
+      import kda
+      from kda import plotting
+
+      # define matrix with reaction rates set to 1
+      K = np.array([
+          [0, 1, 0, 1],
+          [1, 0, 1, 1],
+          [0, 1, 0, 1],
+          [1, 1, 1, 0],
+      ])
+      # create a KineticModel from the rate matrix
+      model = kda.KineticModel(K=K, G=None)
+      # specify the positions of all nodes in NetworkX fashion
+      node_positions = {0: [1, 1], 1: [-1, 1], 2: [-1, -1], 3: [1, -1]}
+      # build the cycles for the model
+      model.build_cycles()
+      # plot cycles with coral-colored nodes
+      plotting.draw_cycles(
+          G=model.G,
+          cycles=model.cycles,
+          pos=node_positions,
+          path=os.getcwd(),
+          # set color-by-target to label the target nodes
+          cbt=True,
+          label="cycles_panel",
+      )
+
+    This will save a file ``cycles_panel.png`` in your current working
+    directory displaying all 3 cycles for the 4-state model.
 
     """
     if curved_arrows:

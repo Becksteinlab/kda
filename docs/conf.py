@@ -218,6 +218,22 @@ rst_epilog = """
     :alt: 4-state model with leakage input diagram
     :width: 300px
 
+.. |img_4wl_small| image:: {url_base}test_model_4_state_leakage/diagrams/input.png?raw=true
+    :alt: 4-state model with leakage input diagram
+    :width: 200px
+
+.. |img_4wl_cycles_small| image:: {url_base}test_model_4_state_leakage/diagrams/cycles.png?raw=true
+    :alt: 4-state model with leakage cycles diagram
+    :width: 600px
+
+.. |img_4wl_directional| image:: {url_base}test_model_4_state_leakage/diagrams/directional.png?raw=true
+    :alt: 4-state model with leakage directional diagrams
+    :width: 600px
+
+.. |img_4wl_flux_small| image:: {url_base}test_model_4_state_leakage/diagrams/flux.png?raw=true
+    :alt: 4-state model with leakage flux diagrams
+    :width: 300px
+
 .. |img_5wl| image:: {url_base}test_model_5_state_leakage/diagrams/input.png?raw=true
     :alt: 5-state model with leakage input diagram
     :width: 300px
