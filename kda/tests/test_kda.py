@@ -861,7 +861,10 @@ class Test_Diagram_Generation:
         # test a second time after building the partial diagrams
         model.build_partial_diagrams()
         assert model.get_partial_diagram_count() == expected_pars
-        # generate the directional partial diagrams and verify
+        # check that each partial diagram has the correct number of nodes
+        for G_partial in model.partial_diagrams:
+            assert G_partial.number_of_nodes() == model.G.number_of_nodes()
+        # generate the directional diagrams and verify
         # they agree with the expected value
         assert model.get_directional_diagram_count() == expected_dirpars
         # test a second time after building the directional diagrams
@@ -871,6 +874,9 @@ class Test_Diagram_Generation:
         # and verify they agree with the expected value
         n_pars = diagrams.enumerate_partial_diagrams(model.G)
         assert n_pars == expected_pars
+        # check that each directional diagram has the correct number of nodes
+        for G_directional in model.directional_diagrams:
+            assert G_directional.number_of_nodes() == model.G.number_of_nodes()
 
     @pytest.mark.parametrize(
         "K",
