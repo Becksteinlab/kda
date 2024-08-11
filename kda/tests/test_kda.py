@@ -852,10 +852,10 @@ class Test_Misc_Funcs:
         elif cycle == [0, 1, 3, 4, 2]:
             expected_value = (k12*k24*k45*k53*k31) - (k21*k42*k54*k35*k13)
         elif cycle == [1, 2, 4, 3]:
-            expected_value = (k24*k45*k53*k32) - (k42*k54*k35*k23)
+            expected_value = (k45*k53*k32*k24) - (k54*k35*k23*k42)
 
         # check that the calculated value agrees with the expected value
-        assert_allclose(pi_diff_val, expected_value, atol=1e-11, rtol=1e-14)
+        assert_allclose(pi_diff_val, expected_value, atol=1e-14, rtol=1e-14)
         # generate the equation for the thermodynamic force
         pi_diff_func = calculations.calc_pi_difference(
             G, cycle, cycle_order, key="name", output_strings=True
