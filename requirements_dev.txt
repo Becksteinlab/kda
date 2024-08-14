@@ -1,0 +1,9 @@
+numpy
+sympy
+networkx
+scipy
+matplotlib
+pytest
+pytest-cov
+hypothesis
+asv
