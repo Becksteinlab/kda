@@ -577,10 +577,8 @@ def calc_net_cycle_flux(G, cycle, order, key="name", output_strings=True):
 
     Returns
     -------
-    net_cycle_flux : float
+    net_cycle_flux : float or ``SymPy`` expression
         Net cycle flux for input cycle.
-    net_cycle_flux_func : ``SymPy`` expression
-        Symbolic net cycle flux expression.
 
     Notes
     -----
@@ -598,28 +596,13 @@ def calc_net_cycle_flux(G, cycle, order, key="name", output_strings=True):
     (i.e. positive) direction is counter-clockwise (CCW).
 
     """
-    dirpar_edges = diagrams.generate_directional_diagrams(G, return_edges=True)
-    flux_diags = diagrams.generate_flux_diagrams(G, cycle)
-    if output_strings == False:
-        pi_diff = calc_pi_difference(
-            G, cycle, order, key, output_strings=output_strings
-        )
-        sigma_K = calc_sigma_K(G, cycle, flux_diags, key, output_strings=output_strings)
-        sigma = calc_sigma(G, dirpar_edges, key, output_strings=output_strings)
-        net_cycle_flux = pi_diff * sigma_K / sigma
-        return net_cycle_flux
-    if output_strings == True:
-        pi_diff_str = calc_pi_difference(
-            G, cycle, order, key, output_strings=output_strings
-        )
-        sigma_K_str = calc_sigma_K(
-            G, cycle, flux_diags, key, output_strings=output_strings
-        )
-        sigma_str = calc_sigma(G, dirpar_edges, key, output_strings=output_strings)
-        sympy_net_cycle_flux_func = expressions.construct_sympy_net_cycle_flux_func(
-            pi_diff_str, sigma_K_str, sigma_str
-        )
-        return sympy_net_cycle_flux_func
+    # generate the directional diagram edges
+    dir_edges = diagrams.generate_directional_diagrams(G=G, return_edges=True)
+    net_cycle_flux = calc_net_cycle_flux_from_diags(
+        G=G, dirpar_edges=dir_edges, cycle=cycle,
+        order=order, key=key, output_strings=output_strings,
+    )
+    return net_cycle_flux
 
 
 def calc_state_probs_from_diags(G, dirpar_edges, key="name", output_strings=True):
@@ -741,30 +724,23 @@ def calc_net_cycle_flux_from_diags(
 
     Returns
     -------
-    net_cycle_flux : float
+    net_cycle_flux : float or ``SymPy`` expression
         Net cycle flux for input cycle.
-    net_cycle_flux_func : ``SymPy`` expression
-        Symbolic net cycle flux expression.
 
     """
-    flux_diags = diagrams.generate_flux_diagrams(G, cycle)
-    if output_strings == False:
-        pi_diff = calc_pi_difference(
-            G, cycle, order, key, output_strings=output_strings
-        )
-        sigma_K = calc_sigma_K(G, cycle, flux_diags, key, output_strings=output_strings)
-        sigma = calc_sigma(G, dirpar_edges, key, output_strings=output_strings)
+    flux_diags = diagrams.generate_flux_diagrams(G=G, cycle=cycle)
+    # construct the expressions for (Pi+ - Pi-), sigma, and sigma_k
+    # from the directional diagram edges
+    pi_diff = calc_pi_difference(
+        G=G, cycle=cycle, order=order, key=key, output_strings=output_strings)
+    sigma_K = calc_sigma_K(
+        G=G, cycle=cycle, flux_diags=flux_diags,
+        key=key, output_strings=output_strings)
+    sigma = calc_sigma(
+        G=G, dirpar_edges=dirpar_edges, key=key, output_strings=output_strings)
+    if output_strings:
+        net_cycle_flux = expressions.construct_sympy_net_cycle_flux_func(
+            pi_diff_str=pi_diff, sigma_K_str=sigma_K, sigma_str=sigma)
+    else:
         net_cycle_flux = pi_diff * sigma_K / sigma
-        return net_cycle_flux
-    if output_strings == True:
-        pi_diff_str = calc_pi_difference(
-            G, cycle, order, key, output_strings=output_strings
-        )
-        sigma_K_str = calc_sigma_K(
-            G, cycle, flux_diags, key, output_strings=output_strings
-        )
-        sigma_str = calc_sigma(G, dirpar_edges, key, output_strings=output_strings)
-        sympy_net_cycle_flux_func = expressions.construct_sympy_net_cycle_flux_func(
-            pi_diff_str, sigma_K_str, sigma_str
-        )
-        return sympy_net_cycle_flux_func
+    return net_cycle_flux
