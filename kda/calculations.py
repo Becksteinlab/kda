@@ -21,7 +21,7 @@ References
 .. footbibliography::
 
 """
-
+import warnings
 import math
 import numpy as np
 import networkx as nx
@@ -486,7 +486,7 @@ def calc_thermo_force(G, cycle, order, key="name", output_strings=True):
         return parsed_thermo_force_str
 
 
-def calc_state_probs(G, key="name", output_strings=True):
+def calc_state_probs(G, key="name", output_strings=True, dir_edges=None):
     r"""Generates the state probability expressions using the diagram
     method developed by King and Altman :footcite:`king_schematic_1956` and
     Hill :footcite:`hill_studies_1966`.
@@ -506,6 +506,10 @@ def calc_state_probs(G, key="name", output_strings=True):
         probabilities using numbers. If ``True``, this will assume the input
         ``'key'`` will return strings of variable names to join into the
         analytic state multplicity and normalization function.
+    dir_edges : ndarray (optional)
+        Array of all directional diagram edges (made from 2-tuples). Created
+        using :meth:`~kda.diagrams.generate_directional_diagrams` with
+        ``return_edges=True``.
 
     Returns
     -------
@@ -538,16 +542,62 @@ def calc_state_probs(G, key="name", output_strings=True):
     all :math:`\Omega_i` s) for the kinetic diagram.
 
     """
-    dirpar_edges = diagrams.generate_directional_diagrams(G, return_edges=True)
-    state_probs = calc_state_probs_from_diags(
-        G, dirpar_edges=dirpar_edges, key=key, output_strings=output_strings,
-    )
+    edge_is_str = isinstance(G.edges[list(G.edges)[0]][key], str)
+    if output_strings != edge_is_str:
+        msg = f"""Inputs `key={key}` and `output_strings={output_strings}`
+            do not match. If symbolic outputs are requested the input `key`
+            should retrieve edge data from `G` that corresponds to symbolic
+            variable names for all edges."""
+        raise TypeError(msg)
+
+    if dir_edges is None:
+        # generate the directional diagram edges
+        dir_edges = diagrams.generate_directional_diagrams(G=G, return_edges=True)
+    # get the number of nodes/states
+    n_states = G.number_of_nodes()
+    # get the number of directional diagrams
+    n_dirpars = dir_edges.shape[0]
+    # get the number of partial diagrams
+    n_partials = int(n_dirpars / n_states)
     if output_strings:
-        state_probs = expressions.construct_sympy_prob_funcs(state_mult_funcs=state_probs)
+        dirpar_rate_products = np.empty(shape=(n_dirpars,), dtype=object)
+        for i, edge_list in enumerate(dir_edges):
+            rate_product_vals = []
+            for edge in edge_list:
+                rate_product_vals.append(G.edges[edge][key])
+            dirpar_rate_products[i] = "*".join(rate_product_vals)
+
+        state_mults = np.empty(shape=(n_states,), dtype=object)
+        dirpar_rate_products = dirpar_rate_products.reshape(n_states, n_partials)
+        for i, arr in enumerate(dirpar_rate_products):
+            state_mults[i] = "+".join(arr)
+        state_probs = expressions.construct_sympy_prob_funcs(state_mult_funcs=state_mults)
+    else:
+        # retrieve the rate matrix from G
+        Kij = graph_utils.retrieve_rate_matrix(G)
+        # create array of ones for storing rate products
+        dirpar_rate_products = np.ones(n_dirpars, dtype=float)
+        # iterate over the directional diagrams
+        for i, edge_list in enumerate(dir_edges):
+            # for each edge list, retrieve an array of the ith and jth indices,
+            # retrieve the values associated with each (i, j) pair, and
+            # calculate the product of those values
+            Ki = edge_list[:, 0]
+            Kj = edge_list[:, 1]
+            dirpar_rate_products[i] = np.prod(Kij[Ki, Kj])
+
+        state_mults = dirpar_rate_products.reshape(n_states, n_partials).sum(axis=1)
+        state_probs = state_mults / math.fsum(dirpar_rate_products)
+        if any(elem < 0 for elem in state_probs):
+            raise ValueError(
+                "Calculated negative state probabilities, overflow or underflow occurred."
+            )
+
     return state_probs
 
 
-def calc_net_cycle_flux(G, cycle, order, key="name", output_strings=True):
+def calc_net_cycle_flux(G, cycle, order, key="name",
+        output_strings=True, dir_edges=None):
     r"""Generates the expression for the net cycle flux for
     some ``cycle`` in kinetic diagram ``G``.
 
@@ -574,6 +624,13 @@ def calc_net_cycle_flux(G, cycle, order, key="name", output_strings=True):
         using numbers. If ``True``, this will assume the input ``'key'``
         will return strings of variable names to join into the analytic
         cycle flux function.
+    dir_edges : ndarray (optional)
+        Array of all directional diagram edges (made from 2-tuples).
+        Given as an option for performance reasons (when calculating
+        net cycle fluxes for multiple cycles it is best to generate
+        the directional diagram edges up front and provide them).
+        Created using :meth:`~kda.diagrams.generate_directional_diagrams`
+        with ``return_edges=True``.
 
     Returns
     -------
@@ -596,12 +653,25 @@ def calc_net_cycle_flux(G, cycle, order, key="name", output_strings=True):
     (i.e. positive) direction is counter-clockwise (CCW).
 
     """
-    # generate the directional diagram edges
-    dir_edges = diagrams.generate_directional_diagrams(G=G, return_edges=True)
-    net_cycle_flux = calc_net_cycle_flux_from_diags(
-        G=G, dirpar_edges=dir_edges, cycle=cycle,
-        order=order, key=key, output_strings=output_strings,
-    )
+    if dir_edges is None:
+        # generate the directional diagram edges
+        dir_edges = diagrams.generate_directional_diagrams(G=G, return_edges=True)
+    # generate the flux diagrams
+    flux_diags = diagrams.generate_flux_diagrams(G=G, cycle=cycle)
+    # construct the expressions for (Pi+ - Pi-), sigma, and sigma_k
+    # from the directional diagram edges
+    pi_diff = calc_pi_difference(
+        G=G, cycle=cycle, order=order, key=key, output_strings=output_strings)
+    sigma_K = calc_sigma_K(
+        G=G, cycle=cycle, flux_diags=flux_diags,
+        key=key, output_strings=output_strings)
+    sigma = calc_sigma(
+        G=G, dirpar_edges=dir_edges, key=key, output_strings=output_strings)
+    if output_strings:
+        net_cycle_flux = expressions.construct_sympy_net_cycle_flux_func(
+            pi_diff_str=pi_diff, sigma_K_str=sigma_K, sigma_str=sigma)
+    else:
+        net_cycle_flux = pi_diff * sigma_K / sigma
     return net_cycle_flux
 
 
@@ -609,7 +679,8 @@ def calc_state_probs_from_diags(G, dirpar_edges, key="name", output_strings=True
     """Generates the state probability expressions using the diagram
     method developed by King and Altman :footcite:`king_schematic_1956` and
     Hill :footcite:`hill_studies_1966`. If directional diagram edges are already
-    generated this offers better performance than :func:`calc_state_probs`.
+    generated this offers better performance than
+    :meth:`~kda.calculations.calc_state_probs`.
 
     Parameters
     ----------
@@ -638,56 +709,15 @@ def calc_state_probs_from_diags(G, dirpar_edges, key="name", output_strings=True
         List of algebraic state multiplicity expressions.
 
     """
-    # get the number of nodes/states
-    n_states = G.number_of_nodes()
-    # get the number of directional diagrams
-    n_dirpars = dirpar_edges.shape[0]
-    # get the number of partial diagrams
-    n_partials = int(n_dirpars / n_states)
-    # retrieve the rate matrix from G
-    Kij = graph_utils.retrieve_rate_matrix(G)
-
-    edge_value = G.edges[list(G.edges)[0]][key]
-    if not output_strings:
-        if isinstance(edge_value, str):
-            raise TypeError(
-                "To enter variable strings set parameter output_strings=True."
-            )
-        # create array of ones for storing rate products
-        dirpar_rate_products = np.ones(n_dirpars, dtype=float)
-        # iterate over the directional diagrams
-        for i, edge_list in enumerate(dirpar_edges):
-            # for each edge list, retrieve an array of the ith and jth indices,
-            # retrieve the values associated with each (i, j) pair, and
-            # calculate the product of those values
-            Ki = edge_list[:, 0]
-            Kj = edge_list[:, 1]
-            dirpar_rate_products[i] = np.prod(Kij[Ki, Kj])
-
-        state_mults = dirpar_rate_products.reshape(n_states, n_partials).sum(axis=1)
-        state_probs = state_mults / math.fsum(dirpar_rate_products)
-        if any(elem < 0 for elem in state_probs):
-            raise ValueError(
-                "Calculated negative state probabilities, overflow or underflow occurred."
-            )
-        return state_probs
-    elif output_strings:
-        if not isinstance(edge_value, str):
-            raise TypeError(
-                "To enter variable values set parameter output_strings=False."
-            )
-        dirpar_rate_products = np.empty(shape=(n_dirpars,), dtype=object)
-        for i, edge_list in enumerate(dirpar_edges):
-            rate_product_vals = []
-            for edge in edge_list:
-                rate_product_vals.append(G.edges[edge][key])
-            dirpar_rate_products[i] = "*".join(rate_product_vals)
-
-        state_mults = np.empty(shape=(n_states,), dtype=object)
-        dirpar_rate_products = dirpar_rate_products.reshape(n_states, n_partials)
-        for i, arr in enumerate(dirpar_rate_products):
-            state_mults[i] = "+".join(arr)
-        return state_mults
+    msg = """`kda.calculations.calc_state_probs_from_diags` will be deprecated.
+        Use `kda.calculations.calc_state_probs` with parameter `dir_edges`."""
+    warnings.warn(msg, DeprecationWarning)
+    state_probs = calc_state_probs(
+        G=G, dir_edges=dirpar_edges, key=key, output_strings=output_strings,
+    )
+    if output_strings:
+        state_probs = expressions.construct_sympy_prob_funcs(state_mult_funcs=state_probs)
+    return state_probs
 
 
 def calc_net_cycle_flux_from_diags(
@@ -695,7 +725,8 @@ def calc_net_cycle_flux_from_diags(
 ):
     """Generates the expression for the net cycle flux for some ``cycle``
     in kinetic diagram ``G``. If directional diagram edges are already
-    generated this offers better performance than :func:`calc_net_cycle_flux`.
+    generated this offers better performance than
+    :meth:`~kda.calculations.calc_net_cycle_flux`.
 
     Parameters
     ----------
@@ -728,19 +759,14 @@ def calc_net_cycle_flux_from_diags(
         Net cycle flux for input cycle.
 
     """
-    flux_diags = diagrams.generate_flux_diagrams(G=G, cycle=cycle)
-    # construct the expressions for (Pi+ - Pi-), sigma, and sigma_k
-    # from the directional diagram edges
-    pi_diff = calc_pi_difference(
-        G=G, cycle=cycle, order=order, key=key, output_strings=output_strings)
-    sigma_K = calc_sigma_K(
-        G=G, cycle=cycle, flux_diags=flux_diags,
-        key=key, output_strings=output_strings)
-    sigma = calc_sigma(
-        G=G, dirpar_edges=dirpar_edges, key=key, output_strings=output_strings)
-    if output_strings:
-        net_cycle_flux = expressions.construct_sympy_net_cycle_flux_func(
-            pi_diff_str=pi_diff, sigma_K_str=sigma_K, sigma_str=sigma)
-    else:
-        net_cycle_flux = pi_diff * sigma_K / sigma
-    return net_cycle_flux
+    msg = """`kda.calculations.calc_net_cycle_flux_from_diags` will be deprecated.
+        Use `kda.calculations.calc_net_cycle_flux` with parameter `dir_edges`."""
+    warnings.warn(msg, DeprecationWarning)
+    return calc_net_cycle_flux(
+        G=G,
+        cycle=cycle,
+        order=order,
+        key=key,
+        output_strings=output_strings,
+        dir_edges=dirpar_edges,
+    )
