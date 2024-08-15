@@ -109,8 +109,11 @@ def calc_sigma(G, dirpar_edges, key="name", output_strings=True):
     ----------
     G : ``NetworkX.MultiDiGraph``
         A kinetic diagram
-    dirpar_edges : list
-        List of all directional diagrams for the input diagram ``G``.
+    dirpar_edges : ndarray
+        Array of all directional diagram edges (made from 2-tuples)
+        for the input diagram ``G``. Created using
+        :meth:`~kda.diagrams.generate_directional_diagrams`
+        with ``return_edges=True``.
     key : str
         Attribute key used to retrieve edge data from ``G.edges``. The default
         ``NetworkX`` edge key is ``"weight"``, however the ``kda`` edge keys
@@ -507,9 +510,10 @@ def calc_state_probs(G, key="name", output_strings=True, dir_edges=None):
         ``'key'`` will return strings of variable names to join into the
         analytic state multplicity and normalization function.
     dir_edges : ndarray (optional)
-        Array of all directional diagram edges (made from 2-tuples). Created
-        using :meth:`~kda.diagrams.generate_directional_diagrams` with
-        ``return_edges=True``.
+        Array of all directional diagram edges (made from 2-tuples)
+        for the input diagram ``G``. Created using
+        :meth:`~kda.diagrams.generate_directional_diagrams`
+        with ``return_edges=True``.
 
     Returns
     -------
@@ -626,10 +630,10 @@ def calc_net_cycle_flux(G, cycle, order, key="name",
         will return strings of variable names to join into the analytic
         cycle flux function.
     dir_edges : ndarray (optional)
-        Array of all directional diagram edges (made from 2-tuples).
-        Given as an option for performance reasons (when calculating
-        net cycle fluxes for multiple cycles it is best to generate
-        the directional diagram edges up front and provide them).
+        Array of all directional diagram edges (made from 2-tuples)
+        for the input diagram ``G``. Given as an option for performance reasons
+        (when calculating net cycle fluxes for multiple cycles it is best to
+        generate the directional diagram edges up front and provide them).
         Created using :meth:`~kda.diagrams.generate_directional_diagrams`
         with ``return_edges=True``.
 
@@ -688,7 +692,10 @@ def calc_state_probs_from_diags(G, dirpar_edges, key="name", output_strings=True
     G : ``NetworkX.MultiDiGraph``
         A kinetic diagram
     dirpar_edges : array
-        Array of all directional diagram edges (made from 2-tuples).
+        Array of all directional diagram edges (made from 2-tuples)
+        for the input diagram ``G``.  Created using
+        :meth:`~kda.diagrams.generate_directional_diagrams`
+        with ``return_edges=True``.
     key : str
         Attribute key used to retrieve edge data from ``G.edges``. The default
         ``NetworkX`` edge key is ``"weight"``, however the ``kda`` edge keys
@@ -735,7 +742,10 @@ def calc_net_cycle_flux_from_diags(
     G : ``NetworkX.MultiDiGraph``
         A kinetic diagram
     dirpar_edges : ndarray
-        Array of all directional diagram edges (made from 2-tuples).
+        Array of all directional diagram edges (made from 2-tuples)
+        for the input diagram ``G``. Created using
+        :meth:`~kda.diagrams.generate_directional_diagrams`
+        with ``return_edges=True``.
     cycle : list of int
         List of node indices for cycle of interest, index zero. Order of node
         indices does not matter.
