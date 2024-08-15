@@ -513,11 +513,12 @@ def calc_state_probs(G, key="name", output_strings=True, dir_edges=None):
 
     Returns
     -------
-    state_probs : ndarray
+    state_probs : ndarray or list of ``SymPy`` expressions
         Array of state probabilities for ``N`` states
-        of the form ``[p1, p2, p3, ..., pN]``.
-    state_probs_sympy : ``SymPy`` expression
-        List of symbolic state probability expressions.
+        of the form ``[p1, p2, p3, ..., pN]``
+        (for ``output_strings=False``), or a
+        list of symbolic state probability expressions
+        in the same order (for ``output_strings=True``).
 
     Notes
     -----
@@ -635,7 +636,7 @@ def calc_net_cycle_flux(G, cycle, order, key="name",
     Returns
     -------
     net_cycle_flux : float or ``SymPy`` expression
-        Net cycle flux for input cycle.
+        Net cycle flux for the input ``cycle``.
 
     Notes
     -----
@@ -702,11 +703,12 @@ def calc_state_probs_from_diags(G, dirpar_edges, key="name", output_strings=True
 
     Returns
     -------
-    state_probabilities : ndarray
-        Array of state probabilities for ``N`` states of
-        the form ``[p1, p2, p3, ..., pN]``.
-    state_mults : list of str
-        List of algebraic state multiplicity expressions.
+    state_probs : ndarray or list of ``SymPy`` expressions
+        Array of state probabilities for ``N`` states
+        of the form ``[p1, p2, p3, ..., pN]``
+        (for ``output_strings=False``), or a
+        list of symbolic state probability expressions
+        in the same order (for ``output_strings=True``).
 
     """
     msg = """`kda.calculations.calc_state_probs_from_diags` will be deprecated.
@@ -756,7 +758,7 @@ def calc_net_cycle_flux_from_diags(
     Returns
     -------
     net_cycle_flux : float or ``SymPy`` expression
-        Net cycle flux for input cycle.
+        Net cycle flux for the input ``cycle``.
 
     """
     msg = """`kda.calculations.calc_net_cycle_flux_from_diags` will be deprecated.

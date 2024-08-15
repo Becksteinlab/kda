@@ -1128,6 +1128,15 @@ def test_function_inputs():
         calculations.calc_state_probs(
             G, dir_edges=dir_edges, key="val", output_strings=True
         )
+    with pytest.warns(DeprecationWarning):
+        calculations.calc_state_probs_from_diags(
+            G, dirpar_edges=dir_edges, key="val", output_strings=False
+        )
+    with pytest.warns(DeprecationWarning):
+        calculations.calc_net_cycle_flux_from_diags(
+            G, cycle=cycle, dirpar_edges=dir_edges, order=order,
+            key="val", output_strings=False,
+        )
 
 
 def test_retrieve_rate_matrix():
