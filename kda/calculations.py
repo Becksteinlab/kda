@@ -130,7 +130,7 @@ def calc_sigma(G, dirpar_edges, key="name", output_strings=True):
     -------
     sigma : float or str
         Sum of rate products of all directional diagrams for the input
-        diagram ``G`` as a float (``output_strings=False``) for a string
+        diagram ``G`` as a float (``output_strings=False``) or a string
         (``output_strings=True``).
 
     Notes
@@ -487,9 +487,9 @@ def calc_state_probs(G, key="name", output_strings=True, dir_edges=None):
     state_probs : ndarray or list of ``SymPy`` expressions
         Array of state probabilities for ``N`` states
         of the form ``[p1, p2, p3, ..., pN]``
-        (for ``output_strings=False``), or a
+        (``output_strings=False``), or a
         list of symbolic state probability expressions
-        in the same order (for ``output_strings=True``).
+        in the same order (``output_strings=True``).
 
     Notes
     -----
@@ -675,9 +675,9 @@ def calc_state_probs_from_diags(G, dirpar_edges, key="name", output_strings=True
     state_probs : ndarray or list of ``SymPy`` expressions
         Array of state probabilities for ``N`` states
         of the form ``[p1, p2, p3, ..., pN]``
-        (for ``output_strings=False``), or a
+        (``output_strings=False``), or a
         list of symbolic state probability expressions
-        in the same order (for ``output_strings=True``).
+        in the same order (``output_strings=True``).
 
     """
     msg = """`kda.calculations.calc_state_probs_from_diags` will be deprecated.
