@@ -402,7 +402,7 @@ def calc_thermo_force(G, cycle, order, key="name", output_strings=True):
     thermo_force : float or ``SymPy`` expression
         The thermodynamic force for the input ``cycle`` returned
         as a float (``output_strings=False``) or a ``SymPy`` expression
-        (``output_strings=True`). The returned value is unitless and
+        (``output_strings=True``). The returned value is unitless and
         should be multiplied by ``kT`` to calculate the actual
         thermodynamic force.
 
