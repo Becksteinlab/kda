@@ -369,7 +369,8 @@ def generate_partial_diagrams(G, return_edges=False):
 
 def generate_directional_diagrams(G, return_edges=False):
     """
-    Generates all directional diagrams for a kinetic diagram.
+    Generates all directional diagrams for a kinetic diagram
+    using depth-first-search algorithm.
 
     Parameters
     ----------
@@ -382,11 +383,10 @@ def generate_directional_diagrams(G, return_edges=False):
 
     Returns
     -------
-    directional_diagrams : ndarray of ``NetworkX.MultiDiGraph``
-        Array of all directional diagrams for ``G``.
-    directional_diagram_edges : ndarray
-        Array of edges (made from 2-tuples) for valid directional
-        diagrams.
+    directional_diagrams : ndarray or ndarray of ``NetworkX.MultiDiGraph``
+        Array of all directional diagram edges made from 3-tuples
+        (``return_edges=True``) or array of all directional
+        diagrams (``return_edges=False``) for ``G``.
     """
     partial_diagrams = generate_partial_diagrams(G, return_edges=False)
 
