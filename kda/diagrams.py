@@ -383,7 +383,7 @@ def generate_directional_diagrams(G, return_edges=False):
 
     Returns
     -------
-    directional_diagrams : ndarray or ndarray of ``NetworkX.MultiDiGraph``
+    directional_diagrams : ndarray or ndarray of ``NetworkX.DiGraph``
         Array of all directional diagram edges made from 3-tuples
         (``return_edges=True``) or array of all directional
         diagrams (``return_edges=False``) for ``G``.
@@ -409,19 +409,20 @@ def generate_directional_diagrams(G, return_edges=False):
             # a directed spanning tree where the edges are directed
             # from the target node to the leaf nodes
             G_dfs = nx.dfs_tree(G_partial, source=target)
-            # collect the edges from the directed spanning tree
-            # and reverse the direction of the edges to get the correct
-            # edges for a directional diagram
-            dir_edges = np.fliplr(np.asarray(G_dfs.edges(), dtype=np.int32))
-            # add in the zero column for now
-            # TODO: change downstream functions so we
-            # don't have to keep these unnecessary zeros
-            dir_edges = np.column_stack((dir_edges, np.zeros(dir_edges.shape[0])))
             if return_edges:
+                # collect the edges from the directed spanning tree
+                # and reverse the direction of the edges to get the correct
+                # edges for a directional diagram
+                dir_edges = np.fliplr(np.asarray(G_dfs.edges(), dtype=np.int32))
+                # add in the zero column for now
+                # TODO: change downstream functions so we
+                # don't have to keep these unnecessary zeros
+                dir_edges = np.column_stack((dir_edges, np.zeros(dir_edges.shape[0])))
                 directional_diagrams[j + i*n_partials] = dir_edges
             else:
-                G_directional = nx.MultiDiGraph()
-                G_directional.add_edges_from(dir_edges)
+                # make a copy of the `nx.DiGraph` with reversed
+                # edges to get the directional diagram
+                G_directional = G_dfs.reverse(copy=True)
                 # set "is_target" to False for all nodes
                 nx.set_node_attributes(G_directional, False, "is_target")
                 # set target node to True
