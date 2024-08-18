@@ -4,6 +4,7 @@
 import numpy as np
 import networkx as nx
 
+import kda
 from kda import graph_utils, calculations, diagrams
 
 
@@ -150,3 +151,60 @@ class Sigma:
             key=self.key,
             output_strings=output_strings,
         )
+
+
+class CycleFlux:
+    """
+    A benchmark to test the time and space complexity of the
+    `calculations.calc_net_cycle_flux()` function.
+    """
+    param_names = ["graph", "output_strings"]
+    params = [
+        [
+            "3-state",
+            "Hill-5-state",
+            "Hill-8-state",
+        ],
+        [
+            True,
+            False,
+        ]
+    ]
+
+    def setup(self, graph, output_strings):
+        if output_strings:
+            key = "name"
+        else:
+            key = "val"
+        self.key = key
+        G = build_graph(graph=graph)
+        model = kda.KineticModel(G=G)
+        model.build_cycles()
+        self.G = model.G
+        self.cycles = model.cycles
+        self.dir_edges = diagrams.generate_directional_diagrams(
+            G=self.G, return_edges=True)
+
+    def time_calc_net_cycle_flux(self, graph, output_strings):
+        # benchmark cycle flux calculation algorithm
+        # for various models we commonly use for testing
+        for cycle in self.cycles:
+            calculations.calc_net_cycle_flux(
+                G=self.G,
+                cycle=cycle,
+                order=cycle[:2],
+                key=self.key,
+                output_strings=output_strings,
+                dir_edges=self.dir_edges,
+            )
+
+    def peakmem_calc_net_cycle_flux(self, graph, output_strings):
+        for cycle in self.cycles:
+            calculations.calc_net_cycle_flux(
+                G=self.G,
+                cycle=cycle,
+                order=cycle[:2],
+                key=self.key,
+                output_strings=output_strings,
+                dir_edges=self.dir_edges,
+            )
