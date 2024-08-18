@@ -48,4 +48,4 @@ jobs:
       - name: asv check
         run: |
           python -m pip install -r ./requirements_dev.txt
-          python -m asv check -E existing
+          python -m asv check -E existing --config ./benchmarks/asv.conf.json
