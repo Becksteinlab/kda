@@ -20,7 +20,7 @@ identifiers:
   - description: This is the archived snapshot of version 0.3.0 of KDA Examples
     type: doi
     value: "10.5281/zenodo.13159638"
-license: Apache-2.0
+license: GPL-3.0
 url: "https://github.com/Becksteinlab/kda"
 preferred-citation:
   type: article
