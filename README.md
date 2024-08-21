@@ -5,7 +5,7 @@ Kinetic Diagram Analysis
 [![codecov](https://codecov.io/gh/Becksteinlab/kda/branch/master/graph/badge.svg)](https://codecov.io/gh/Becksteinlab/kda/branch/master)
 [![Documentation Status](https://readthedocs.org/projects/kda/badge/?version=latest)](https://kda.readthedocs.io/en/latest/?badge=latest)
 [![asv](http://img.shields.io/badge/benchmarked%20by-asv-blue.svg?style=flat)](https://github.com/Becksteinlab/kda/actions/workflows/test.yml)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.5826394.svg)](https://doi.org/10.5281/zenodo.5826394)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.5826393.svg)](https://doi.org/10.5281/zenodo.5826393)
 
 Python package used for the analysis of biochemical kinetic diagrams using the diagrammatic approach developed by [T.L. Hill](https://link.springer.com/book/10.1007/978-1-4612-3558-3).
 
