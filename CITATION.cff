@@ -1,0 +1,42 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Awtrey"
+  given-names: "Nikolaus Carl"
+  orcid: "https://orcid.org/0009-0000-0395-6284"
+- family-names: "Beckstein"
+  given-names: "Oliver"
+  orcid: "https://orcid.org/0000-0003-1340-0831"
+title: "Kinetic Diagram Analysis"
+version: 0.3.0
+date-released: 2024-03-11
+identifiers:
+  - description: This is the collection of archived snapshots of all versions of Kinetic Diagram Analysis
+    type: doi
+    value: "10.5281/zenodo.5826393"
+  - description: This is the archived snapshot of version 0.3.0 of Kinetic Diagram Analysis
+    type: doi
+    value: "10.5281/zenodo.10802705"
+  - description: This is the archived snapshot of version 0.3.0 of KDA Examples
+    type: doi
+    value: "10.5281/zenodo.13159638"
+license: GPL-3.0
+url: "https://github.com/Becksteinlab/kda"
+preferred-citation:
+  type: article
+  authors:
+  - family-names: "Awtrey"
+    given-names: "Nikolaus Carl"
+    orcid: "https://orcid.org/0009-0000-0395-6284"
+  - family-names: "Beckstein"
+    given-names: "Oliver"
+    orcid: "https://orcid.org/0000-0003-1340-0831"
+  doi: "10.1021/acs.jctc.4c00688"
+  journal: "Journal of Chemical Theory and Computation"
+  # month: 8
+  # start: 1 # First page number
+  # end: 10 # Last page number
+  title: "Kinetic Diagram Analysis: A Python Library for Calculating Steady-State Observables of Biochemical Systems Analytically"
+  # issue: 1
+  # volume: 1
+  year: 2024
