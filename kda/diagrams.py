@@ -350,19 +350,26 @@ def generate_partial_diagrams(G, return_edges=False):
     # get list of possible combinations of unique edges (N choose N-1)
     # and iterate over each unique combination
     for edge_list in itertools.combinations(unique_edges, n_edges):
-        # make a base partial graph
-        partial = nx.Graph()
-        partial.add_nodes_from(base_nodes)
-        partial.add_edges_from(edge_list)
-        # for the tree to be valid, it must have N-1 edges and
-        # be connected. Since we already have the edge list
-        # generated for N-1 edges, just check if it is connected
-        if nx.is_connected(partial):
-            if return_edges:
-                partials[i, :] = edge_list
-            else:
-                partials[i] = partial
-            i += 1
+        # partial diagrams must span all nodes in the kinetic diagram
+        # check if edges include all nodes in the base diagram
+        # before continuing
+        nodes_in_edges = set([item for edge in edge_list for item in edge])
+        nodes_span_edges = set(base_nodes) == nodes_in_edges
+        # filter out cases where edges don't span all nodes
+        if nodes_span_edges:
+            # make a base partial graph
+            partial = nx.Graph()
+            partial.add_nodes_from(base_nodes)
+            partial.add_edges_from(edge_list)
+            # spanning trees must have `N-1` edges that span all nodes
+            # and are connected. We already have `N-1` edges that
+            # span all nodes in `G`, just check if they are connected
+            if nx.is_connected(partial):
+                if return_edges:
+                    partials[i, :] = edge_list
+                else:
+                    partials[i] = partial
+                i += 1
 
     return partials
 
