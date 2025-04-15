@@ -122,8 +122,8 @@ python setup.py install
 When using Kinetic Diagram Analysis in published work, please cite the following paper:
 
 *   N. C. Awtrey and O. Beckstein. Kinetic Diagram Analysis: A Python Library for Calculating
-    Steady-State Observables of Biochemical Systems Analytically. *J. Chem. Theory Comput.* (2024).
-    doi: [10.1021/acs.jctc.4c00688](https://pubs.acs.org/doi/10.1021/acs.jctc.4c00688)
+    Steady-State Observables of Biochemical Systems Analytically. *J. Chem. Theory Comput.* **2024**, *30*(17), 7646–7666. doi: [10.1021/acs.jctc.4c00688](https://pubs.acs.org/doi/10.1021/acs.jctc.4c00688)
+
 
 ## Copyright
 
