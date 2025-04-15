@@ -33,10 +33,10 @@ preferred-citation:
     orcid: "https://orcid.org/0000-0003-1340-0831"
   doi: "10.1021/acs.jctc.4c00688"
   journal: "Journal of Chemical Theory and Computation"
-  # month: 8
-  # start: 1 # First page number
-  # end: 10 # Last page number
+  month: 9
+  start: 7646 # First page number
+  end: 7666 # Last page number
   title: "Kinetic Diagram Analysis: A Python Library for Calculating Steady-State Observables of Biochemical Systems Analytically"
-  # issue: 1
-  # volume: 1
+  issue: 17
+  volume: 30
   year: 2024
