@@ -77,17 +77,16 @@ class KineticModel(object):
 		RuntimeError
 			If both ``K`` and ``G`` are ``None``.
 		"""
-		if G is None or K is None:
-			if K is not None:
-				# if only K is input create the diagram
-				G = nx.MultiDiGraph()
-				graph_utils.generate_edges(G=G, vals=K)
-			elif G is not None:
-				# if only G is input create the kinetic rate matrix
-				K = graph_utils.retrieve_rate_matrix(G)
-			else:
-				msg = "To create a `KineticModel`, K or G must be input."
-				raise RuntimeError(msg)
+		if K is not None:
+			# if only K is input create the diagram
+			G = nx.MultiDiGraph()
+			graph_utils.generate_edges(G=G, vals=K)
+		elif G is not None:
+			# if only G is input create the kinetic rate matrix
+			K = graph_utils.retrieve_rate_matrix(G)
+		else:
+			msg = "To create a `KineticModel`, K or G must be input."
+			raise RuntimeError(msg)
 
 		self.K = K
 		self.G = G
