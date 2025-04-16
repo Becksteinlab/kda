@@ -10,7 +10,7 @@ The :mod:`~kda.calculations` module contains code to calculate steady-state
 probabilities and fluxes from a user-defined kinetic diagram.
 
 .. autofunction:: calc_state_probs
-.. autofunction:: calc_net_cycle_flux
+.. autofunction:: calc_cycle_flux
 .. autofunction:: calc_sigma
 .. autofunction:: calc_sigma_K
 .. autofunction:: calc_pi_difference
@@ -282,7 +282,8 @@ def calc_sigma_K(G, cycle, flux_diags, key="name", output_strings=True):
     return sigma_K
 
 
-def calc_pi_difference(G, cycle, order, key="name", output_strings=True):
+def calc_pi_difference(G, cycle, order, key="name",
+        output_strings=True, net=True):
     r"""
     Generates the expression for the cycle-based componenet of the
     sum of flux diagrams for some ``cycle`` in kinetic diagram ``G``.
@@ -312,6 +313,10 @@ def calc_pi_difference(G, cycle, order, key="name", output_strings=True):
         using numbers. If ``True``, this will assume the input ``'key'``
         will return strings of variable names to join into the analytic
         function.
+    net : bool (optional)
+        Used to determine whether to return the _forward_ cycle product
+        (i.e., ``net=False``) or the _difference_ of the forward and reverse
+        cycle products (i.e., ``net=True``). Default is ``True``.
 
     Returns
     -------
@@ -357,14 +362,20 @@ def calc_pi_difference(G, cycle, order, key="name", output_strings=True):
         for edge in cycle_edges:
             ccw_rates.append(G.edges[edge[0], edge[1], edge[2]][key])
             cw_rates.append(G.edges[edge[1], edge[0], edge[2]][key])
-        pi_difference = "-".join(["*".join(ccw_rates), "*".join(cw_rates)])
+        if net:
+            pi_difference = "-".join(["*".join(ccw_rates), "*".join(cw_rates)])
+        else:
+            pi_difference = "*".join(ccw_rates)
     else:
         ccw_rates = 1
         cw_rates = 1
         for edge in cycle_edges:
             ccw_rates *= G.edges[edge[0], edge[1], edge[2]][key]
             cw_rates *= G.edges[edge[1], edge[0], edge[2]][key]
-        pi_difference = ccw_rates - cw_rates
+        if net:
+            pi_difference = ccw_rates - cw_rates
+        else:
+            pi_difference = ccw_rates
     return pi_difference
 
 
@@ -563,10 +574,10 @@ def calc_state_probs(G, key="name", output_strings=True, dir_edges=None):
     return state_probs
 
 
-def calc_net_cycle_flux(G, cycle, order, key="name",
-        output_strings=True, dir_edges=None):
-    r"""Generates the expression for the net cycle flux for
-    some ``cycle`` in kinetic diagram ``G``.
+def calc_cycle_flux(G, cycle, order, key="name",
+        output_strings=True, dir_edges=None, net=True):
+    r"""Generates the expression for the one-way or net cycle
+    flux for a ``cycle`` in the kinetic diagram ``G``.
 
     Parameters
     ----------
@@ -598,11 +609,14 @@ def calc_net_cycle_flux(G, cycle, order, key="name",
         generate the directional diagram edges up front and provide them).
         Created using :meth:`~kda.diagrams.generate_directional_diagrams`
         with ``return_edges=True``.
+    net : bool (optional)
+        Used to determine whether to return the _one-way_ or _net_ cycle flux.
+        Default is ``True`` (i.e., to generate the _net_ cycle flux).
 
     Returns
     -------
-    net_cycle_flux : float or ``SymPy`` expression
-        Net cycle flux for the input ``cycle``.
+    cycle_flux : float or ``SymPy`` expression
+        The one-way or net cycle flux for the input ``cycle``.
 
     Notes
     -----
@@ -628,18 +642,19 @@ def calc_net_cycle_flux(G, cycle, order, key="name",
     # construct the expressions for (Pi+ - Pi-), sigma, and sigma_k
     # from the directional diagram edges
     pi_diff = calc_pi_difference(
-        G=G, cycle=cycle, order=order, key=key, output_strings=output_strings)
+        G=G, cycle=cycle, order=order, key=key,
+        output_strings=output_strings, net=net)
     sigma_K = calc_sigma_K(
         G=G, cycle=cycle, flux_diags=flux_diags,
         key=key, output_strings=output_strings)
     sigma = calc_sigma(
         G=G, dirpar_edges=dir_edges, key=key, output_strings=output_strings)
     if output_strings:
-        net_cycle_flux = expressions.construct_sympy_net_cycle_flux_func(
+        cycle_flux = expressions.construct_sympy_net_cycle_flux_func(
             pi_diff_str=pi_diff, sigma_K_str=sigma_K, sigma_str=sigma)
     else:
-        net_cycle_flux = pi_diff * sigma_K / sigma
-    return net_cycle_flux
+        cycle_flux = pi_diff * sigma_K / sigma
+    return cycle_flux
 
 
 def calc_state_probs_from_diags(G, dirpar_edges, key="name", output_strings=True):
@@ -697,7 +712,7 @@ def calc_net_cycle_flux_from_diags(
     """Generates the expression for the net cycle flux for some ``cycle``
     in kinetic diagram ``G``. If directional diagram edges are already
     generated this offers better performance than
-    :meth:`~kda.calculations.calc_net_cycle_flux`.
+    :meth:`~kda.calculations.calc_cycle_flux`.
 
     Parameters
     ----------
@@ -734,13 +749,14 @@ def calc_net_cycle_flux_from_diags(
 
     """
     msg = """`kda.calculations.calc_net_cycle_flux_from_diags` will be deprecated.
-        Use `kda.calculations.calc_net_cycle_flux` with parameter `dir_edges`."""
+        Use `kda.calculations.calc_cycle_flux` with parameter `dir_edges`."""
     warnings.warn(msg, DeprecationWarning)
-    return calc_net_cycle_flux(
+    return calc_cycle_flux(
         G=G,
         cycle=cycle,
         order=order,
         key=key,
         output_strings=output_strings,
         dir_edges=dirpar_edges,
+        net=True,
     )

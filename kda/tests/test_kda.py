@@ -467,7 +467,7 @@ class Test_Flux_Diagrams:
         cycle = [0, 1, 3]
         order = [0, 1]
         # calculate the net cycle flux
-        net_cycle_flux = calculations.calc_net_cycle_flux(
+        net_cycle_flux = calculations.calc_cycle_flux(
             G,
             dir_edges=dir_edges,
             cycle=cycle,
@@ -476,7 +476,7 @@ class Test_Flux_Diagrams:
             output_strings=False,
         )
         # generate the net cycle flux function
-        net_cycle_flux_sympy_func = calculations.calc_net_cycle_flux(
+        net_cycle_flux_sympy_func = calculations.calc_cycle_flux(
             G,
             dir_edges=dir_edges,
             cycle=cycle,
@@ -522,11 +522,11 @@ class Test_Flux_Diagrams:
         cycle = [0, 2, 1]
         order = [0, 1]
         # calculate the net cycle flux
-        net_cycle_flux = calculations.calc_net_cycle_flux(
+        net_cycle_flux = calculations.calc_cycle_flux(
             G, cycle=cycle, order=order, key="val", output_strings=False
         )
         # generate the sympy net cycle flux function
-        sympy_net_cycle_flux_func = calculations.calc_net_cycle_flux(
+        sympy_net_cycle_flux_func = calculations.calc_cycle_flux(
             G, cycle=cycle, order=order, key="name", output_strings=True
         )
         # make sure the sympy function agrees with the known solution
