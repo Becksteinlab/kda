@@ -306,7 +306,6 @@ def calc_pi_difference(G, cycle, order, key="name",
         ``NetworkX`` edge key is ``"weight"``, however the ``kda`` edge keys
         are ``"name"`` (for rate constant names, e.g. ``"k12"``) and ``"val"``
         (for the rate constant values, e.g. ``100``). Default is ``"name"``.
-        Default is ``"name"``.
     output_strings : bool (optional)
         Used to denote whether values or strings will be combined. Default
         is ``False``, which tells the function to calculate the difference
@@ -314,8 +313,8 @@ def calc_pi_difference(G, cycle, order, key="name",
         will return strings of variable names to join into the analytic
         function.
     net : bool (optional)
-        Used to determine whether to return the _forward_ cycle product
-        (i.e., ``net=False``) or the _difference_ of the forward and reverse
+        Used to determine whether to return the forward cycle product
+        (i.e., ``net=False``) or the difference of the forward and reverse
         cycle products (i.e., ``net=True``). Default is ``True``.
 
     Returns
@@ -595,7 +594,6 @@ def calc_cycle_flux(G, cycle, order, key="name",
         ``NetworkX`` edge key is ``"weight"``, however the ``kda`` edge keys
         are ``"name"`` (for rate constant names, e.g. ``"k12"``) and ``"val"``
         (for the rate constant values, e.g. ``100``). Default is ``"name"``.
-        Default is ``"name"``.
     output_strings : bool (optional)
         Used to denote whether values or strings will be combined. Default
         is ``False``, which tells the function to calculate the cycle flux
@@ -610,8 +608,8 @@ def calc_cycle_flux(G, cycle, order, key="name",
         Created using :meth:`~kda.diagrams.generate_directional_diagrams`
         with ``return_edges=True``.
     net : bool (optional)
-        Used to determine whether to return the _one-way_ or _net_ cycle flux.
-        Default is ``True`` (i.e., to generate the _net_ cycle flux).
+        Used to determine whether to return the one-way or net cycle flux.
+        Default is ``True`` (i.e., to generate the net cycle flux).
 
     Returns
     -------
