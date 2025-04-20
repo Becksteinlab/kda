@@ -99,7 +99,7 @@ def _get_ordered_cycle(G, input_cycle):
             )
 
 
-def calc_sigma(G, dirpar_edges, key="name", output_strings=True):
+def calc_sigma(G, dir_edges=None, key="name", output_strings=True, **kwargs):
     r"""
     Generates the normalization factor expression for state
     probabilities and cycle fluxes, which is the sum of directional
@@ -109,12 +109,12 @@ def calc_sigma(G, dirpar_edges, key="name", output_strings=True):
     ----------
     G : ``NetworkX.MultiDiGraph``
         A kinetic diagram
-    dirpar_edges : ndarray
+    dir_edges : ndarray (optional)
         Array of all directional diagram edges (made from 2-tuples)
         for the input diagram ``G``. Created using
         :meth:`~kda.diagrams.generate_directional_diagrams`
         with ``return_edges=True``.
-    key : str
+    key : str (optional)
         Attribute key used to retrieve edge data from ``G.edges``. The default
         ``NetworkX`` edge key is ``"weight"``, however the ``kda`` edge keys
         are ``"name"`` (for rate constant names, e.g. ``"k12"``) and ``"val"``
@@ -125,6 +125,9 @@ def calc_sigma(G, dirpar_edges, key="name", output_strings=True):
         factor using numbers. If ``True``, this will assume the input
         ``'key'`` will return strings of variable names to join into the
         analytic cycle flux function.
+    kwargs : dict (optional)
+        Additional keyword arguments. Note that the alias
+        ``dirpar_edges`` is deprecated; please use ``dir_edges``.
 
     Returns
     -------
@@ -132,6 +135,18 @@ def calc_sigma(G, dirpar_edges, key="name", output_strings=True):
         Sum of rate products of all directional diagrams for the input
         diagram ``G`` as a float (``output_strings=False``) or a string
         (``output_strings=True``).
+
+    Warns
+    -----
+    DeprecationWarning
+        The ``dirpar_edges`` parameter is deprecated and will be removed
+        in a future release. Please use ``dir_edges`` instead.
+
+    Raises
+    ------
+    TypeError
+        If the required argument ``dir_edges`` is not provided (including
+        when the deprecated ``dirpar_edges`` parameter is not supplied).
 
     Notes
     -----
@@ -159,6 +174,15 @@ def calc_sigma(G, dirpar_edges, key="name", output_strings=True):
     of all directional diagrams for the kinetic diagram.
 
     """
+    if "dirpar_edges" in kwargs:
+        warn_msg = (
+            "The `dirpar_edges` parameter is deprecated and will be "
+            "removed in a future release. Please use `dir_edges` instead."
+            )
+        warnings.warn(warn_msg, DeprecationWarning)
+        dir_edges = kwargs.pop("dirpar_edges", None)
+    if dir_edges is None:
+        raise TypeError("`calc_sigma()` missing required argument: `dir_edges`")
     edge_is_str = isinstance(G.edges[list(G.edges)[0]][key], str)
     if output_strings != edge_is_str:
         msg = f"""Inputs `key={key}` and `output_strings={output_strings}`
@@ -167,11 +191,11 @@ def calc_sigma(G, dirpar_edges, key="name", output_strings=True):
             variable names for all edges."""
         raise TypeError(msg)
 
-    n_dir_diagrams = dirpar_edges.shape[0]
+    n_dir_diagrams = dir_edges.shape[0]
     if output_strings:
         rate_products = np.empty(shape=(n_dir_diagrams,), dtype=object)
         # iterate over the directional diagrams
-        for i, edge_list in enumerate(dirpar_edges):
+        for i, edge_list in enumerate(dir_edges):
             rates = [G.edges[edge][key] for edge in edge_list]
             rate_products[i] = "*".join(rates)
         # sum all terms to get normalization factor
@@ -179,7 +203,7 @@ def calc_sigma(G, dirpar_edges, key="name", output_strings=True):
     else:
         rate_products = np.ones(n_dir_diagrams, dtype=float)
         # iterate over the directional diagrams
-        for i, edge_list in enumerate(dirpar_edges):
+        for i, edge_list in enumerate(dir_edges):
             # iterate over the edges in the given directional diagram i
             for edge in edge_list:
                 # multiply the rate of each edge in edge_list
@@ -646,7 +670,7 @@ def calc_cycle_flux(G, cycle, order, key="name",
         G=G, cycle=cycle, flux_diags=flux_diags,
         key=key, output_strings=output_strings)
     sigma = calc_sigma(
-        G=G, dirpar_edges=dir_edges, key=key, output_strings=output_strings)
+        G=G, dir_edges=dir_edges, key=key, output_strings=output_strings)
     if output_strings:
         cycle_flux = expressions.construct_sympy_net_cycle_flux_func(
             pi_diff_str=pi_diff, sigma_K_str=sigma_K, sigma_str=sigma)
@@ -655,23 +679,108 @@ def calc_cycle_flux(G, cycle, order, key="name",
     return cycle_flux
 
 
-def calc_state_probs_from_diags(G, dirpar_edges, key="name", output_strings=True):
+def calc_net_cycle_flux(G, cycle, order, key="name",
+        output_strings=True, dir_edges=None):
+    r"""Generates the expression for the net cycle flux for
+    some ``cycle`` in kinetic diagram ``G``.
+
+    .. deprecated:: 0.3.0
+       ``calc_net_cycle_flux`` is deprecated and will be removed in
+       a future release. Use :func:`~kda.calculations.calc_cycle_flux`
+       with ``net=True`` instead.
+
+    Parameters
+    ----------
+    G : ``NetworkX.MultiDiGraph``
+        A kinetic diagram
+    cycle : list of int
+        List of node indices for cycle of interest, index zero. Order of node
+        indices does not matter.
+    order : list of int
+        List of integers of length 2 (e.g. ``[0, 1]``), where the integers are
+        nodes in ``cycle``. The pair of nodes should be ordered such that
+        a counter-clockwise path is followed.
+    key : str (optional)
+        Attribute key used to retrieve edge data from ``G.edges``. The default
+        ``NetworkX`` edge key is ``"weight"``, however the ``kda`` edge keys
+        are ``"name"`` (for rate constant names, e.g. ``"k12"``) and ``"val"``
+        (for the rate constant values, e.g. ``100``). Default is ``"name"``.
+        Default is ``"name"``.
+    output_strings : bool (optional)
+        Used to denote whether values or strings will be combined. Default
+        is ``False``, which tells the function to calculate the cycle flux
+        using numbers. If ``True``, this will assume the input ``'key'``
+        will return strings of variable names to join into the analytic
+        cycle flux function.
+    dir_edges : ndarray (optional)
+        Array of all directional diagram edges (made from 2-tuples)
+        for the input diagram ``G``. Given as an option for performance reasons
+        (when calculating net cycle fluxes for multiple cycles it is best to
+        generate the directional diagram edges up front and provide them).
+        Created using :meth:`~kda.diagrams.generate_directional_diagrams`
+        with ``return_edges=True``.
+
+    Returns
+    -------
+    net_cycle_flux : float or ``SymPy`` expression
+        Net cycle flux for the input ``cycle``.
+
+    Warns
+    -----
+    DeprecationWarning
+        ``calc_net_cycle_flux`` is deprecated. Use
+        :func:`~kda.calculations.calc_cycle_flux`
+        with ``net=True`` instead.
+
+    Notes
+    -----
+    The net cycle flux for some cycle :math:`k` is :footcite:`hill_free_1989`,
+
+    .. math::
+
+        J_{k} = \frac{(\Pi_{+} - \Pi_{-}) \Sigma_{k}}{\Sigma},
+
+    where :math:`(\Pi_{+} - \Pi_{-}) \Sigma_{k}` is the sum of all
+    flux diagrams for cycle :math:`k` and :math:`\Sigma` is the sum
+    of all directional diagrams for the kinetic diagram.
+    :math:`\Pi_{+}` and :math:`\Pi_{-}` are the forward and reverse
+    rate-products along cycle :math:`k` where the forward
+    (i.e. positive) direction is counter-clockwise (CCW).
+
+    """
+    warn_msg = (
+        "`kda.calculations.calc_net_cycle_flux` is deprecated"
+        "and will be removed in a future release. Use "
+        "`kda.calculations.calc_cycle_flux` with `net=True`."
+    )
+    warnings.warn(warn_msg, DeprecationWarning)
+    return calc_cycle_flux(G=G, cycle=cycle, order=order, key=key,
+        output_strings=output_strings, dir_edges=dir_edges, net=True)
+
+
+def calc_state_probs_from_diags(
+    G, dir_edges=None, key="name", output_strings=True, **kwargs):
     """Generates the state probability expressions using the diagram
     method developed by King and Altman :footcite:`king_schematic_1956` and
     Hill :footcite:`hill_studies_1966`. If directional diagram edges are already
     generated this offers better performance than
     :meth:`~kda.calculations.calc_state_probs`.
 
+    .. deprecated:: 0.3.0
+       ``calc_state_probs_from_diags`` is deprecated and will be removed in
+       a future release. Use :func:`~kda.calculations.calc_state_probs`
+       with the parameter ``dir_edges`` instead.
+
     Parameters
     ----------
     G : ``NetworkX.MultiDiGraph``
         A kinetic diagram
-    dirpar_edges : array
+    dir_edges : array (optional)
         Array of all directional diagram edges (made from 2-tuples)
         for the input diagram ``G``.  Created using
         :meth:`~kda.diagrams.generate_directional_diagrams`
         with ``return_edges=True``.
-    key : str
+    key : str (optional)
         Attribute key used to retrieve edge data from ``G.edges``. The default
         ``NetworkX`` edge key is ``"weight"``, however the ``kda`` edge keys
         are ``"name"`` (for rate constant names, e.g. ``"k12"``) and ``"val"``
@@ -682,6 +791,9 @@ def calc_state_probs_from_diags(G, dirpar_edges, key="name", output_strings=True
         probabilities using numbers. If ``True``, this will assume the input
         ``'key'`` will return strings of variable names to join into the
         analytic state multplicity and normalization functions.
+    kwargs : dict (optional)
+        Additional keyword arguments. Note that the alias
+        ``dirpar_edges`` is deprecated; please use ``dir_edges``.
 
     Returns
     -------
@@ -692,35 +804,63 @@ def calc_state_probs_from_diags(G, dirpar_edges, key="name", output_strings=True
         list of symbolic state probability expressions
         in the same order (``output_strings=True``).
 
+    Warns
+    -----
+    DeprecationWarning
+        - The ``dirpar_edges`` parameter is deprecated and will be removed
+        in a future release. Please use ``dir_edges`` instead.
+        - ``calc_state_probs_from_diags`` itself is deprecated. Use
+        :func:`~kda.calculations.calc_state_probs` with ``dir_edges`` instead.
+
+    Raises
+    ------
+    TypeError
+        If the required argument ``dir_edges`` is not provided (including
+        when the deprecated ``dirpar_edges`` parameter is not supplied).
+
     """
-    msg = """`kda.calculations.calc_state_probs_from_diags` will be deprecated.
-        Use `kda.calculations.calc_state_probs` with parameter `dir_edges`."""
-    warnings.warn(msg, DeprecationWarning)
-    state_probs = calc_state_probs(
-        G=G, dir_edges=dirpar_edges, key=key, output_strings=output_strings,
+    if "dirpar_edges" in kwargs:
+        warn_msg = (
+            "The `dirpar_edges` parameter is deprecated and will be "
+            "removed in a future release. Please use `dir_edges` instead."
+            )
+        warnings.warn(warn_msg, DeprecationWarning)
+        dir_edges = kwargs.pop("dirpar_edges", None)
+    if dir_edges is None:
+        err_msg = (
+            "`calc_state_probs_from_diags()` "
+            "missing required argument: `dir_edges`"
+            )
+        raise TypeError(err_msg)
+    warn_msg = (
+        "`kda.calculations.calc_state_probs_from_diags` is deprecated"
+        "and will be removed in a future release. Use "
+        "`kda.calculations.calc_state_probs` with parameter `dir_edges`."
     )
+    warnings.warn(warn_msg, DeprecationWarning)
+    state_probs = calc_state_probs(
+        G=G, dir_edges=dir_edges, key=key, output_strings=output_strings)
     if output_strings:
         state_probs = expressions.construct_sympy_prob_funcs(state_mult_funcs=state_probs)
     return state_probs
 
 
 def calc_net_cycle_flux_from_diags(
-    G, dirpar_edges, cycle, order, key="name", output_strings=True
-):
+    G, cycle, order, dir_edges=None, key="name", output_strings=True, **kwargs):
     """Generates the expression for the net cycle flux for some ``cycle``
     in kinetic diagram ``G``. If directional diagram edges are already
     generated this offers better performance than
     :meth:`~kda.calculations.calc_cycle_flux`.
 
+    .. deprecated:: 0.3.0
+       ``calc_net_cycle_flux_from_diags`` is deprecated and will be removed
+       in a future release. Use :func:`~kda.calculations.calc_cycle_flux`
+       with the parameter ``dir_edges`` instead.
+
     Parameters
     ----------
     G : ``NetworkX.MultiDiGraph``
         A kinetic diagram
-    dirpar_edges : ndarray
-        Array of all directional diagram edges (made from 2-tuples)
-        for the input diagram ``G``. Created using
-        :meth:`~kda.diagrams.generate_directional_diagrams`
-        with ``return_edges=True``.
     cycle : list of int
         List of node indices for cycle of interest, index zero. Order of node
         indices does not matter.
@@ -728,7 +868,12 @@ def calc_net_cycle_flux_from_diags(
         List of integers of length 2 (e.g. ``[0, 1]``), where the integers are
         nodes in ``cycle``. The pair of nodes should be ordered such that
         a counter-clockwise path is followed.
-    key : str
+    dir_edges : ndarray (optional)
+        Array of all directional diagram edges (made from 2-tuples)
+        for the input diagram ``G``. Created using
+        :meth:`~kda.diagrams.generate_directional_diagrams`
+        with ``return_edges=True``.
+    key : str (optional)
         Attribute key used to retrieve edge data from ``G.edges``. The default
         ``NetworkX`` edge key is ``"weight"``, however the ``kda`` edge keys
         are ``"name"`` (for rate constant names, e.g. ``"k12"``) and ``"val"``
@@ -739,22 +884,55 @@ def calc_net_cycle_flux_from_diags(
         using numbers. If ``True``, this will assume the input ``'key'``
         will return strings of variable names to join into the analytic
         cycle flux function.
+    kwargs : dict (optional)
+        Additional keyword arguments. Note that the alias
+        ``dirpar_edges`` is deprecated; please use ``dir_edges``.
 
     Returns
     -------
     net_cycle_flux : float or ``SymPy`` expression
         Net cycle flux for the input ``cycle``.
 
+    Warns
+    -----
+    DeprecationWarning
+        - The ``dirpar_edges`` parameter is deprecated and will be removed
+        in a future release. Please use ``dir_edges`` instead.
+        - ``calc_net_cycle_flux_from_diags`` itself is deprecated. Use
+        :func:`~kda.calculations.calc_cycle_flux` with ``dir_edges`` instead.
+
+    Raises
+    ------
+    TypeError
+        If the required argument ``dir_edges`` is not provided (including
+        when the deprecated ``dirpar_edges`` parameter is not supplied).
+
     """
-    msg = """`kda.calculations.calc_net_cycle_flux_from_diags` will be deprecated.
-        Use `kda.calculations.calc_cycle_flux` with parameter `dir_edges`."""
-    warnings.warn(msg, DeprecationWarning)
+    if "dirpar_edges" in kwargs:
+        warn_msg = (
+            "The `dirpar_edges` parameter is deprecated and will be "
+            "removed in a future release. Please use `dir_edges` instead."
+            )
+        warnings.warn(warn_msg, DeprecationWarning)
+        dir_edges = kwargs.pop("dirpar_edges", None)
+    if dir_edges is None:
+        err_msg = (
+            "`calc_net_cycle_flux_from_diags()` "
+            "missing required argument: `dir_edges`"
+            )
+        raise TypeError(err_msg)
+    warn_msg = (
+        "`kda.calculations.calc_net_cycle_flux_from_diags` is deprecated"
+        "and will be removed in a future release. Use "
+        "`kda.calculations.calc_cycle_flux` with parameter `dir_edges`."
+        )
+    warnings.warn(warn_msg, DeprecationWarning)
     return calc_cycle_flux(
         G=G,
         cycle=cycle,
         order=order,
         key=key,
         output_strings=output_strings,
-        dir_edges=dirpar_edges,
+        dir_edges=dir_edges,
         net=True,
     )
