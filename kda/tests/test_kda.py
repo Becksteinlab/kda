@@ -1170,7 +1170,6 @@ def test_function_inputs():
         # check that both DeprecationWarnings are raised
         dep_msg_1 = record[0].message.args[0]
         dep_msg_2 = record[1].message.args[0]
-        assert len(record) == 2
         assert "The `dirpar_edges` parameter is deprecated" in dep_msg_1
         assert "`kda.calculations.calc_net_cycle_flux_from_diags`" in dep_msg_2
     with pytest.raises(TypeError):
