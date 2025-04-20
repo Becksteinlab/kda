@@ -866,7 +866,7 @@ class Test_Misc_Funcs:
 
 class Test_Diagram_Generation:
     @pytest.mark.parametrize(
-        "K, expected_pars, expected_dirpars",
+        "K, expected_pars, expected_dirs",
         [
             (np.array([[0, 1, 1], [1, 0, 1], [1, 1, 0]]), 3, 9),
             (np.array([[0, 1, 0, 1], [1, 0, 1, 0], [0, 1, 0, 1], [1, 0, 1, 0]]), 4, 16),
@@ -900,7 +900,7 @@ class Test_Diagram_Generation:
             ),
         ],
     )
-    def test_diagram_counts(self, K, expected_pars, expected_dirpars):
+    def test_diagram_counts(self, K, expected_pars, expected_dirs):
         # create the model from the rate matrix
         model = kda.KineticModel(K=K, G=None)
         # generate the partial diagrams and verify
@@ -914,10 +914,10 @@ class Test_Diagram_Generation:
             assert G_partial.number_of_nodes() == model.G.number_of_nodes()
         # generate the directional diagrams and verify
         # they agree with the expected value
-        assert model.get_directional_diagram_count() == expected_dirpars
+        assert model.get_directional_diagram_count() == expected_dirs
         # test a second time after building the directional diagrams
         model.build_directional_diagrams()
-        assert model.get_directional_diagram_count() == expected_dirpars
+        assert model.get_directional_diagram_count() == expected_dirs
         # count the number of partial diagrams
         # and verify they agree with the expected value
         n_pars = diagrams.enumerate_partial_diagrams(model.G)
@@ -994,11 +994,11 @@ class Test_Diagram_Generation:
         assert len(partial_edges) == expected_pars
         # generate the directional partial diagrams and verify
         # they agree with the expected value
-        dirpar_edges = diagrams.generate_directional_diagrams(
+        dir_edges = diagrams.generate_directional_diagrams(
             G, return_edges=True
         )
-        expected_dirpars = n_states ** (n_states - 1)
-        assert len(dirpar_edges) == expected_dirpars
+        expected_dirs = n_states ** (n_states - 1)
+        assert len(dir_edges) == expected_dirs
         # count the number of partial diagrams
         # and verify they agree with the expected value
         n_pars = diagrams.enumerate_partial_diagrams(G)
@@ -1088,6 +1088,12 @@ def test_function_inputs():
         calculations.calc_sigma(G, dir_edges, key="name", output_strings=False)
     with pytest.raises(TypeError):
         calculations.calc_sigma(G, dir_edges, key="val", output_strings=True)
+    with pytest.warns(DeprecationWarning):
+        # call `calc_sigma` using deprecated parameter, `dirpar_edges`
+        calculations.calc_sigma(G, dirpar_edges=dir_edges)
+    with pytest.raises(TypeError):
+        # call `calc_sigma` without any directional edges
+        calculations.calc_sigma(G, None)
 
     # pick one of the 3-node cycles and generate the flux diagrams for it
     cycle = [0, 1, 3]
@@ -1128,16 +1134,54 @@ def test_function_inputs():
         calculations.calc_state_probs(
             G, dir_edges=dir_edges, key="val", output_strings=True
         )
-    with pytest.warns(DeprecationWarning):
+    with pytest.warns(DeprecationWarning,
+        match="`kda.calculations.calc_state_probs_from_diags` is deprecated"):
+        calculations.calc_state_probs_from_diags(
+            G, dir_edges=dir_edges, key="val", output_strings=False
+        )
+    with pytest.warns(DeprecationWarning) as record:
+        # call using deprecated parameter, `dirpar_edges`
         calculations.calc_state_probs_from_diags(
             G, dirpar_edges=dir_edges, key="val", output_strings=False
         )
-    with pytest.warns(DeprecationWarning):
+        # check that both DeprecationWarnings are raised
+        dep_msg_1 = record[0].message.args[0]
+        dep_msg_2 = record[1].message.args[0]
+        assert len(record) == 2
+        assert "The `dirpar_edges` parameter is deprecated" in dep_msg_1
+        assert "`kda.calculations.calc_state_probs_from_diags`" in dep_msg_2
+    with pytest.raises(TypeError):
+        # call `calc_state_probs_from_diags` without any directional edges
+        calculations.calc_state_probs_from_diags(
+            G, dir_edges=None, key="val", output_strings=False
+        )
+    with pytest.warns(DeprecationWarning,
+        match="`kda.calculations.calc_net_cycle_flux_from_diags` is deprecated"):
+        calculations.calc_net_cycle_flux_from_diags(
+            G, cycle=cycle, dir_edges=dir_edges, order=order,
+            key="val", output_strings=False,
+        )
+    with pytest.warns(DeprecationWarning) as record:
+        # call using deprecated parameter, `dirpar_edges`
         calculations.calc_net_cycle_flux_from_diags(
             G, cycle=cycle, dirpar_edges=dir_edges, order=order,
             key="val", output_strings=False,
         )
-
+        # check that both DeprecationWarnings are raised
+        dep_msg_1 = record[0].message.args[0]
+        dep_msg_2 = record[1].message.args[0]
+        assert "The `dirpar_edges` parameter is deprecated" in dep_msg_1
+        assert "`kda.calculations.calc_net_cycle_flux_from_diags`" in dep_msg_2
+    with pytest.raises(TypeError):
+        # call `calc_net_cycle_flux_from_diags` without any directional edges
+        calculations.calc_net_cycle_flux_from_diags(
+            G, cycle=cycle, dir_edges=None, order=order,
+            key="val", output_strings=False,
+        )
+    with pytest.warns(DeprecationWarning,
+        match="`kda.calculations.calc_net_cycle_flux` is deprecated"):
+        calculations.calc_net_cycle_flux(G=G, cycle=cycle, order=order,
+            key="name", output_strings=True, dir_edges=None)
 
 def test_retrieve_rate_matrix():
     # regression test for `graph_utils.retrieve_rate_matrix()`
