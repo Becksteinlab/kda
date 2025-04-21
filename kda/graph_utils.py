@@ -64,15 +64,15 @@ def generate_edges(G, vals, names=None, val_key="val", name_key="name"):
         the kinetic rate *values* for each transition in ``G``. For example,
         assuming we have some values ``k12_val`` and ``k21_val``, for a
         2-state diagram ``vals = [[0, k12_val], [k21_val, 0]]``.
-    names : ndarray (optional)
+    names : ndarray, optional
         ``NxN`` array where ``N`` is the number of nodes in ``G``. Contains
         the kinetic rate *variable names* (as strings) for each transition
         in ``G``. For example, for a 2-state diagram
         ``names = [[0, "k12"], ["k21", 0]]``.
-    val_key : str (optional)
+    val_key : str, optional
         Attribute key used to retrieve kinetic rate *values* from the
         edge data stored in ``G.edges``. The default is ``"val"``.
-    name_key : str (optional)
+    name_key : str, optional
         Attribute key used to retrieve kinetic rate *variable names* from
         the edge data stored in ``G.edges``. The default is ``"name"``.
     """
@@ -101,7 +101,7 @@ def retrieve_rate_matrix(G, key="val"):
     ----------
     G : ``NetworkX.MultiDiGraph``
         A kinetic diagram
-    key : str
+    key : str, optional
         Attribute key used to retrieve edge data from ``G.edges``. The default
         ``NetworkX`` edge key is ``"weight"``, however the ``kda`` edge keys
         are ``"name"`` (for rate constant names, e.g. ``"k12"``) and ``"val"``
@@ -177,8 +177,8 @@ def _is_ccw(cycle, start, end):
 def get_ccw_cycle(cycle, order):
     """
     Function used for obtaining the CCW version of an input cycle, primarily
-    used for :meth:`~kda.calculations.calculate_pi_difference()` and
-    :meth:`~kda.calculations.calculate_thermo_force()`.
+    used for :func:`~kda.calculations.calculate_pi_difference()` and
+    :func:`~kda.calculations.calculate_thermo_force()`.
 
     Parameters
     ----------

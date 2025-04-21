@@ -36,7 +36,7 @@ def ode_solver(P, K, t_max, method="LSODA", tol=1e-16, **options):
         Integration method used in ``scipy.integrate.solve_ivp()``. Default is
         ``"LSODA"`` since it has automatic stiffness detection, and generally
         requires much less run time to reach convergence than ``"RK45"``.
-    tol : float (optional)
+    tol : float, optional
         Tolerance value used as convergence criteria. Once all dp/dt values for
         each state are less than the tolerance the integrator will terminate.
         Default is ``1e-16``.
