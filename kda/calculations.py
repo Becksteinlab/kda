@@ -109,23 +109,23 @@ def calc_sigma(G, dir_edges=None, key="name", output_strings=True, **kwargs):
     ----------
     G : ``NetworkX.MultiDiGraph``
         A kinetic diagram
-    dir_edges : ndarray (optional)
+    dir_edges : ndarray, optional
         Array of all directional diagram edges (made from 2-tuples)
         for the input diagram ``G``. Created using
-        :meth:`~kda.diagrams.generate_directional_diagrams`
+        :func:`~kda.diagrams.generate_directional_diagrams`
         with ``return_edges=True``.
-    key : str (optional)
+    key : str, optional
         Attribute key used to retrieve edge data from ``G.edges``. The default
         ``NetworkX`` edge key is ``"weight"``, however the ``kda`` edge keys
         are ``"name"`` (for rate constant names, e.g. ``"k12"``) and ``"val"``
         (for the rate constant values, e.g. ``100``). Default is ``"name"``.
-    output_strings : bool (optional)
+    output_strings : bool, optional
         Used to denote whether values or strings will be combined. Default
         is ``False``, which tells the function to calculate the normalization
         factor using numbers. If ``True``, this will assume the input
         ``'key'`` will return strings of variable names to join into the
         analytic cycle flux function.
-    kwargs : dict (optional)
+    kwargs : dict, optional
         Additional keyword arguments. Note that the alias
         ``dirpar_edges`` is deprecated; please use ``dir_edges``.
 
@@ -228,13 +228,13 @@ def calc_sigma_K(G, cycle, flux_diags, key="name", output_strings=True):
         indices does not matter but should not contain all nodes.
     flux_diags : list
         List of relevant directional flux diagrams for input cycle.
-    key : str
+    key : str, optional
         Attribute key used to retrieve edge data from ``G.edges``. The default
         ``NetworkX`` edge key is ``"weight"``, however the ``kda`` edge keys
         are ``"name"`` (for rate constant names, e.g. ``"k12"``) and ``"val"``
         (for the rate constant values, e.g. ``100``). Default is ``"name"``.
         Default is ``"name"``.
-    output_strings : bool (optional)
+    output_strings : bool, optional
         Used to denote whether values or strings will be combined. Default
         is ``False``, which tells the function to calculate the sum of all
         directional flux diagrams using numbers. If ``True``, this will assume
@@ -325,18 +325,18 @@ def calc_pi_difference(G, cycle, order, key="name",
         List of integers of length 2 (e.g. ``[0, 1]``), where the integers are
         nodes in ``cycle``. The pair of nodes should be ordered such that
         a counter-clockwise path is followed.
-    key : str
+    key : str, optional
         Attribute key used to retrieve edge data from ``G.edges``. The default
         ``NetworkX`` edge key is ``"weight"``, however the ``kda`` edge keys
         are ``"name"`` (for rate constant names, e.g. ``"k12"``) and ``"val"``
         (for the rate constant values, e.g. ``100``). Default is ``"name"``.
-    output_strings : bool (optional)
+    output_strings : bool, optional
         Used to denote whether values or strings will be combined. Default
         is ``False``, which tells the function to calculate the difference
         using numbers. If ``True``, this will assume the input ``'key'``
         will return strings of variable names to join into the analytic
         function.
-    net : bool (optional)
+    net : bool, optional
         Used to determine whether to return the forward cycle product
         (i.e., ``net=False``) or the difference of the forward and reverse
         cycle products (i.e., ``net=True``). Default is ``True``.
@@ -418,13 +418,13 @@ def calc_thermo_force(G, cycle, order, key="name", output_strings=True):
         List of integers of length 2 (e.g. ``[0, 1]``), where the integers are
         nodes in ``cycle``. The pair of nodes should be ordered such that
         a counter-clockwise path is followed.
-    key : str
+    key : str, optional
         Attribute key used to retrieve edge data from ``G.edges``. The default
         ``NetworkX`` edge key is ``"weight"``, however the ``kda`` edge keys
         are ``"name"`` (for rate constant names, e.g. ``"k12"``) and ``"val"``
         (for the rate constant values, e.g. ``100``). Default is ``"name"``.
         Default is ``"name"``.
-    output_strings : bool (optional)
+    output_strings : bool, optional
         Used to denote whether values or strings will be combined. Default
         is ``False``, which tells the function to calculate the thermodynamic
         force using numbers. If ``True``, this will assume the input
@@ -499,21 +499,21 @@ def calc_state_probs(G, key="name", output_strings=True, dir_edges=None):
     ----------
     G : ``NetworkX.MultiDiGraph``
         A kinetic diagram
-    key : str
+    key : str, optional
         Attribute key used to retrieve edge data from ``G.edges``. The default
         ``NetworkX`` edge key is ``"weight"``, however the ``kda`` edge keys
         are ``"name"`` (for rate constant names, e.g. ``"k12"``) and ``"val"``
         (for the rate constant values, e.g. ``100``). Default is ``"name"``.
-    output_strings : bool (optional)
+    output_strings : bool, optional
         Used to denote whether values or strings will be combined. Default
         is ``False``, which tells the function to calculate the state
         probabilities using numbers. If ``True``, this will assume the input
         ``'key'`` will return strings of variable names to join into the
         analytic state multplicity and normalization function.
-    dir_edges : ndarray (optional)
+    dir_edges : ndarray, optional
         Array of all directional diagram edges (made from 2-tuples)
         for the input diagram ``G``. Created using
-        :meth:`~kda.diagrams.generate_directional_diagrams`
+        :func:`~kda.diagrams.generate_directional_diagrams`
         with ``return_edges=True``.
 
     Returns
@@ -613,25 +613,25 @@ def calc_cycle_flux(G, cycle, order, key="name",
         List of integers of length 2 (e.g. ``[0, 1]``), where the integers are
         nodes in ``cycle``. The pair of nodes should be ordered such that
         a counter-clockwise path is followed.
-    key : str
+    key : str, optional
         Attribute key used to retrieve edge data from ``G.edges``. The default
         ``NetworkX`` edge key is ``"weight"``, however the ``kda`` edge keys
         are ``"name"`` (for rate constant names, e.g. ``"k12"``) and ``"val"``
         (for the rate constant values, e.g. ``100``). Default is ``"name"``.
-    output_strings : bool (optional)
+    output_strings : bool, optional
         Used to denote whether values or strings will be combined. Default
         is ``False``, which tells the function to calculate the cycle flux
         using numbers. If ``True``, this will assume the input ``'key'``
         will return strings of variable names to join into the analytic
         cycle flux function.
-    dir_edges : ndarray (optional)
+    dir_edges : ndarray, optional
         Array of all directional diagram edges (made from 2-tuples)
         for the input diagram ``G``. Given as an option for performance reasons
         (when calculating net cycle fluxes for multiple cycles it is best to
         generate the directional diagram edges up front and provide them).
-        Created using :meth:`~kda.diagrams.generate_directional_diagrams`
+        Created using :func:`~kda.diagrams.generate_directional_diagrams`
         with ``return_edges=True``.
-    net : bool (optional)
+    net : bool, optional
         Used to determine whether to return the one-way or net cycle flux.
         Default is ``True`` (i.e., to generate the net cycle flux).
 
@@ -700,24 +700,24 @@ def calc_net_cycle_flux(G, cycle, order, key="name",
         List of integers of length 2 (e.g. ``[0, 1]``), where the integers are
         nodes in ``cycle``. The pair of nodes should be ordered such that
         a counter-clockwise path is followed.
-    key : str (optional)
+    key : str, optional
         Attribute key used to retrieve edge data from ``G.edges``. The default
         ``NetworkX`` edge key is ``"weight"``, however the ``kda`` edge keys
         are ``"name"`` (for rate constant names, e.g. ``"k12"``) and ``"val"``
         (for the rate constant values, e.g. ``100``). Default is ``"name"``.
         Default is ``"name"``.
-    output_strings : bool (optional)
+    output_strings : bool, optional
         Used to denote whether values or strings will be combined. Default
         is ``False``, which tells the function to calculate the cycle flux
         using numbers. If ``True``, this will assume the input ``'key'``
         will return strings of variable names to join into the analytic
         cycle flux function.
-    dir_edges : ndarray (optional)
+    dir_edges : ndarray, optional
         Array of all directional diagram edges (made from 2-tuples)
         for the input diagram ``G``. Given as an option for performance reasons
         (when calculating net cycle fluxes for multiple cycles it is best to
         generate the directional diagram edges up front and provide them).
-        Created using :meth:`~kda.diagrams.generate_directional_diagrams`
+        Created using :func:`~kda.diagrams.generate_directional_diagrams`
         with ``return_edges=True``.
 
     Returns
@@ -764,7 +764,7 @@ def calc_state_probs_from_diags(
     method developed by King and Altman :footcite:`king_schematic_1956` and
     Hill :footcite:`hill_studies_1966`. If directional diagram edges are already
     generated this offers better performance than
-    :meth:`~kda.calculations.calc_state_probs`.
+    :func:`~kda.calculations.calc_state_probs`.
 
     .. deprecated:: 0.3.0
        ``calc_state_probs_from_diags`` is deprecated and will be removed in
@@ -775,23 +775,23 @@ def calc_state_probs_from_diags(
     ----------
     G : ``NetworkX.MultiDiGraph``
         A kinetic diagram
-    dir_edges : array (optional)
+    dir_edges : array, optional
         Array of all directional diagram edges (made from 2-tuples)
         for the input diagram ``G``.  Created using
-        :meth:`~kda.diagrams.generate_directional_diagrams`
+        :func:`~kda.diagrams.generate_directional_diagrams`
         with ``return_edges=True``.
-    key : str (optional)
+    key : str, optional
         Attribute key used to retrieve edge data from ``G.edges``. The default
         ``NetworkX`` edge key is ``"weight"``, however the ``kda`` edge keys
         are ``"name"`` (for rate constant names, e.g. ``"k12"``) and ``"val"``
         (for the rate constant values, e.g. ``100``). Default is ``"name"``.
-    output_strings : bool (optional)
+    output_strings : bool, optional
         Used to denote whether values or strings will be combined. Default
         is ``False``, which tells the function to calculate the state
         probabilities using numbers. If ``True``, this will assume the input
         ``'key'`` will return strings of variable names to join into the
         analytic state multplicity and normalization functions.
-    kwargs : dict (optional)
+    kwargs : dict, optional
         Additional keyword arguments. Note that the alias
         ``dirpar_edges`` is deprecated; please use ``dir_edges``.
 
@@ -850,7 +850,7 @@ def calc_net_cycle_flux_from_diags(
     """Generates the expression for the net cycle flux for some ``cycle``
     in kinetic diagram ``G``. If directional diagram edges are already
     generated this offers better performance than
-    :meth:`~kda.calculations.calc_cycle_flux`.
+    :func:`~kda.calculations.calc_cycle_flux`.
 
     .. deprecated:: 0.3.0
        ``calc_net_cycle_flux_from_diags`` is deprecated and will be removed
@@ -868,23 +868,23 @@ def calc_net_cycle_flux_from_diags(
         List of integers of length 2 (e.g. ``[0, 1]``), where the integers are
         nodes in ``cycle``. The pair of nodes should be ordered such that
         a counter-clockwise path is followed.
-    dir_edges : ndarray (optional)
+    dir_edges : ndarray, optional
         Array of all directional diagram edges (made from 2-tuples)
         for the input diagram ``G``. Created using
-        :meth:`~kda.diagrams.generate_directional_diagrams`
+        :func:`~kda.diagrams.generate_directional_diagrams`
         with ``return_edges=True``.
-    key : str (optional)
+    key : str, optional
         Attribute key used to retrieve edge data from ``G.edges``. The default
         ``NetworkX`` edge key is ``"weight"``, however the ``kda`` edge keys
         are ``"name"`` (for rate constant names, e.g. ``"k12"``) and ``"val"``
         (for the rate constant values, e.g. ``100``). Default is ``"name"``.
-    output_strings : bool (optional)
+    output_strings : bool, optional
         Used to denote whether values or strings will be combined. Default
         is ``False``, which tells the function to calculate the cycle flux
         using numbers. If ``True``, this will assume the input ``'key'``
         will return strings of variable names to join into the analytic
         cycle flux function.
-    kwargs : dict (optional)
+    kwargs : dict, optional
         Additional keyword arguments. Note that the alias
         ``dirpar_edges`` is deprecated; please use ``dir_edges``.
 

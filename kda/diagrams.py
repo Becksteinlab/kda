@@ -233,7 +233,7 @@ def _append_reverse_edges(edge_list):
 
 def _get_cofactor_matrix(K_laplace):
     """
-    Helper function for :meth:`~kda.diagrams.enumerate_partial_diagrams()`.
+    Helper function for :func:`~kda.diagrams.enumerate_partial_diagrams()`.
     Uses singular value decomposition to get the cofactor matrix for
     the input Laplacian matrix.
 

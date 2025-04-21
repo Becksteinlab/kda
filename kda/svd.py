@@ -30,7 +30,7 @@ def svd_solver(K, tol=1e-12):
         ``kij`` is the edge weight (i.e. transition rate constant).
         For example, for a 2-state model with ``k12=3`` and ``k21=4``,
         ``K=[[0, 3], [4, 0]]``.
-    tol : float (optional)
+    tol : float, optional
         Tolerance used for singular value determination. Values are
         considered singular if they are less than the input tolerance.
         Default is ``1e-12``.
